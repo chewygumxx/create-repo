@@ -14,6 +14,7 @@
         "@biomejs/biome": "2.5.14",
         "@chewygumxx/biome-config": "^1.0.0",
         "@chewygumxx/commitlint-config": "^1.0.0",
+        "@chewygumxx/remark-preset": "^1.0.0",
         "@commitlint/cli": "^21.2.2",
         "@commitlint/cz-commitlint": "^21.2.3",
         "commitizen": "^4.3.2",
@@ -21,11 +22,6 @@
         "patch-package": "^8.0.1",
         "prettier": "^3.9.9",
         "remark-cli": "^12.0.1",
-        "remark-frontmatter": "^5.0.0",
-        "remark-gfm": "^4.0.1",
-        "remark-lint-maximum-line-length": "^4.1.1",
-        "remark-preset-lint-consistent": "^6.0.1",
-        "remark-preset-lint-recommended": "^7.0.1",
         "typescript": "^7.0.2"
     },
     "scripts": {
@@ -47,18 +43,8 @@
         }
     },
     "remarkConfig": {
-        "settings": {
-            "bullet": "-"
-        },
         "plugins": [
-            "remark-frontmatter",
-            "remark-gfm",
-            "remark-preset-lint-recommended",
-            "remark-preset-lint-consistent",
-            [
-                "remark-lint-maximum-line-length",
-                80
-            ]
+            "@chewygumxx/remark-preset"
         ]
     }
 }
