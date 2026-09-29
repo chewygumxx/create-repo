@@ -59,9 +59,9 @@ the header sync in CI and do not need editing by hand.
 `.github/workflows/ci.yaml` calls the shared
 [standard workflow](https://github.com/chewygumxx/.github#standard-workflow):
 commitlint, the header sync, generic lint and format checks for workflows,
-shell scripts, TOML and `.editorconfig`, and the metadata sync. This
-repository's own `npm run check` follows, against the commit the header sync
-pushed.
+shell and zsh scripts, TOML, YAML and `.editorconfig`, and the metadata sync.
+This repository's own `npm run check` follows, against the commit the header
+sync pushed.
 
 ## Development
 
