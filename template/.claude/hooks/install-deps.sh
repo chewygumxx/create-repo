@@ -24,4 +24,4 @@ root=${CLAUDE_PROJECT_DIR:-}
 command -v npm >/dev/null 2>&1 || exit 0
 
 cd "$root" || exit 0
-npm install --no-fund --no-audit --package-lock-only
+npm ci --no-fund --no-audit >/dev/null
