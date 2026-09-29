@@ -1,0 +1,49 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.github/workflows/lint.yaml
+#
+#
+
+name: Lint
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+    workflow_dispatch: {}
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+
+            - name: Setup Node and NPM
+              uses: jdx/mise-action@v4
+
+            - name: Cache NPM
+              uses: actions/cache@v6
+              with:
+                  path: ~/.npm
+                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+                  restore-keys: npm-${{ runner.os }}-
+
+            - name: NPM Clean Install
+              run: npm ci
+
+            - name: Typecheck, Format and Lint
+              run: npm run check
