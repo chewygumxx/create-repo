@@ -13,19 +13,12 @@
 #
 # The development toolchain for this repository, in one place.
 #
-# Two separate problems this solves. The gates (`luafmt`, `selene`, `tombi`,
-# `lua-language-server`, Neovim itself) were each pinned twice: once in
-# `.github/workflows/lint-config.yaml`'s `env:` and once in whatever the
-# contributor happened to have on `PATH`, with `.husky/pre-commit` silently
-# skipping any tool it could not find. A hook that no-ops on a missing tool
-# is not a gate, so the versions below are the ones CI asserts against and
-# the ones a local checkout gets.
-#
-# The editor toolchain (LSPs, linters, formatters, debug adapters) is here
-# for a second reason: `lua/plugin.lua` condemns the whole mason trio under
-# Termux, which has no toolchain for it. Everything mason would install is
-# therefore listed here too, so the one platform that cannot use mason has
-# a supported way to get the same binaries.
+# Everything the repository runs that is not an npm package lives here, so
+# a checkout never depends on whatever the contributor happens to have on
+# `PATH`. npm packages (commitlint, Biome, remark, husky, TypeScript) are
+# pinned in `package.json` instead; together the two files are the whole
+# dependency surface. CI installs from this file via `jdx/mise-action`, so
+# the versions below are the ones CI runs.
 #
 # Backends are named explicitly rather than relying on the registry alias,
 # so the resolution is visible here and cannot change underneath the pin.
@@ -37,9 +30,11 @@ min_version = "2026.9.0"
 #
 # Runtimes
 #
-# `npm` is pinned separately from the Node it ships with: `npm patch` is
-# needed for `patchedDependencies` in `package.json`, and the npm bundled
-# with Node 24 predates it.
-#
 node = "24"
-"npm:npm" = "12"
+
+#
+# Utilities
+#
+# `jq` parses the tool payload in `.claude/hooks/prohibit-em-dash.sh`.
+#
+"aqua:jqlang/jq" = "1"
