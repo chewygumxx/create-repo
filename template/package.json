@@ -18,14 +18,20 @@
         "commitizen": "^4.3.2",
         "husky": "^9.1.7",
         "patch-package": "^8.0.1",
-        "prettier": "^3.9.7",
+        "remark-cli": "^12.0.1",
         "remark-frontmatter": "^5.0.0",
+        "remark-gfm": "^4.0.1",
         "remark-preset-lint-consistent": "^6.0.1",
         "remark-preset-lint-recommended": "^7.0.1",
         "typescript": "^7.0.2"
     },
     "scripts": {
+        "check": "npm run typecheck && npm run format:check && npm run lint && npm run lint:md",
         "commit": "cz",
+        "format": "biome format --write .",
+        "format:check": "biome format .",
+        "lint": "biome lint .",
+        "lint:md": "remark . --frail --quiet",
         "postinstall": "patch-package >/dev/null",
         "prepare": "test -d node_modules/husky && husky || true",
         "typecheck": "tsc"
@@ -41,18 +47,9 @@
         },
         "plugins": [
             "remark-frontmatter",
+            "remark-gfm",
             "remark-preset-lint-recommended",
             "remark-preset-lint-consistent"
-        ]
-    },
-    "prettier": {
-        "overrides": [
-            {
-                "files": "*.jsonc",
-                "options": {
-                    "trailingComma": "none"
-                }
-            }
         ]
     }
 }
