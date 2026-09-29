@@ -69,8 +69,7 @@ const types: { enum: Enumerable[] } = {
         {
             name: "build",
             fullName: "Build",
-            description:
-                "Compilation, tools and dependency (eg. chezmoi script, template, external, execution)",
+            description: "Compilation, toolchain and dependencies",
         },
         {
             name: "test",

@@ -5,7 +5,7 @@ __cgxx: |
 
   #
   #
-  # ~chewygumxx/nvim-config.git
+  # ~chewygumxx/repo-tmpl.git
   # ::: :/.claude/rules/repo-metadata.md
   #
   #
