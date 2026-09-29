@@ -215,6 +215,29 @@ const slug = `${owner}/${name}`;
 
 process.chdir(fileURLToPath(new URL("..", import.meta.url)));
 
+// File headers name the repository as `~owner/name.git`. CI's header sync
+// would correct them, but its token may not push changes to workflow files,
+// so they are rewritten here. Read before `slug` is changed below.
+const template = parse(readFileSync(".repo-metadata.jsonc", "utf8"))?.slug;
+if (typeof template !== "string") {
+    fail(`"slug" in .repo-metadata.jsonc not found`);
+}
+const files = execFileSync(
+    "git",
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+    { encoding: "utf8" },
+)
+    .split("\0")
+    .filter(Boolean);
+let headers = 0;
+for (const file of files) {
+    const text = readFileSync(file, "utf8");
+    if (!text.includes(`~${template}.git`)) continue;
+    writeFileSync(file, text.replaceAll(`~${template}.git`, `~${slug}.git`));
+    headers += 1;
+}
+if (headers === 0) fail(`no file header naming ~${template}.git found`);
+
 editJsonc(".repo-metadata.jsonc", [
     ["name", name],
     ["owner", owner],

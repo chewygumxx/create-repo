@@ -78,10 +78,12 @@ fail() {
     status=1
 }
 
-if git grep -n -e repo-tmpl -e is_template -e 'Using this template' |
-    grep -v '~chewygumxx/repo-tmpl.git'; then
+# File headers included: CI's header sync cannot rewrite workflow files.
+if git grep -n -e repo-tmpl -e is_template -e 'Using this template'; then
     fail "template identity remains"
 fi
+grep -q '~example/derived-repo.git' .github/workflows/ci.yaml ||
+    fail "ci.yaml header"
 for path in scripts .github/workflows/template.yaml; do
     [[ ! -e $path ]] || fail "$path was not deleted"
 done
