@@ -1,0 +1,57 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.github/workflows/commitlint.yaml
+#
+#
+
+name: Lint Commit Messages
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+    workflow_dispatch: {}
+
+permissions:
+    contents: read
+    pull-requests: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    commitlint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node and NPM
+              uses: jdx/mise-action@v4
+
+            - name: Cache NPM
+              uses: actions/cache@v6
+              with:
+                  path: ~/.npm
+                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+                  restore-keys: npm-${{ runner.os }}-
+
+            - name: NPM Clean Install
+              run: npm ci
+
+            - name: Lint Pull Request Commits
+              if: github.event_name == 'pull_request'
+              run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+            - name: Lint Pushed Commit
+              if: github.event_name != 'pull_request'
+              run: npx commitlint --last --verbose

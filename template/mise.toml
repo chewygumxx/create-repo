@@ -1,0 +1,45 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/mise.toml
+#
+#
+
+#
+# https://mise.jdx.dev/configuration.html
+#
+# The development toolchain for this repository, in one place.
+#
+# Two separate problems this solves. The gates (`luafmt`, `selene`, `tombi`,
+# `lua-language-server`, Neovim itself) were each pinned twice: once in
+# `.github/workflows/lint-config.yaml`'s `env:` and once in whatever the
+# contributor happened to have on `PATH`, with `.husky/pre-commit` silently
+# skipping any tool it could not find. A hook that no-ops on a missing tool
+# is not a gate, so the versions below are the ones CI asserts against and
+# the ones a local checkout gets.
+#
+# The editor toolchain (LSPs, linters, formatters, debug adapters) is here
+# for a second reason: `lua/plugin.lua` condemns the whole mason trio under
+# Termux, which has no toolchain for it. Everything mason would install is
+# therefore listed here too, so the one platform that cannot use mason has
+# a supported way to get the same binaries.
+#
+# Backends are named explicitly rather than relying on the registry alias,
+# so the resolution is visible here and cannot change underneath the pin.
+#
+
+min_version = "2026.9.0"
+
+[tools]
+#
+# Runtimes
+#
+# `npm` is pinned separately from the Node it ships with: `npm patch` is
+# needed for `patchedDependencies` in `package.json`, and the npm bundled
+# with Node 24 predates it.
+#
+node = "24"
+"npm:npm" = "12"

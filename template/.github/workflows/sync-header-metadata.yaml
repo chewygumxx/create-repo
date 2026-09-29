@@ -1,0 +1,47 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=5:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.github/workflows/sync-header-metadata.yaml
+#
+#
+
+name: Sync Header Metadata
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+    workflow_dispatch: {}
+
+jobs:
+    update:
+        name: Update
+        runs-on: ubuntu-latest
+
+        # contents: write has no effect on a pull_request from a fork; the
+        # commit step below will fail to push there.
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.head_ref || github.ref_name }}
+                  persist-credentials: true
+
+            - name: Update tracked files
+              uses: chewygumxx/sync-header-metadata@v2
+              with:
+                  mode: update
+                  verbose: "false"
+                  annotation: "false"
+
+            - name: Commit changes
+              uses: stefanzweifel/git-auto-commit-action@v7
+              with:
+                  commit_message: "chore: Sync header metadata"

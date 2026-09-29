@@ -1,0 +1,58 @@
+{
+    "name": "repo-tmpl",
+    "description": "Repository Template",
+    "private": true,
+    "keywords": [
+        "repo",
+        "template",
+        "repository"
+    ],
+    "license": "GPL-3.0-only",
+    "homepage": "https://github.com/chewygumxx/repo-tmpl",
+    "repository": "github:chewygumxx/repo-tmpl",
+    "devDependencies": {
+        "@biomejs/biome": "2.5.14",
+        "@commitlint/cli": "^21.2.2",
+        "@commitlint/config-conventional": "^21.2.2",
+        "@commitlint/cz-commitlint": "^21.2.3",
+        "commitizen": "^4.3.2",
+        "husky": "^9.1.7",
+        "patch-package": "^8.0.1",
+        "prettier": "^3.9.7",
+        "remark-frontmatter": "^5.0.0",
+        "remark-preset-lint-consistent": "^6.0.1",
+        "remark-preset-lint-recommended": "^7.0.1",
+        "typescript": "^7.0.2"
+    },
+    "scripts": {
+        "commit": "cz",
+        "postinstall": "patch-package >/dev/null",
+        "prepare": "test -d node_modules/husky && husky || true",
+        "typecheck": "tsc"
+    },
+    "config": {
+        "commitizen": {
+            "path": "@commitlint/cz-commitlint"
+        }
+    },
+    "remarkConfig": {
+        "settings": {
+            "bullet": "-"
+        },
+        "plugins": [
+            "remark-frontmatter",
+            "remark-preset-lint-recommended",
+            "remark-preset-lint-consistent"
+        ]
+    },
+    "prettier": {
+        "overrides": [
+            {
+                "files": "*.jsonc",
+                "options": {
+                    "trailingComma": "none"
+                }
+            }
+        ]
+    }
+}
