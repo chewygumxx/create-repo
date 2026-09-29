@@ -6,7 +6,10 @@
         "moduleResolution": "nodenext",
         "strict": true,
         "noEmit": true,
+        "allowJs": true,
+        "checkJs": true,
+        "types": ["node"],
         "skipLibCheck": true
     },
-    "include": [".commitlintrc.mts"]
+    "include": [".commitlintrc.mts", "scripts/**/*.mjs"]
 }
