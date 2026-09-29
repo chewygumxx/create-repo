@@ -39,7 +39,7 @@ and repository metadata sync, Dependabot) and Claude Code settings and hooks.
    write", install it on the new repository, and store its client ID as the
    `METADATA_APP_CLIENT_ID` variable and its private key as the
    `METADATA_APP_PRIVATE_KEY` secret. See the comment in
-   `.github/workflows/sync-repo-metadata.yaml`.
+   [`sync-repo-metadata.yaml`](https://github.com/chewygumxx/.github/blob/main/.github/workflows/sync-repo-metadata.yaml).
 4. Add the new repository's commit scopes to `scopes.enum` in
    `.commitlintrc.mts`.
 5. Install the toolchain and dependencies. This also wires the husky git hooks.
