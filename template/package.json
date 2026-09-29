@@ -15,6 +15,7 @@
         "@chewygumxx/biome-config": "^1.0.0",
         "@chewygumxx/commitlint-config": "^1.0.0",
         "@chewygumxx/remark-preset": "^1.0.0",
+        "@chewygumxx/yamllint-config": "^1.0.0",
         "@commitlint/cli": "^21.2.2",
         "@commitlint/cz-commitlint": "^21.2.3",
         "commitizen": "^4.3.2",
@@ -32,7 +33,7 @@
         "format:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --write --log-level warn",
         "lint": "biome lint .",
         "lint:md": "git ls-files -z '*.md' | xargs -0 remark --frail --quiet --no-stdout",
-        "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check",
+        "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | YAMLLINT_CONFIG_FILE=node_modules/@chewygumxx/yamllint-config/config.yaml xargs -0 -r yamllint --strict",
         "postinstall": "patch-package >/dev/null",
         "prepare": "test -d node_modules/husky && husky || true",
         "typecheck": "tsc"
