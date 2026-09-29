@@ -68,7 +68,16 @@ async function main(argv) {
     const env = { ...process.env };
     loadEnvFile(env, options.envFile);
     const children = childEnv(env);
-    const tools = { run, exists: existsSync };
+    // Preflight's children get the filtered environment too, env-file
+    // included, so gh checks as the same identity that later creates.
+    const tools = {
+        run: (
+            /** @type {string} */ file,
+            /** @type {string[]} */ args,
+            /** @type {import("../lib/run.js").RunOptions} */ options = {},
+        ) => run(file, args, { env: children, ...options }),
+        exists: existsSync,
+    };
 
     const { login, clientId } = await checkTools(options, tools);
     const key = options.metadata
@@ -134,6 +143,13 @@ async function main(argv) {
         step("Installing the toolchain and dependencies");
         await run("mise", ["trust", "--quiet"], local);
         await run("mise", ["install"], local);
+        // The template's pinned tools, yamllint and node included, for every
+        // later step and its git hooks; the caller's PATH may lack them.
+        const pinned = await run("mise", ["env", "--json"], {
+            ...local,
+            capture: true,
+        });
+        local.env = childEnv({ ...children, ...JSON.parse(pinned.stdout) });
         await run("npm", ["ci", "--no-fund", "--no-audit"], local);
 
         step("Initialising");
