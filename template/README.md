@@ -67,7 +67,8 @@ sync pushed.
 
 - `npm run commit` composes a commit interactively.
 - `npm run check` runs the typecheck, format check, lint, Markdown lint and YAML
-  format check that CI runs.
+  checks (prettier, then yamllint with `@chewygumxx/yamllint-config`) that CI
+  runs.
 - `npm run format` applies Biome formatting, and prettier's to YAML, which Biome
   does not read.
 
