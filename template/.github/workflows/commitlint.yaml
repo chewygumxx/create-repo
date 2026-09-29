@@ -52,6 +52,12 @@ jobs:
               if: github.event_name == 'pull_request'
               run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-            - name: Lint Pushed Commit
-              if: github.event_name != 'pull_request'
+            # `before` is all zeros when the push creates the branch, and
+            # absent on workflow_dispatch; lint only the tip in those cases.
+            - name: Lint Pushed Commits
+              if: github.event_name == 'push' && !startsWith(github.event.before, '0000000')
+              run: npx commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --verbose
+
+            - name: Lint Latest Commit
+              if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.event.before, '0000000'))
               run: npx commitlint --last --verbose
