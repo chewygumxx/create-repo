@@ -191,7 +191,8 @@ if (!owner || !name || !description?.trim()) {
 }
 if (!NAME.test(name)) fail(`invalid repository name "${name}"`);
 if (!OWNER.test(owner)) fail(`invalid owner "${owner}"`);
-const topics = list(values.topics);
+const topics = [...new Set(list(values.topics))];
+if (topics.length > 20) fail(`${topics.length} topics; GitHub allows 20`);
 for (const topic of topics) {
     if (!TOPIC.test(topic)) fail(`invalid topic "${topic}"`);
 }
