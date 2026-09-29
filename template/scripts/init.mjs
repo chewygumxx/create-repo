@@ -164,6 +164,20 @@ function wrap(text, width = 80) {
 }
 
 /**
+ * Turns bare URLs into links remark accepts, leaving trailing punctuation
+ * outside: `<https://…>`, and `[www.…](https://www.…)` since an autolink
+ * needs a scheme.
+ * @param {string} text
+ */
+function linkUrls(text) {
+    return text.replace(
+        /\b(https?:\/\/|www\.)[^\s<>]*[^\s<>.,;:!?'")\]]/g,
+        (url, start) =>
+            start === "www." ? `[${url}](https://${url})` : `<${url}>`,
+    );
+}
+
+/**
  * A YAML frontmatter entry: a quoted scalar when it fits in 80 columns,
  * otherwise a `>-` folded scalar wrapped under a two-space indent.
  * @param {string} key
@@ -256,7 +270,7 @@ editText("README.md", (text) => {
     return replace(
         text,
         /^# repo-tmpl\n\n[\s\S]*?\n## Using this template\n[\s\S]*?\n(?=## )/m,
-        () => `# ${name}\n\n${wrap(description)}\n\n`,
+        () => `# ${name}\n\n${wrap(linkUrls(description))}\n\n`,
         'the heading, intro and "Using this template" in README.md',
     );
 });

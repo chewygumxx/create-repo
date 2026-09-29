@@ -15,8 +15,9 @@
 # KEEP is set, and kept for inspection otherwise. Template-only: init deletes
 # this script.
 #
-# The description has quotes, a colon and more than 80 characters, so the
-# README frontmatter's folded scalar and the body wrapping are exercised.
+# The description has quotes, a colon, a bare URL and more than 80
+# characters, so the README frontmatter's folded scalar, the body's links and
+# its wrapping are exercised.
 
 set -euo pipefail
 
@@ -58,7 +59,7 @@ npm ci --silent
 node scripts/init.mjs \
     --owner example \
     --name derived-repo \
-    --description 'Tests "init": a description with quotes, a colon and enough words to wrap past eighty columns.' \
+    --description 'Tests "init": a description with quotes, a colon, a link to https://example.com/docs, and enough words to wrap past eighty columns.' \
     --topics alpha,beta \
     --scopes 'api,cli:Command Line'
 
