@@ -21,9 +21,9 @@ tags:
 
 # `.repo-metadata.jsonc` is the GitHub settings page
 
-This file holds the GitHub repository's own description, topics and licence. The
-`sync-repo-metadata` Action applies it whenever it changes, so those settings
-are edited here and not in the web interface.
+This file holds the GitHub repository's own description, topics and licence. CI
+applies it on every push to `main`, so those settings are edited here and not in
+the web interface.
 
 Editing them in the web interface is the failure worth naming: nothing rejects
 it, and the next push silently reverts it.
