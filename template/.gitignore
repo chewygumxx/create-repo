@@ -10,5 +10,8 @@
 
 .env*
 *.local.*
+
 node_modules/
+/.herdr/
+/.claude/worktrees/
 
