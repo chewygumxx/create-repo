@@ -66,9 +66,10 @@ sync pushed.
 ## Development
 
 - `npm run commit` composes a commit interactively.
-- `npm run check` runs the typecheck, format check, lint and Markdown lint that
-  CI runs.
-- `npm run format` applies Biome formatting.
+- `npm run check` runs the typecheck, format check, lint, Markdown lint and YAML
+  format check that CI runs.
+- `npm run format` applies Biome formatting, and prettier's to YAML, which Biome
+  does not read.
 
 The pre-commit hook runs the same checks on staged files, and rejects em dashes.
 The commit-msg hook runs commitlint.

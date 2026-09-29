@@ -15,10 +15,10 @@
 #
 # Everything the repository runs that is not an npm package lives here, so
 # a checkout never depends on whatever the contributor happens to have on
-# `PATH`. npm packages (commitlint, Biome, remark, husky, TypeScript) are
-# pinned in `package.json` instead; together the two files are the whole
-# dependency surface. CI installs from this file via `jdx/mise-action`, so
-# the versions below are the ones CI runs.
+# `PATH`. npm packages (commitlint, Biome, remark, prettier, husky,
+# TypeScript) are pinned in `package.json` instead; together the two files
+# are the whole dependency surface. CI installs from this file via
+# `jdx/mise-action`, so the versions below are the ones CI runs.
 #
 # Backends are named explicitly rather than relying on the registry alias,
 # so the resolution is visible here and cannot change underneath the pin.
