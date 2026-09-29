@@ -15,7 +15,7 @@ npx --no -- tsc
 npx --no -- biome check --staged --no-errors-on-unmatched
 
 git diff -z --cached --name-only --diff-filter=ACMR -- '*.md' |
-    xargs -0 -r npx --no -- remark --frail --quiet
+    xargs -0 -r npx --no -- remark --frail --quiet --no-stdout
 
 # U+2014 as UTF-8 bytes, so this file does not trip its own check.
 emdash=$(printf '\342\200\224')
