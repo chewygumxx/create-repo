@@ -1,6 +1,6 @@
 {
     "name": "@chewygumxx/create-repo",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Creates a repository from chewygumxx/repo-tmpl: npm create @chewygumxx/repo",
     "keywords": [
         "create",
