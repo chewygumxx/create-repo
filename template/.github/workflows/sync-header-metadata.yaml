@@ -19,29 +19,6 @@ on:
 
 jobs:
     update:
-        name: Update
-        runs-on: ubuntu-latest
-
-        # contents: write has no effect on a pull_request from a fork; the
-        # commit step below will fail to push there.
         permissions:
             contents: write
-
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v7
-              with:
-                  ref: ${{ github.head_ref || github.ref_name }}
-                  persist-credentials: true
-
-            - name: Update tracked files
-              uses: chewygumxx/sync-header-metadata@v2
-              with:
-                  mode: update
-                  verbose: "false"
-                  annotation: "false"
-
-            - name: Commit changes
-              uses: stefanzweifel/git-auto-commit-action@v7
-              with:
-                  commit_message: "chore: Sync header metadata"
+        uses: chewygumxx/.github/.github/workflows/sync-header-metadata.yaml@v1
