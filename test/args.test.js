@@ -149,3 +149,13 @@ test("scopes round-trip through the form init reads", () => {
 test("topics trim and drop empty items", () => {
     assert.deepEqual(parseTopics(" a ,, b "), ["a", "b"]);
 });
+
+test("topics drop duplicates, which GitHub would refuse", () => {
+    assert.deepEqual(parseTopics("a,b,a"), ["a", "b"]);
+});
+
+test("more than 20 topics is a mistake, not a later sync failure", () => {
+    const twenty = Array.from({ length: 20 }, (_, i) => `t${i}`);
+    assert.equal(parseTopics(twenty.join()).length, 20);
+    assert.throws(() => parseTopics([...twenty, "t20"].join()), UsageError);
+});
