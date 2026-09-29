@@ -16,6 +16,7 @@
     "default_branch": "main",
     "description": "Repository Template",
     "category": "repository",
+    "is_template": true,
     "topics": ["repo", "template", "repository"],
     "license": {
         "filepath": "./LICENSE",
