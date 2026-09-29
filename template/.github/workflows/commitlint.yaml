@@ -27,37 +27,4 @@ concurrency:
 
 jobs:
     commitlint:
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v7
-              with:
-                  fetch-depth: 0
-
-            - name: Setup Node and NPM
-              uses: jdx/mise-action@v4
-
-            - name: Cache NPM
-              uses: actions/cache@v6
-              with:
-                  path: ~/.npm
-                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-                  restore-keys: npm-${{ runner.os }}-
-
-            - name: NPM Clean Install
-              run: npm ci
-
-            - name: Lint Pull Request Commits
-              if: github.event_name == 'pull_request'
-              run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-
-            # `before` is all zeros when the push creates the branch, and
-            # absent on workflow_dispatch; lint only the tip in those cases.
-            - name: Lint Pushed Commits
-              if: github.event_name == 'push' && !startsWith(github.event.before, '0000000')
-              run: npx commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --verbose
-
-            - name: Lint Latest Commit
-              if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.event.before, '0000000'))
-              run: npx commitlint --last --verbose
+        uses: chewygumxx/.github/.github/workflows/commitlint.yaml@v1
