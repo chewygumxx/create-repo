@@ -1,0 +1,57 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/shared-config.git
+# ::: :/.github/workflows/create-repo.yaml
+#
+#
+
+# Runs `create-repo --dry-run` against the published template: copy, install,
+# init, check and commit for real, with nothing created on GitHub. Catches
+# the creator drifting from repo-tmpl, as repo-tmpl's template.yaml catches
+# the template drifting from init. gh is not logged in here, so the dry run
+# reads nothing from GitHub.
+
+name: Create Repo
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+    workflow_dispatch: {}
+
+permissions:
+    contents: read
+
+jobs:
+    dry-run:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
+
+            - name: Setup mise
+              uses: jdx/mise-action@v4
+
+            - name: Dry Run
+              env:
+                  GH_TOKEN: ""
+              run: |
+                  git config --global user.name "create-repo dry run"
+                  git config --global user.email "create-repo@users.noreply.github.com"
+                  node packages/create-repo/bin/create-repo.js dry-run \
+                      --description 'Dry run of "create-repo": the published template, initialised and committed.' \
+                      --topics ci \
+                      --scopes api \
+                      --owner example \
+                      --dir "$RUNNER_TEMP/dry-run" \
+                      --no-metadata \
+                      --dry-run \
+                      --yes
+                  git -C "$RUNNER_TEMP/dry-run" log --format=%B -1
