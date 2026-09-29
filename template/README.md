@@ -81,8 +81,9 @@ To do the same by hand:
 5. Push: `git push -u origin main`. The first CI run applies
    `.repo-metadata.jsonc` to the repository settings.
 
-File headers (`~owner/repo.git` and the `::: :/path` line) are kept current by
-the header sync in CI and do not need editing by hand.
+The script also rewrites the `~owner/repo.git` line of every file header. The
+header sync in CI keeps headers current after that, but its token may not push
+changes to workflow files, so a workflow's header must already be right.
 
 ## CI
 
