@@ -1,0 +1,32 @@
+{
+    "name": "@chewygumxx/create-repo",
+    "version": "1.0.0",
+    "description": "Creates a repository from chewygumxx/repo-tmpl: npm create @chewygumxx/repo",
+    "keywords": [
+        "create",
+        "template",
+        "repository"
+    ],
+    "license": "GPL-3.0-only",
+    "homepage": "https://github.com/chewygumxx/shared-config/tree/main/packages/create-repo#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/chewygumxx/shared-config.git",
+        "directory": "packages/create-repo"
+    },
+    "type": "module",
+    "bin": {
+        "create-repo": "bin/create-repo.js"
+    },
+    "files": [
+        "bin",
+        "lib"
+    ],
+    "engines": {
+        "node": ">=22"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}
