@@ -118,6 +118,10 @@ const Configuration: UserConfig = {
     extends: ["@commitlint/config-conventional"],
     parserPreset: "conventional-changelog-conventionalcommits",
 
+    // Dependabot headers name the package and both versions, and its
+    // bodies carry release-note URLs; neither fits the limits below.
+    ignores: [(message) => /^(build|ci): bump /i.test(message)],
+
     rules: {
         "header-max-length": [lvl.err, "always", 50],
         "type-enum": [lvl.err, "always", types.enum.map((type) => type.name)],
