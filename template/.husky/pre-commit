@@ -17,8 +17,14 @@ npx --no -- biome check --staged --no-errors-on-unmatched
 git diff -z --cached --name-only --diff-filter=ACMR -- '*.md' |
     xargs -0 -r npx --no -- remark --frail --quiet --no-stdout
 
-git diff -z --cached --name-only --diff-filter=ACMR -- '*.yaml' '*.yml' |
-    xargs -0 -r npx --no -- prettier --check
+yaml=$(git diff --cached --name-only --diff-filter=ACMR -- '*.yaml' '*.yml')
+if [ -n "$yaml" ]; then
+    git diff -z --cached --name-only --diff-filter=ACMR -- '*.yaml' '*.yml' |
+        xargs -0 npx --no -- prettier --check
+    git diff -z --cached --name-only --diff-filter=ACMR -- '*.yaml' '*.yml' |
+        YAMLLINT_CONFIG_FILE=node_modules/@chewygumxx/yamllint-config/config.yaml \
+            xargs -0 yamllint --strict
+fi
 
 # U+2014 as UTF-8 bytes, so this file does not trip its own check.
 emdash=$(printf '\342\200\224')
