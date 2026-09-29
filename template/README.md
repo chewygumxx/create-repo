@@ -29,10 +29,9 @@ and repository metadata sync, Dependabot) and Claude Code settings and hooks.
 ## Using this template
 
 1. Edit `.repo-metadata.jsonc` before anything else: `name`, `slug`,
-   `description`, `topics`, and remove `is_template`. The `sync-repo-metadata`
-   workflow applies this file to the GitHub repository settings on every push to
-   `main` that touches it, so any stale value here overwrites the new
-   repository's settings.
+   `description`, `topics`, and remove `is_template`. The CI workflow applies
+   this file to the GitHub repository settings on every push to `main`, so any
+   stale value here overwrites the new repository's settings.
 2. Update the identity in `package.json` (`name`, `description`, `keywords`,
    `homepage`, `repository`) and in this README's frontmatter and body.
 3. Register a GitHub App with repository permission "Administration: Read and
@@ -40,6 +39,9 @@ and repository metadata sync, Dependabot) and Claude Code settings and hooks.
    `METADATA_APP_CLIENT_ID` variable and its private key as the
    `METADATA_APP_PRIVATE_KEY` secret. See the comment in
    [`sync-repo-metadata.yaml`](https://github.com/chewygumxx/.github/blob/main/.github/workflows/sync-repo-metadata.yaml).
+   Until both are set, the metadata sync fails on every push to `main`; once
+   they are, re-run the CI workflow by dispatch. A repository without the App
+   passes `metadata-sync: false` to the standard workflow instead.
 4. Add the new repository's commit scopes to `scopes.enum` in
    `.commitlintrc.mts`.
 5. Install the toolchain and dependencies. This also wires the husky git hooks.
@@ -50,7 +52,16 @@ and repository metadata sync, Dependabot) and Claude Code settings and hooks.
    ```
 
 File headers (`~owner/repo.git` and the `::: :/path` line) are kept current by
-the `sync-header-metadata` workflow and do not need editing by hand.
+the header sync in CI and do not need editing by hand.
+
+## CI
+
+`.github/workflows/ci.yaml` calls the shared
+[standard workflow](https://github.com/chewygumxx/.github#standard-workflow):
+commitlint, the header sync, generic lint and format checks for workflows,
+shell scripts, TOML and `.editorconfig`, and the metadata sync. This
+repository's own `npm run check` follows, against the commit the header sync
+pushed.
 
 ## Development
 
