@@ -1,4 +1,23 @@
-# create-repo design
+---
+__cgxx: |
+  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
+  # SPDX-License-Identifier: GPL-3.0-only
+
+  #
+  #
+  # ~chewygumxx/shared-config.git
+  # ::: :/docs/specs/2026-09-29-create-repo-design.md
+  #
+  #
+
+ctime: 2026-09-29
+title: >-
+  Preliminary Specification: create-repo
+description: ""
+tags: []
+---
+
+# Preliminary Specification: create-repo
 
 `npm create @chewygumxx/repo` creates a new GitHub repository from
 [`chewygumxx/repo-tmpl`](https://github.com/chewygumxx/repo-tmpl) in one
@@ -22,7 +41,7 @@ The work spans three repositories:
   commit itself, rather than using `gh repo create --template`. GitHub's
   generated commit would still describe `chewygumxx/repo-tmpl`, fail
   commitlint, and race the creator's push. The cost is GitHub's "generated
-  from" label; the commit message names the template instead.
+  from" label; the first commit's body names the template instead.
 - **Metadata App.** One GitHub App is installed on all repositories. Each new
   repository needs only the `METADATA_APP_CLIENT_ID` variable and the
   `METADATA_APP_PRIVATE_KEY` secret.
@@ -40,26 +59,33 @@ npm create @chewygumxx/repo -- my-thing --description "…" --topics a,b \
     --scopes api,"cli:Command Line" --yes
 ```
 
-| Argument or flag         | Default                            |
-| ------------------------ | ---------------------------------- |
-| `<name>`                 | Prompted                           |
-| `--description`          | Prompted                           |
-| `--topics`               | Prompted; may be empty             |
-| `--scopes`               | Prompted; may be empty             |
-| `--owner`                | The account `gh` is logged in as   |
-| `--private`              | Public                             |
-| `--dir`                  | `./<name>`                         |
-| `--template`             | `chewygumxx/repo-tmpl`             |
-| `--env-file`             | See below                          |
-| `--metadata-key-file`    | None; `-` reads standard input     |
-| `--metadata-key-command` | `CREATE_REPO_METADATA_KEY_COMMAND` |
-| `--no-metadata`          | Off                                |
-| `--dry-run`              | Off                                |
-| `--yes`                  | Off                                |
+| Argument or flag         | Default                                |
+| ------------------------ | -------------------------------------- |
+| `<name>`                 | Prompted                               |
+| `--description`          | Prompted                               |
+| `--topics`               | Prompted; empty when not in a terminal |
+| `--scopes`               | Prompted; empty when not in a terminal |
+| `--owner`                | The account `gh` is logged in as       |
+| `--private`              | Public                                 |
+| `--dir`                  | `./<name>`                             |
+| `--template`             | `chewygumxx/repo-tmpl`                 |
+| `--env-file`             | See below                              |
+| `--metadata-key-file`    | None; `-` reads standard input         |
+| `--metadata-key-command` | `CREATE_REPO_METADATA_KEY_COMMAND`     |
+| `--no-metadata`          | Off                                    |
+| `--dry-run`              | Off                                    |
+| `--yes`                  | Off                                    |
+| `--help`                 | Off                                    |
 
 A scope is `name` or `name:Full Name`. Missing values are prompted for only
-when standard input is a terminal; otherwise a missing value is an error.
-`--yes` skips the confirmation, not missing values.
+when standard input is a terminal; otherwise a missing name or description is
+an error, and missing topics or scopes are empty. `--yes` skips the
+confirmation, not missing values, and is required when standard input is not
+a terminal.
+
+Names and topics are validated before anything is created: a repository name
+is letters, digits, `.`, `-` and `_`; a topic is lowercase letters, digits and
+`-`, at most 50 characters; a scope is lowercase letters, digits and `-`.
 
 ### Metadata private key
 
@@ -74,8 +100,8 @@ already set. The key is then taken from the first of:
    `CREATE_REPO_METADATA_KEY_COMMAND`, run through the shell
 
 With none of these and without `--no-metadata`, preflight fails. Reading the
-key from standard input requires every value as a flag, since prompts would
-also need standard input.
+key from standard input requires the name, the description and `--yes` as
+flags, since prompts would also need standard input.
 
 The key must contain a `-----BEGIN … PRIVATE KEY-----` block. It is held in
 memory, written only to the standard input of `gh secret set`, and never
@@ -99,8 +125,10 @@ readable, unlike secrets.
    its `.git`, and `git init -b main`.
 4. **Install and initialise.** `mise trust`, `mise install`, `npm ci`, then
    `node scripts/init.mjs` with the answers.
-5. **Commit.** `npm run check`, then `git add -A` and commit
-   `chore: Initialise from <template>`. The git hooks run.
+5. **Commit.** `git add -A`, then `npm run check`, then commit
+   `chore: Initialise from template` with `Generated from <template URL>.` as
+   the body. The git hooks run. Staging comes first because the Markdown and
+   YAML checks read `git ls-files`.
 6. **Create.** `gh repo create <owner>/<name> --source <dir> --remote origin`
    with `--public` or `--private` and the description, without pushing. Then
    `gh variable set` the client ID and `gh secret set` the key.
@@ -156,6 +184,7 @@ node scripts/init.mjs --owner chewygumxx --name my-thing \
   comments and layout are kept.
 - **`package.json`**: set `name`, `description`, `keywords` (the topics),
   `homepage` and `repository`.
+- **`package-lock.json`**: set the root `name` and `packages[""].name`.
 - **`README.md`**: in the frontmatter, set `title`, `description`, `tags` and
   `ctime` (today), leaving `__cgxx` alone. In the body, set the `#` heading to
   the name, replace the intro paragraph with the description, and delete the
@@ -173,6 +202,8 @@ template change that init does not know about is an error, not a silent skip.
 
 `tsconfig.json` includes `scripts/**/*.mjs` with `checkJs`. A pattern that
 matches nothing is not an error, so derived repositories need no change.
+`@types/node` becomes an explicit development dependency in repo-tmpl and
+shared-config, rather than arriving through commitlint.
 
 ### Test: `.github/workflows/template.yaml`
 
@@ -180,7 +211,8 @@ Runs on push and pull request in repo-tmpl only, since init deletes it:
 
 1. Copy the checkout to a temporary directory, `git init` it, and `npm ci`.
 2. Run init with sample values.
-3. Assert `npm run check` passes and a commit passes the git hooks.
+3. `git add -A`, then assert `npm run check` passes and a commit passes the
+   git hooks.
 4. Assert that `repo-tmpl`, `is_template` and "Using this template" appear
    nowhere outside file headers, and the sample values appear where expected.
 
