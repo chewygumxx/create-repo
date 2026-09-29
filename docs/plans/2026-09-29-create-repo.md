@@ -19,24 +19,39 @@ tags: []
 
 # Implementation Plan: create-repo
 
+> [!IMPORTANT]
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `npm create @chewygumxx/repo` creates a GitHub repository from
+### Objective
+
+`npm create @chewygumxx/repo` creates a GitHub repository from
 `chewygumxx/repo-tmpl` whose first CI run passes, metadata sync included.
 
-**Architecture:** A dependency-free Node CLI in shared-config
+### Architecture
+
+A dependency-free Node CLI in shared-config
 (`packages/create-repo`) owns preflight, prompts, the private key, the GitHub
 calls and their order. The template owns the edits to its own files in
 `scripts/init.mjs`, tested by a template-only workflow. `.github`'s metadata
 sync refuses a metadata file whose slug names another repository.
 
-**Tech Stack:** Node ≥ 22 standard library (`node:util` `parseArgs` and
-`parseEnv`, `node:readline/promises`, `node:child_process`, `node:test`),
-JSDoc checked by `tsc`, Biome, remark, prettier, yamllint, GitHub Actions,
-`gh`, `git`, `mise`, `npm`.
+### Tech Stack
+
+- Node ≥ 22 standard library (`node:util` `parseArgs` and `parseEnv`,
+  `node:readline/promises`, `node:child_process`, `node:test`)
+- JSDoc checked by `tsc`
+- `@biomejs/biome`
+- `remark`
+- `prettier`
+- `yamllint`
+- GitHub Actions
+- `gh`
+- `git`
+- `mise`
+- `npm`
 
 **Spec:** [`docs/specs/2026-09-29-create-repo-design.md`](../specs/2026-09-29-create-repo-design.md)
 
@@ -50,17 +65,20 @@ JSDoc checked by `tsc`, Biome, remark, prettier, yamllint, GitHub Actions,
 - YAML passes prettier and yamllint with the house config.
 - Commit headers follow commitlint: `type(scope): Sentence case subject`, at
   most 50 characters, one granular commit per step that says "Commit".
-- repo-tmpl's only scope is `claude`, so its commits here have no scope.
-  shared-config's commits use the `create-repo` scope once Task 3 adds it.
+- The only scope of `repo-tmpl` is `claude`, so its commits here have no scope.
+  Commits to `shared-config` use the `create-repo` scope once Task 3 adds it.
 - The private key is never printed, logged, written to disk, or passed to a
   child other than the key command and `gh secret set` (standard input).
 - The creator never deletes anything on GitHub.
-- Repository names match `^[A-Za-z0-9._-]{1,100}$` and are not `.` or `..`;
-  topics match `^[a-z0-9][a-z0-9-]{0,49}$`; scope names match
-  `^[a-z0-9][a-z0-9-]*$`.
-- First commit: header `chore: Initialise from template`, body
-  `Generated from https://github.com/<template>.`
+- Repository names match: `^[\w](?:[\w]|-(?=[\w])|.(?=[\w])){0,99}$`
+- Topics match: `^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,49}$`
+- Scope names match: `^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,14}$`
+- First commit:
+  - Header: `chore: Initialise from template`
+  - Body: `Generated from https://github.com/<template>.`
 - Push, tag and publish only where a step says so; the user publishes 1.0.0.
+
+<!-- NOTE(@claude): I amended the above JavaScript RegEx -->
 
 ## Review Focus
 
@@ -77,9 +95,12 @@ JSDoc checked by `tsc`, Biome, remark, prettier, yamllint, GitHub Actions,
    (Task 2 workflow, Task 7 dry run).
 4. **Descriptions with quotes, colons or more than 80 characters.** They
    must stay valid YAML in the README frontmatter and pass remark in the body.
-   The template test uses such a description (Task 2).
+   Employ `>-` when necessary. The template test uses such a description (Task
+   2).
 5. **No terminal.** In CI or with the key on standard input, the creator must
    fail at once rather than wait on a prompt (Task 3 and Task 5 tests).
+
+<!-- NOTE(@claude): I added the chomping folded block scalar -->
 
 ---
 
@@ -89,7 +110,7 @@ JSDoc checked by `tsc`, Biome, remark, prettier, yamllint, GitHub Actions,
 | ------------- | ----------------------------------------------------------------- | --------------------------------------------------- |
 | `.github`     | `.github/workflows/sync-repo-metadata.yaml`                       | Slug check before the App token is minted           |
 | `.github`     | `README.md`                                                       | Mentions the slug check                             |
-| repo-tmpl     | `scripts/init.mjs`                                                | Rewrites the identity, formats, deletes itself      |
+| repo-tmpl     | `scripts/init.mjs`                                                | Rewrites the identity, formats, self-destructs      |
 | repo-tmpl     | `.github/workflows/template.yaml`                                 | Runs init on a copy and asserts the result          |
 | repo-tmpl     | `tsconfig.json`, `package.json`                                   | Typecheck `scripts/**/*.mjs`; `@types/node`         |
 | repo-tmpl     | `README.md`                                                       | "Using this template" leads with `npm create`       |
@@ -123,6 +144,12 @@ JSDoc checked by `tsc`, Biome, remark, prettier, yamllint, GitHub Actions,
 - [ ] **Step 1: Write the check as a local script and see it fail on a
       mismatch**
 
+<!--
+   - TODO(@claude):
+   - - Under no pretext should JSONC parsing be attempted without a
+   -   dedicated JSONC parser.
+   -->
+
 ```bash
 cd ~/dev/.github
 cat > /tmp/slug-check.mjs <<'EOF'
@@ -153,14 +180,21 @@ In `sync-repo-metadata.yaml`, move the `actions/checkout@v7` step above
 `Mint App Installation Token`, and add this step between them:
 
 ```yaml
-- uses: actions/checkout@v7
+- name: Checkout
+  uses: actions/checkout@v7
   with:
     persist-credentials: false
 
-# A metadata file copied from another repository, or left over
-# from a rename, would otherwise apply that repository's settings
-# here. Whole-line comments are removed so JSON.parse reads JSONC.
-- name: Check Metadata Slug
+  # A metadata file copied from another repository, or left over
+  # from a rename, would otherwise apply that repository's settings
+  # here. Whole-line comments are removed so JSON.parse reads JSONC.
+  #
+  # TODO(@claude):
+  # - This step should be factored-out into a node action.
+  # - Under no pretext should JSONC parsing be attempted without a
+  #   dedicated JSONC parser.
+  #
+- name: Validate Metadata Slug
   env:
     METADATA_PATH: ${{ inputs.metadata-path }}
     REPOSITORY: ${{ github.repository }}
@@ -186,6 +220,12 @@ The existing comment block about the App stays above
 checkout.
 
 - [ ] **Step 3: Lint**
+
+<!-- NOTE(@claude):
+   - `actionlint` erroneously flags `client-id` of sync-repo-metadata.yaml as
+   - invalid and incorrectly suggests `app-id` instead. `client-id` is the
+   - correct key.
+   -->
 
 ```bash
 cd ~/dev/.github
@@ -215,6 +255,8 @@ or `workflow_dispatch`, refusing a file whose `slug` names another
 repository. Each part has a boolean input to switch it off, such as
 `metadata-sync: false` for a repository without the metadata App.
 ```
+
+<!-- NOTE(@claude): `.github` should probably have npm tooling -->
 
 `.github` has no npm tooling, so check it with shared-config's remark,
 piping the file in so shared-config's own settings apply:
@@ -366,12 +408,60 @@ jobs:
 
 - [ ] **Step 2: Run the same steps locally and see them fail**
 
+<!-- NOTE(@claude): Brother, this is spaghetti -->
+
 ```bash
 cd ~/dev/repo-tmpl
 DERIVED=$(mktemp -d)/derived && mkdir "$DERIVED"
 git ls-files -z | xargs -0 cp --parents -t "$DERIVED"
 cd "$DERIVED" && git init -q -b main && mise trust && npm ci --silent
 node scripts/init.mjs --owner example --name derived-repo --description x; echo "rc=$?"
+```
+
+<!-- NOTE(@claude): I tried to untangle the rhizome -->
+
+```bash
+#!/usr/bin/env zsh
+set -euo pipefail
+
+src=${1:-$HOME/dev/repo-tmpl}
+tmp=$(mktemp -d)
+derived=$tmp/derived
+
+cleanup() {
+    local rc=$?
+    if (( rc == 0 )); then
+        rm -rf -- "$tmp"
+    else
+        print -u2 -- "kept for inspection: $derived"
+    fi
+}
+trap cleanup EXIT
+
+mkdir -- "$derived"
+
+# Copy tracked files (working-tree state), keeping relative paths.
+(
+    cd -- "$src"
+    git ls-files -z | xargs -0r cp -P --parents -t "$derived"
+)
+
+cd -- "$derived"
+git init -q -b main
+
+# Trust only this throwaway path, without touching mise's state dir.
+export MISE_TRUSTED_CONFIG_PATHS=$derived
+
+mise exec -- npm ci --silent
+
+init_rc=0
+mise exec -- node scripts/init.mjs \
+    --owner example \
+    --name derived-repo \
+    --description x || init_rc=$?
+
+print "rc=$init_rc"
+exit "$init_rc"
 ```
 
 Expected: `Cannot find module '.../scripts/init.mjs'` and `rc=1`.
@@ -405,6 +495,11 @@ npm install --save-dev @types/node@^24
 Run: `npx --no -- tsc`. Expected: exit 0 (the pattern matches nothing yet).
 
 - [ ] **Step 4: Write `scripts/init.mjs`**
+
+<!-- NOTE(@claude): Ideally this would be four space indented. If this not
+   - configurable and/or would be formatted to two space indentation it's
+   - acceptable as is.
+   -->
 
 ```javascript
 #!/usr/bin/env node
@@ -774,6 +869,7 @@ To do the same by hand:
    [`sync-repo-metadata.yaml`](https://github.com/chewygumxx/.github/blob/main/.github/workflows/sync-repo-metadata.yaml).
    A repository without the App passes `metadata-sync: false` to the standard
    workflow instead.
+
 5. Push: `git push -u origin main`. The first CI run applies
    `.repo-metadata.jsonc` to the repository settings.
 
@@ -781,17 +877,26 @@ File headers (`~owner/repo.git` and the `::: :/path` line) are kept current by
 the header sync in CI and do not need editing by hand.
 ````
 
-Run: `npx --no -- remark README.md --frail --quiet --no-stdout`. Expected:
-exit 0. Then rerun Step 5 to confirm init still removes the rewritten
-section.
+Run: `npx --no -- remark README.md --frail --quiet --no-stdout`.
+Expected: exit 0.
+Then rerun Step 5 to confirm init still removes the rewritten section.
 
 - [ ] **Step 9: Commit and push**
+
+<!-- NOTE(@claude): I small refactor -->
 
 ```bash
 git add README.md
 git commit -m "docs: Lead with npm create in README"
 git push origin main
-gh run watch -R chewygumxx/repo-tmpl "$(gh run list -R chewygumxx/repo-tmpl -w Template -L 1 --json databaseId -q '.[0].databaseId')" --exit-status
+
+GITHUB_RUN_ID="$(gh run list \
+  -R chewygumxx/repo-tmpl \
+  -w Template \
+  -L 1 \
+  --json databaseId \
+  -q '.[0].databaseId')"
+gh run watch -R chewygumxx/repo-tmpl "$GITHUB_RUN_ID" --exit-status
 ```
 
 Expected: the Template run succeeds; CI also succeeds on the same commit.
@@ -802,14 +907,20 @@ Expected: the Template run succeeds; CI also succeeds on the same commit.
 
 **Files:**
 
-- Create: `packages/create-repo/package.json`, `packages/create-repo/LICENSE`
-- Create: `packages/create-repo/lib/args.js`
-- Test: `packages/create-repo/test/args.test.js`
-- Modify: `package.json` (`test` script, `check`, `@types/node`)
-- Modify: `tsconfig.json` (`include`)
-- Modify: `.commitlintrc.mts` (scope `create-repo`)
+<!-- NOTE(@claude): I converted this to a table -->
+
+| Operation | Paths                                                               |
+| --------- | ------------------------------------------------------------------- |
+| Create    | `packages/create-repo/package.json`, `packages/create-repo/LICENSE` |
+| Create    | `packages/create-repo/lib/args.js`                                  |
+| Test      | `packages/create-repo/test/args.test.js`                            |
+| Modify    | `package.json` (`test` script, `check`, `@types/node`)              |
+| Modify    | `tsconfig.json` (`include`)                                         |
+| Modify    | `.commitlintrc.mts` (scope `create-repo`)                           |
 
 **Interfaces:**
+
+<!-- NOTE(@claude): Whitespace formatting -->
 
 - Consumes: nothing.
 - Produces (`lib/args.js`):
@@ -817,11 +928,23 @@ Expected: the Template run succeeds; CI also succeeds on the same commit.
     its message and exits 2.
   - `const DEFAULT_TEMPLATE = "chewygumxx/repo-tmpl"`
   - `typedef Scope = { name: string, fullName: string }`
-  - `typedef Options = { name?: string, description?: string, topics?:
-string[], scopes?: Scope[], owner?: string, visibility: "public" |
-"private", dir?: string, template: string, envFile?: string,
-metadataKeyFile?: string, metadataKeyCommand?: string, metadata: boolean,
-dryRun: boolean, yes: boolean, help: boolean }`
+  - `typedef Options = {
+  name?: string,
+  description?: string,
+  topics?: string[],
+  scopes?: Scope[],
+  owner?: string,
+  visibility: "public" | "private",
+  dir?: string,
+  template: string,
+  envFile?: string,
+  metadataKeyFile?: string,
+  metadataKeyCommand?: string,
+  metadata: boolean,
+  dryRun: boolean,
+  yes: boolean,
+  help: boolean
+}`
   - `parseOptions(argv: string[]): Options`: throws `UsageError`
   - `checkName(name: string): string`: throws `UsageError`
   - `parseTopics(text: string): string[]`: throws `UsageError`
@@ -894,9 +1017,17 @@ Append to the `scopes` in `.commitlintrc.mts`:
 
 Run `npm install` so the workspace links, then commit:
 
+<!-- NOTE(@claude): Whitespace formatting -->
+
 ```bash
 npm run format
-git add package.json package-lock.json tsconfig.json .commitlintrc.mts packages/create-repo/package.json packages/create-repo/LICENSE
+git add \
+    package.json \
+    package-lock.json \
+    tsconfig.json \
+    .commitlintrc.mts \
+    packages/create-repo/package.json \
+    packages/create-repo/LICENSE
 git commit -m "build(create-repo): Scaffold create-repo package"
 ```
 
@@ -1087,10 +1218,11 @@ export class UsageError extends Error {}
 
 export const DEFAULT_TEMPLATE = "chewygumxx/repo-tmpl";
 
-const NAME = /^[A-Za-z0-9._-]{1,100}$/;
-const OWNER = /^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/;
-const TOPIC = /^[a-z0-9][a-z0-9-]{0,49}$/;
-const SCOPE = /^[a-z0-9][a-z0-9-]*$/;
+/* NOTE(@claude): I amended these */
+const NAME = /^[\w](?:[\w]|-(?=[\w])|.(?=[\w])){0,99}$/;
+const OWNER = /^[\w](?:[\w]|-(?=[\w])){0,38}$/;
+const TOPIC = /^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,49}$/;
+const SCOPE = /^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,14}$/;
 
 /** @param {string} text */
 function list(text) {
@@ -1247,8 +1379,12 @@ Expected: all tests pass; tsc and Biome exit 0.
 
 - [ ] **Step 6: Commit**
 
+<!-- NOTE(@claude): Whitespace formatting -->
+
 ```bash
-git add packages/create-repo/lib/args.js packages/create-repo/test/args.test.js
+git add \
+    packages/create-repo/lib/args.js \
+    packages/create-repo/test/args.test.js
 git commit -m "feat(create-repo): Parse and validate flags"
 ```
 
@@ -1633,8 +1769,12 @@ Expected: all pass.
 
 - [ ] **Step 5: Commit**
 
+<!-- NOTE(@claude): Whitespace formatting -->
+
 ```bash
-git add packages/create-repo/lib/key.js packages/create-repo/test/key.test.js
+git add \
+    packages/create-repo/lib/key.js \
+    packages/create-repo/test/key.test.js
 git commit -m "feat(create-repo): Resolve metadata App key"
 ```
 
@@ -2915,9 +3055,15 @@ It needs Node 22 or later, `git`, `mise`, and `gh` logged in with
 
 ## Flags
 
+<!-- NOTE(@claude): Whitespace formatting -->
+
 ```sh
-npm create @chewygumxx/repo -- my-thing --description "…" --topics a,b \
-    --scopes api,"cli:Command Line" --yes
+npm create @chewygumxx/repo -- \
+    my-thing \
+    --description "…" \
+    --topics a,b \
+    --scopes api,"cli:Command Line" \
+    --yes
 ```
 
 Run with `--help` for every flag. Without a terminal, the name and
@@ -2969,9 +3115,17 @@ git commit -m "docs: List create-repo"
 
 - [ ] **Step 8: Push and watch CI**
 
+<!-- NOTE(@claude): I small refactor -->
+
 ```bash
 git push origin main
-gh run watch "$(gh run list -w 'Create Repo' -L 1 --json databaseId -q '.[0].databaseId')" --exit-status
+GITHUB_RUN_ID="$(gh run list \
+  -R chewygumxx/create-repo-smoke \
+  -w CI \
+  -L 1 \
+  --json databaseId \
+  -q '.[0].databaseId')"
+gh run watch -R chewygumxx/create-repo-smoke "$GITHUB_RUN_ID" --exit-status
 ```
 
 Expected: `Create Repo` and `CI` succeed.
@@ -2982,9 +3136,14 @@ Expected: `Create Repo` and `CI` succeed.
 
 - [ ] **Step 1: Dry-run the tarball**
 
+<!-- NOTE(@claude): Whitespace formatting -->
+
 ```bash
 cd ~/dev/shared-config
-npm publish --workspace packages/create-repo --dry-run --provenance=false
+npm publish \
+    --workspace packages/create-repo \
+    --provenance=false \
+    --dry-run
 ```
 
 Expected contents: `LICENSE`, `README.md`, `bin/create-repo.js`,
@@ -2998,9 +3157,14 @@ The user runs, typing `!` first:
 
 - [ ] **Step 3: The user adds the trusted publisher**
 
+<!-- NOTE(@claude): Whitespace formatting -->
+
 ```bash
-npm trust github @chewygumxx/create-repo --file publish.yaml \
-    --repo chewygumxx/shared-config --allow-stage-publish --otp=<code>
+npm trust github @chewygumxx/create-repo \
+    --file publish.yaml \
+    --repo chewygumxx/shared-config \
+    --allow-stage-publish \
+    --otp=<code>
 ```
 
 - [ ] **Step 4: Confirm it is installable**
@@ -3023,15 +3187,24 @@ Expected: `1.0.0` (allow a few minutes for the registry).
 cd /tmp
 npm create @chewygumxx/repo@latest -- create-repo-smoke \
     --description "Smoke test of create-repo; to be deleted." \
-    --topics smoke --yes
+    --topics smoke \
+    --yes
 ```
 
 Expected: ends with `Created https://github.com/chewygumxx/create-repo-smoke`.
 
 - [ ] **Step 3: Watch its first CI run**
 
+<!-- NOTE(@claude): I small refactor -->
+
 ```bash
-gh run watch -R chewygumxx/create-repo-smoke "$(gh run list -R chewygumxx/create-repo-smoke -w CI -L 1 --json databaseId -q '.[0].databaseId')" --exit-status
+GITHUB_RUN_ID="$(gh run list \
+  -R chewygumxx/create-repo-smoke \
+  -w CI \
+  -L 1 \
+  --json databaseId \
+  -q '.[0].databaseId')"
+gh run watch -R chewygumxx/create-repo-smoke "$GITHUB_RUN_ID" --exit-status
 gh repo view chewygumxx/create-repo-smoke --json description,repositoryTopics
 ```
 
