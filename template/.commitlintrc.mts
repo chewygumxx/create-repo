@@ -118,8 +118,14 @@ const Configuration: UserConfig = {
     parserPreset: "conventional-changelog-conventionalcommits",
 
     // Dependabot headers name the package and both versions, and its
-    // bodies carry release-note URLs; neither fits the limits below.
-    ignores: [(message) => /^(build|ci): bump /i.test(message)],
+    // bodies carry release-note URLs; neither fits the limits below. An
+    // ignored message skips every rule, so require Dependabot's sign-off
+    // trailer as well as its header rather than trusting the header alone.
+    ignores: [
+        (message) =>
+            /^(build|ci): bump /i.test(message) &&
+            /^Signed-off-by: dependabot\[bot\]/m.test(message),
+    ],
 
     rules: {
         "header-max-length": [lvl.err, "always", 50],
