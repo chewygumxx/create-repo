@@ -31,7 +31,7 @@
         "format": "biome format --write .",
         "format:check": "biome format .",
         "lint": "biome lint .",
-        "lint:md": "remark . --frail --quiet",
+        "lint:md": "git ls-files -z '*.md' | xargs -0 remark --frail --quiet",
         "postinstall": "patch-package >/dev/null",
         "prepare": "test -d node_modules/husky && husky || true",
         "typecheck": "tsc"
