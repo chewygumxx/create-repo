@@ -13,6 +13,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+    checkDescription,
     checkName,
     DEFAULT_TEMPLATE,
     formatScopes,
@@ -158,4 +159,19 @@ test("more than 20 topics is a mistake, not a later sync failure", () => {
     const twenty = Array.from({ length: 20 }, (_, i) => `t${i}`);
     assert.equal(parseTopics(twenty.join()).length, 20);
     assert.throws(() => parseTopics([...twenty, "t20"].join()), UsageError);
+});
+
+test("descriptions are trimmed and must say something", () => {
+    assert.equal(checkDescription("  A thing  "), "A thing");
+    assert.throws(() => checkDescription(" "), UsageError);
+    assert.throws(() => parseOptions(["x", "--description", ""]), UsageError);
+});
+
+test("descriptions the first commit would refuse are refused first", () => {
+    assert.throws(() => checkDescription("Builds \u2014 and more"), /em dash/);
+    assert.throws(() => checkDescription("Two\nlines"), /one line/);
+    assert.throws(
+        () => parseOptions(["x", "--description", "a \u2014 b"]),
+        UsageError,
+    );
 });
