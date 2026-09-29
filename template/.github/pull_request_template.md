@@ -8,6 +8,5 @@
 
 - [ ] Commits are single-line, Conventional Commits (see `.commitlintrc.mts`)
 - [ ] Edited or new files keep the repository's file header convention
-- [ ] `npm run typecheck`, `npm run format:check`, `npm run lint`,
-      `npm run lint:md`, and `npm test` pass locally
+- [ ] `npm run check` passes locally
 - [ ] No em dashes were introduced
