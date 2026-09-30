@@ -11,12 +11,18 @@
 // @ts-check
 
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+    linkSync,
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { init } from "../lib/init.js";
+import { collides, init } from "../lib/init.js";
 import { copyTemplate } from "../lib/template.js";
 import { TEMPLATES } from "../lib/templates.js";
 
@@ -105,5 +111,23 @@ test("the vimdoc's right-aligned lines keep their width for any module", () => {
                 );
             });
         });
+    }
+});
+
+// On a case-insensitive filesystem a case-only rename names the file being
+// moved, which is not a collision. A hard link is the same file under a
+// second name, as that path is.
+test("a path naming the moved file is not a collision", () => {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-identity-"));
+    try {
+        const file = join(root, "a");
+        writeFileSync(file, "a");
+        linkSync(file, join(root, "same"));
+        writeFileSync(join(root, "other"), "b");
+        assert.equal(collides(file, join(root, "same")), false);
+        assert.equal(collides(file, join(root, "other")), true);
+        assert.equal(collides(file, join(root, "missing")), false);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
     }
 });
