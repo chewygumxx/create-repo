@@ -32,6 +32,8 @@ safe to ignore.
 | `typescript` | A Node library or CLI in TypeScript, run without a build; |
 |              | `--with publish` compiles it and publishes it to npm as   |
 |              | `@owner/name` by trusted publishing                       |
+| `cloudflare` | A Cloudflare Worker in TypeScript, tested in the Workers  |
+|              | runtime, with a workflow that deploys it                  |
 
 `--template` chooses one, `standard` by default, and `--with` turns on its
 optional features; `--help` lists both. A package version always creates
@@ -45,10 +47,10 @@ they name.
 Each template is an ordered list of layers under `templates/`, declared in
 `lib/templates.js`: a later layer's file replaces the same file from an
 earlier one. `common` holds what every repository carries, `npm` the
-npm-based checks, `typescript` its sources, and `typescript-publish` what
-`--with publish` replaces and adds. A layer that holds a `package.json` holds
-its lock; regenerate it with `npm install --package-lock-only` in the layer's
-directory.
+npm-based checks, `typescript` its sources, `typescript-publish` what
+`--with publish` replaces and adds, and `cloudflare` the Worker. A layer that
+holds a `package.json` holds its lock; regenerate it with
+`npm install --package-lock-only` in the layer's directory.
 
 The templates' identity stays `chewygumxx/repo-tmpl`:
 `~chewygumxx/repo-tmpl.git` in every file header and the slug in
