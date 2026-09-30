@@ -74,10 +74,10 @@ subdirectory is a layer:
 |                      | `README.md`; adds `tsconfig.build.json` and the publish  |
 |                      | workflow                                                 |
 | `cloudflare`         | Replaces `package.json`, its lock, `tsconfig.json`,      |
-|                      | `.biome.json`, `_gitignore` and `README.md`; adds        |
-|                      | `wrangler.jsonc`, `worker-configuration.d.ts`,           |
-|                      | `vitest.config.ts`, `src/`, `test/` and the deploy       |
-|                      | workflow                                                 |
+|                      | `.biome.json`, `.editorconfig`, `_gitignore` and         |
+|                      | `README.md`; adds `wrangler.jsonc`,                      |
+|                      | `worker-configuration.d.ts`, `vitest.config.ts`,         |
+|                      | `src/`, `test/` and the deploy workflow                  |
 | `native`             | The native hygiene layer (see [Native](#native-family))  |
 | `rust`               | `Cargo.toml`, `Cargo.lock`, `rustfmt.toml`, its mise     |
 |                      | tasks; replaces `_gitignore`, `README.md`, Dependabot    |
@@ -252,8 +252,9 @@ against the Worker's `src/index.ts`, since no layer deletes.
 - `package.json` adds `dev`, `deploy`, `types` and `types:check`; `check` runs
   `wrangler types --check` (`types:check`) so it fails when
   `worker-configuration.d.ts` is stale, then `vitest run`.
-- `.biome.json` ignores `worker-configuration.d.ts`; `_gitignore` adds
-  `.wrangler/` and `.dev.vars*`.
+- `.biome.json` ignores `worker-configuration.d.ts`, and `.editorconfig`
+  allows its tabs, which CI's editorconfig-checker would otherwise refuse;
+  `_gitignore` adds `.wrangler/` and `.dev.vars*`.
 - `.github/workflows/deploy.yaml` runs on `workflow_run` of CI completing on
   `main`, and on `workflow_dispatch`. Its job requires a `push` CI run that
   succeeded (or a manual run) and `vars.CLOUDFLARE_ACCOUNT_ID != ''`, so until
