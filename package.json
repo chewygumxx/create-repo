@@ -59,7 +59,7 @@
         "lint:emdash": "git grep -nIP --untracked '\\x{2014}'; test $? -eq 1",
         "lint:md": "git ls-files -z '*.md' | xargs -0 -r remark --frail --quiet --no-stdout",
         "lint:template": "cd template && biome ci --vcs-use-ignore-file=false .",
-        "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | YAMLLINT_CONFIG_FILE=node_modules/@chewygumxx/yamllint-config/config.yaml xargs -0 -r yamllint --strict",
+        "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamllint --strict",
         "prepare": "patch-package >/dev/null && (test -d node_modules/husky && husky || true)",
         "test": "node --test 'test/*.test.js'",
         "typecheck": "tsc"
