@@ -21,7 +21,12 @@ import { text } from "node:stream/consumers";
 import { parseOptions, UsageError } from "../lib/args.js";
 import { init } from "../lib/init.js";
 import { childEnv, loadEnvFile, resolveKey } from "../lib/key.js";
-import { checkTarget, checkTools, METADATA_REPO } from "../lib/preflight.js";
+import {
+    checkTarget,
+    checkTemplateTools,
+    checkTools,
+    METADATA_REPO,
+} from "../lib/preflight.js";
 import {
     completeAnswers,
     confirm,
@@ -148,6 +153,7 @@ async function main(argv) {
     }
     const answers = await completeAnswers(options, { owner, ask });
     await checkTarget(answers, tools, { remote: login !== undefined });
+    await checkTemplateTools(answers, tools);
 
     console.error(
         `\n${summary(answers, { dryRun: options.dryRun, keySource: key?.source })}\n`,

@@ -13,7 +13,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parseOptions, UsageError } from "../lib/args.js";
-import { checkTarget, checkTools, METADATA_REPO } from "../lib/preflight.js";
+import {
+    checkTarget,
+    checkTemplateTools,
+    checkTools,
+    METADATA_REPO,
+} from "../lib/preflight.js";
 import { completeAnswers } from "../lib/prompt.js";
 import { CommandError } from "../lib/run.js";
 
@@ -187,5 +192,37 @@ test("without remote access the repository is not checked", async () => {
     const target = await answers(["x", "--description", "D", "--dir", "/d"]);
     const fake = tools({});
     await checkTarget(target, fake, { remote: false });
+    assert.deepEqual(fake.calls, []);
+});
+
+test("a template's system tools must be on PATH", async () => {
+    const target = await answers([
+        "x",
+        "--template",
+        "zsh",
+        "--description",
+        "D",
+        "--dir",
+        "/d",
+    ]);
+    await assert.rejects(
+        checkTemplateTools(target, tools({})),
+        (error) =>
+            error instanceof UsageError &&
+            /zsh/.test(error.message) &&
+            /zsh template/.test(error.message),
+    );
+    await checkTemplateTools(target, tools({ "zsh --version": "zsh 5.9" }));
+    const other = await answers([
+        "x",
+        "--template",
+        "rust",
+        "--description",
+        "D",
+        "--dir",
+        "/d",
+    ]);
+    const fake = tools({});
+    await checkTemplateTools(other, fake);
     assert.deepEqual(fake.calls, []);
 });
