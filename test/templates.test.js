@@ -334,7 +334,7 @@ test("a crate's name is 1 to 64 letters, digits, - and _, a library's lowercase"
         );
     }
     assert.doesNotThrow(() => check("my-lib", "lib"));
-    for (const name of ["My-Lib", "myLib"]) {
+    for (const name of ["My-Lib", "myLib", "my--lib", "my__lib", "a_-b"]) {
         assert.doesNotThrow(() => check(name), name);
         assert.throws(
             () => check(name, "lib"),
