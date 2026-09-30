@@ -657,6 +657,24 @@ test("a zsh plugin's name is a function's: no leading -, no reserved word", () =
         "time",
         "end",
         "select",
+        // Reserved words that zsh's own list holds beside those.
+        "local",
+        "export",
+        "typeset",
+        "declare",
+        "float",
+        "integer",
+        "readonly",
+        // Builtins the layer's own code calls, which the function would
+        // shadow: `exit` then turns a failed assertion into a pass.
+        "exit",
+        "print",
+        "return",
+        "source",
+        "emulate",
+        "autoload",
+        "unfunction",
+        "unset",
     ]) {
         assert.throws(
             () => check(name),
