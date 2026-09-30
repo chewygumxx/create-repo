@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "jsonc-parser";
 import { init } from "../lib/init.js";
-import { copyTemplate, TEMPLATE_DIR, TemplateError } from "../lib/template.js";
+import { copyTemplate, TEMPLATES_DIR, TemplateError } from "../lib/template.js";
 
 const IDENTITY = {
     owner: "example",
@@ -58,7 +58,7 @@ function initialised(body, changes = {}, before = () => {}) {
     const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
     try {
         const dir = join(root, "derived");
-        const files = copyTemplate(dir);
+        const files = copyTemplate(dir, ["common", "npm"]);
         before(dir);
         init(dir, { ...IDENTITY, ...changes }, files, { today: "2026-10-01" });
         body(dir, files);
@@ -127,7 +127,10 @@ test("no topics leaves empty tags; no scopes leaves commitlint alone", () =>
             assert.match(read(dir, "README.md"), /^tags: \[\]$/m);
             assert.equal(
                 read(dir, ".commitlintrc.mts"),
-                read(TEMPLATE_DIR, ".commitlintrc.mts").replaceAll(
+                read(
+                    join(TEMPLATES_DIR, "npm"),
+                    ".commitlintrc.mts",
+                ).replaceAll(
                     "~chewygumxx/repo-tmpl.git",
                     "~example/derived-repo.git",
                 ),

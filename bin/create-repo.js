@@ -127,7 +127,7 @@ async function main(argv) {
 
     try {
         step("Copying the template");
-        const files = copyTemplate(dir);
+        const files = copyTemplate(dir, ["common", "npm"]);
         await run(
             "git",
             ["init", "--quiet", "--initial-branch", "main"],

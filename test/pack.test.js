@@ -16,10 +16,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { templateFiles } from "../lib/template.js";
+import { compose } from "../lib/template.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -42,8 +42,8 @@ function packed() {
 test("the package carries every template file", () => {
     const files = packed();
     assert.deepEqual(
-        templateFiles()
-            .map((file) => `template/${file}`)
+        [...compose(["common", "npm"]).values()]
+            .map((source) => relative(ROOT, source))
             .filter((file) => !files.has(file)),
         [],
     );

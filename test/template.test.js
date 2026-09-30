@@ -25,13 +25,17 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { parse } from "jsonc-parser";
 import {
+    compose,
     copyTemplate,
     RENAMED,
     TargetExistsError,
-    TEMPLATE_DIR,
+    TEMPLATES_DIR,
     TemplateError,
     templateFiles,
 } from "../lib/template.js";
+
+/** The standard template's layers. */
+const LAYERS = ["common", "npm"];
 
 /** @param {(root: string) => void} body */
 function inTemp(body) {
@@ -43,23 +47,82 @@ function inTemp(body) {
     }
 }
 
+/**
+ * Writes `files` under `root`, creating directories.
+ * @param {string} root
+ * @param {Record<string, string>} files
+ */
+function write(root, files) {
+    for (const [file, text] of Object.entries(files)) {
+        mkdirSync(dirname(join(root, file)), { recursive: true });
+        writeFileSync(join(root, file), text);
+    }
+}
+
 test("copies every file, restoring .gitignore", () =>
     inTemp((root) => {
-        const files = copyTemplate(join(root, "x"));
+        const files = copyTemplate(join(root, "x"), LAYERS);
         assert.ok(files.includes(".gitignore"));
         assert.ok(!files.includes("_gitignore"));
-        assert.equal(files.length, templateFiles().length);
+        assert.equal(files.length, templateFiles(LAYERS).length);
         assert.equal(
             readFileSync(join(root, "x", ".gitignore"), "utf8"),
-            readFileSync(join(TEMPLATE_DIR, "_gitignore"), "utf8"),
+            readFileSync(join(TEMPLATES_DIR, "npm", "_gitignore"), "utf8"),
         );
+    }));
+
+test("a later layer's file replaces an earlier one's", () =>
+    inTemp((root) => {
+        const from = join(root, "layers");
+        write(from, {
+            "a/_gitignore": "",
+            "a/same.txt": "a\n",
+            "a/only-a.txt": "a\n",
+            "b/same.txt": "b\n",
+            "b/sub/only-b.txt": "b\n",
+        });
+        const files = copyTemplate(join(root, "x"), ["a", "b"], from);
+        assert.deepEqual(files, [
+            ".gitignore",
+            "only-a.txt",
+            "same.txt",
+            "sub/only-b.txt",
+        ]);
+        assert.equal(readFileSync(join(root, "x", "same.txt"), "utf8"), "b\n");
+    }));
+
+test("the last layer's _gitignore applies to every layer", () =>
+    inTemp((root) => {
+        const from = join(root, "layers");
+        write(from, {
+            "a/_gitignore": "a.txt\n",
+            "a/a.txt": "",
+            "a/b.txt": "",
+            "b/_gitignore": "b.txt\n",
+        });
+        const files = copyTemplate(join(root, "x"), ["a", "b"], from);
+        assert.deepEqual(files, [".gitignore", "a.txt"]);
+        assert.equal(
+            readFileSync(join(root, "x", ".gitignore"), "utf8"),
+            "b.txt\n",
+        );
+    }));
+
+test("a missing layer is a TemplateError naming it; nothing is copied", () =>
+    inTemp((root) => {
+        assert.throws(
+            () => copyTemplate(join(root, "x"), ["common", "nope"]),
+            (error) =>
+                error instanceof TemplateError && /"nope"/.test(error.message),
+        );
+        assert.ok(!existsSync(join(root, "x")));
     }));
 
 test("refuses a directory that exists", () =>
     inTemp((root) => {
         mkdirSync(join(root, "x"));
         assert.throws(
-            () => copyTemplate(join(root, "x")),
+            () => copyTemplate(join(root, "x"), LAYERS),
             (error) =>
                 error instanceof TargetExistsError &&
                 error instanceof TemplateError &&
@@ -67,24 +130,32 @@ test("refuses a directory that exists", () =>
         );
     }));
 
-// The header sync would rewrite these to name create-repo and template/,
+// The header sync would rewrite these to name create-repo and templates/,
 // and init would then find no header to rewrite.
 test("every template header names the template and its own path", () => {
     const slug = parse(
-        readFileSync(join(TEMPLATE_DIR, ".repo-metadata.jsonc"), "utf8"),
+        readFileSync(
+            join(TEMPLATES_DIR, "common", ".repo-metadata.jsonc"),
+            "utf8",
+        ),
     ).slug;
-    const stray = templateFiles().filter((file) => {
-        const text = readFileSync(join(TEMPLATE_DIR, file), "utf8");
-        const path = RENAMED[file] ?? file;
-        return (
-            text.includes("::: :/") &&
-            !(text.includes(`~${slug}.git`) && text.includes(`::: :/${path}`))
-        );
-    });
+    const stray = [...compose(LAYERS)]
+        .filter(([file, source]) => {
+            const text = readFileSync(source, "utf8");
+            const path = RENAMED[file] ?? file;
+            return (
+                text.includes("::: :/") &&
+                !(
+                    text.includes(`~${slug}.git`) &&
+                    text.includes(`::: :/${path}`)
+                )
+            );
+        })
+        .map(([file]) => file);
     assert.deepEqual(stray, []);
 });
 
-/** Files a checkout's template/ may gain, all ignored by its _gitignore. */
+/** Files a checkout's layers may gain, all ignored by the _gitignore. */
 const STRAY = [
     "node_modules/pkg/index.js",
     ".env.local",
@@ -93,33 +164,35 @@ const STRAY = [
 ];
 
 /**
- * A copy of the template with stray files added.
+ * A copy of the layers with stray files added to each of the standard's.
  * @param {string} root
  */
-function strayTemplate(root) {
-    const from = join(root, "template");
-    cpSync(TEMPLATE_DIR, from, { recursive: true });
-    for (const file of STRAY) {
-        mkdirSync(dirname(join(from, file)), { recursive: true });
-        writeFileSync(join(from, file), "stray\n");
+function strayTemplates(root) {
+    const from = join(root, "templates");
+    cpSync(TEMPLATES_DIR, from, { recursive: true });
+    for (const layer of LAYERS) {
+        write(
+            join(from, layer),
+            Object.fromEntries(STRAY.map((file) => [file, "stray\n"])),
+        );
     }
     return from;
 }
 
-test("lists no file the template's own .gitignore ignores", () =>
+test("lists no file the composed _gitignore ignores", () =>
     inTemp((root) => {
-        const files = templateFiles(strayTemplate(root));
+        const files = templateFiles(LAYERS, strayTemplates(root));
         assert.deepEqual(
             STRAY.filter((file) => files.includes(file)),
             [],
         );
-        assert.deepEqual(files, templateFiles());
+        assert.deepEqual(files, templateFiles(LAYERS));
     }));
 
-test("copies no file the template's own .gitignore ignores", () =>
+test("copies no file the composed _gitignore ignores", () =>
     inTemp((root) => {
-        const from = strayTemplate(root);
-        const files = copyTemplate(join(root, "x"), from);
+        const from = strayTemplates(root);
+        const files = copyTemplate(join(root, "x"), LAYERS, from);
         assert.deepEqual(
             STRAY.filter(
                 (file) =>
@@ -131,22 +204,22 @@ test("copies no file the template's own .gitignore ignores", () =>
 
 test("an ignore rule it cannot follow fails loudly", () =>
     inTemp((root) => {
-        const from = strayTemplate(root);
-        writeFileSync(join(from, "_gitignore"), "*.log\n!keep.log\n");
+        const from = strayTemplates(root);
+        writeFileSync(join(from, "npm", "_gitignore"), "*.log\n!keep.log\n");
         assert.throws(
-            () => templateFiles(from),
+            () => templateFiles(LAYERS, from),
             (error) =>
                 error instanceof TemplateError &&
                 /!keep\.log/.test(error.message),
         );
     }));
 
-test("a copy that fails is a TemplateError naming the cause", () =>
+test("layers without a _gitignore are a TemplateError naming it", () =>
     inTemp((root) => {
-        const from = strayTemplate(root);
-        rmSync(join(from, "_gitignore"));
+        const from = strayTemplates(root);
+        rmSync(join(from, "npm", "_gitignore"));
         assert.throws(
-            () => copyTemplate(join(root, "x"), from),
+            () => copyTemplate(join(root, "x"), LAYERS, from),
             (error) =>
                 error instanceof TemplateError &&
                 /_gitignore/.test(error.message),

@@ -22,7 +22,7 @@ export default defineConfig({
         {
             name: "template",
             fullName: "Template",
-            description: "The bundled template under template/",
+            description: "The bundled templates under templates/",
         },
     ],
 });

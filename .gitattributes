@@ -10,7 +10,7 @@
 
 * text=auto eol=lf
 
-# The bundled template's headers name the template itself, a sentinel that
+# The bundled templates' headers name the template itself, a sentinel that
 # lib/init.js rewrites for each new repository; the header sync must leave
 # them alone.
-/template/** -sync-header-metadata
+/templates/** -sync-header-metadata
