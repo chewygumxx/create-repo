@@ -1,0 +1,42 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.shuck.toml
+#
+#
+
+#
+# https://ewhauser.github.io/shuck/docs/configuration/
+#
+# A repository with this file has chosen shuck for every shell script: the
+# shared CI runs it over the whole tree, including the hooks in `.githooks/`.
+#
+
+# Left unmapped, shuck reads a `.plugin.zsh` file as sh, where
+# `$+functions[...]` means nothing and its formatter rewrites the expression.
+[per-file-shell]
+"**/*.zsh"    = "zsh"
+"functions/*" = "zsh"
+
+# The hooks are formatted as shfmt formats them, so the other options stay at
+# their defaults.
+[format]
+indent-style = "space"
+indent-width = 4
+
+[lint]
+# C001 a variable set and never read, as `Plugins` is by the plugin itself; C002
+# and C003 a path built at runtime and a file the analysis cannot see, which
+# `tests/run.zsh` sources.
+ignore = [ "C001", "C002", "C003" ]
+
+# `tests/run.zsh` sets `plugin_root`, and the tests it sources read it.
+[[lint.contracts.custom]]
+id   = "tests"
+when = "always"
+
+[lint.contracts.custom.provides]
+variables = [ "plugin_root" ]

@@ -1,0 +1,50 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.config/mise/conf.d/zsh.toml
+#
+#
+
+#
+# https://mise.jdx.dev/configuration.html
+#
+# zsh's tools and tasks, merged into `mise.toml`'s aggregates: mise reads
+# every file in this directory beside it.
+#
+# zsh itself is not installed by mise: it is a system package, which CI gets
+# from `.github/apt-packages.txt`.
+#
+
+[tools]
+# The release assets are named shuck-cli-*, so the binary is named here.
+"github:ewhauser/shuck" = { version = "0.2.3", exe = "shuck" }
+
+[tasks."lint:zsh"]
+description = "zsh's syntax check, then shuck's lint and format check"
+# The files are named, since shuck finds a file by its extension or shebang,
+# and an autoloaded function has neither. `.shuck.toml` maps them to the zsh
+# dialect, which shuck would otherwise read as sh, and sets the format.
+run         = """
+git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r -n 1 zsh -n --
+git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r shuck check --
+git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r shuck format --diff --
+"""
+
+[tasks."test:zsh"]
+description = "The plugin's tests"
+run         = "zsh -f tests/run.zsh"
+
+[tasks."format:zsh"]
+description = "Apply shuck's formatting"
+run         = "git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r shuck format --"
+
+[tasks."pre-commit:zsh"]
+description = "zsh's syntax check, shuck's lint and format check on staged files"
+run         = """
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.zsh' 'functions/*' | xargs -0 -r -n 1 zsh -n --
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.zsh' 'functions/*' | xargs -0 -r shuck check --
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.zsh' 'functions/*' | xargs -0 -r shuck format --diff --
+"""

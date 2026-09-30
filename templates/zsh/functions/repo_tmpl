@@ -1,0 +1,15 @@
+#!/bin/false
+# vim:set expandtab shiftwidth=4 filetype=zsh:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/functions/repo_tmpl
+#
+#
+
+# Prints a greeting for the arguments, or for the world.
+emulate -L zsh
+
+print -r -- "Hello, ${*:-world}!"
