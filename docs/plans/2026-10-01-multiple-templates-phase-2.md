@@ -68,6 +68,7 @@ and has landed on `main`.
 - `standard`'s output does not change, and Task 3 does not change what
   `typescript` makes without `publish`.
 - `UsageError` exits 2; `TemplateError` and `CommandError` exit 1.
+- Without a terminal no feature is chosen, whatever a template's defaults.
 - A layer holding a `package.json` holds its `package-lock.json`, and
   regenerating it is `npm install --package-lock-only --no-fund --no-audit`
   in the layer's directory.
@@ -87,6 +88,12 @@ and has landed on `main`.
   derive" decision says.
 - **The published layer's version is `0.0.0`.** The spec does not name one;
   the first release bumps it, as this repository's README describes.
+- **The prompt takes `publish` by default; the flags do not.** Your decision
+  on 2026-10-01, in place of the spec's opt-in only. A template may name
+  `defaultFeatures`: an empty reply to the features prompt takes them and
+  `none` takes no feature. `--with`, including `--with ""`, and a missing
+  terminal never take them, so non-interactive callers are unaffected.
+  Task 4 amends the spec to say so.
 - **`typescript` without `publish` keeps `private: true`.** As the spec says.
   Its `package.json` and lock are its own layer's, not the `npm` layer's,
   because `"type": "module"`, `engines` and the `test` script differ.
@@ -104,8 +111,9 @@ and has landed on `main`.
 4. `typescript` without `publish`: no publish workflow, no `dist/` entry in
    `.gitignore`, and `private` still true, so it can never be published by
    accident (Task 3).
-5. `--with publish` given to `standard`: "The standard template has no
-   features", as before, not a silent no-op (Task 3).
+5. The features prompt: an empty reply takes `publish` for `typescript` and
+   `none` takes no feature, while `--with ""` and a missing terminal never
+   take the default, so scripts keep today's behaviour (Task 4).
 
 ---
 
@@ -1162,7 +1170,223 @@ tsconfig.build.json fails in CI, not at the first release."
 
 ---
 
-### Task 4: Dependabot and the docs
+### Task 4: Publish is the prompt's default
+
+**Files:**
+
+- Modify: `lib/templates.js` (the `Template` typedef and the `typescript`
+  entry), `lib/prompt.js` (`featureQuestion`, a new `pickFeatures`),
+  `docs/specs/2026-09-30-multiple-templates-design.md`
+- Test: `test/prompt.test.js`, `test/templates.test.js`
+
+**Interfaces:**
+
+- Consumes: `checkFeatures`, `parseFeatures`, `completeAnswers`, the
+  `typescript` entry (Task 3).
+- Produces: `Template.defaultFeatures?: string[]`, the features an empty
+  reply to the features prompt takes; `TEMPLATES.typescript.defaultFeatures`
+  is `["publish"]`. The prompt's question ends `[publish]: ` (`[none]: `
+  when a template has no defaults) and `none` takes no feature.
+
+- [ ] **Step 1: Write the failing tests**
+
+In `test/prompt.test.js`, add after "an empty reply takes standard, which asks
+for no features":
+
+```js
+/** The crate template, taking `lib` when its features are not chosen. */
+const DEFAULTING = {
+    ...CATALOGUE,
+    crate: { ...CATALOGUE.crate, defaultFeatures: ["lib"] },
+};
+
+test("an empty reply to the features prompt takes the defaults", async () => {
+    const { ask, asked } = asker(["crate", "", "x", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        templates: DEFAULTING,
+    });
+    assert.deepEqual(answers.features, ["lib"]);
+    assert.match(asked[1], /\[lib\]: $/);
+});
+
+test("none takes no feature, and other replies replace the defaults", async () => {
+    for (const [reply, expected] of [
+        ["none", []],
+        ["bin", ["bin"]],
+        ["lib, bin", ["lib", "bin"]],
+    ]) {
+        const { ask } = asker(["crate", reply, "x", "D", "", ""]);
+        const answers = await completeAnswers(parseOptions([]), {
+            owner: "o",
+            ask,
+            templates: DEFAULTING,
+        });
+        assert.deepEqual(answers.features, expected, reply);
+    }
+});
+
+test("a template without defaults shows none, and an empty reply takes it", async () => {
+    const { ask, asked } = asker(["crate", "", "x", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        templates: CATALOGUE,
+    });
+    assert.deepEqual(answers.features, []);
+    assert.match(asked[1], /\[none\]: $/);
+});
+
+test("flags and a missing terminal never take the defaults", async () => {
+    const run = (/** @type {string[]} */ extra) =>
+        completeAnswers(
+            parseOptions([
+                "x",
+                "--description",
+                "D",
+                "--template",
+                "crate",
+                ...extra,
+            ]),
+            { owner: "o", templates: DEFAULTING },
+        );
+    assert.deepEqual((await run([])).features, []);
+    assert.deepEqual((await run(["--with", ""])).features, []);
+    assert.deepEqual((await run(["--with", "bin"])).features, ["bin"]);
+});
+```
+
+In `test/templates.test.js`, add after "every layer belongs to a template":
+
+```js
+test("typescript takes publish by default at the prompt", () => {
+    assert.deepEqual(TEMPLATES.typescript.defaultFeatures, ["publish"]);
+});
+
+test("every default feature is one the template has", () => {
+    for (const [name, template] of Object.entries(TEMPLATES)) {
+        for (const feature of template.defaultFeatures ?? []) {
+            assert.ok(Object.hasOwn(template.features, feature), name);
+        }
+    }
+});
+```
+
+- [ ] **Step 2: Run them to see them fail**
+
+Run: `node --test test/prompt.test.js test/templates.test.js`
+
+Expected: FAIL, "an empty reply to the features prompt takes the defaults"
+(`[]` is not `["lib"]`), "none takes no feature..." (the reply `none` is
+refused as an unknown feature, and the asker runs out of replies), "a template
+without defaults shows none..." (the question ends `may be empty): `) and
+"typescript takes publish by default at the prompt" (`undefined`). "flags and a
+missing terminal never take the defaults" and "every default feature is one the
+template has" pass already: they pin what must stay true.
+
+- [ ] **Step 3: Implement the prompt**
+
+In `lib/prompt.js`, replace `featureQuestion` with:
+
+```js
+/**
+ * The template's features, then the question, which shows what an empty
+ * reply takes.
+ * @param {string} name
+ * @param {Template} template
+ */
+function featureQuestion(name, template) {
+    const entries = Object.entries(template.features);
+    const width = Math.max(...entries.map(([feature]) => feature.length));
+    const rows = entries.map(
+        ([feature, description]) =>
+            `  ${feature.padEnd(width)}  ${description}`,
+    );
+    const taken = template.defaultFeatures?.join(",") || "none";
+    return `Features of ${name}:\n${rows.join("\n")}\nFeatures (comma separated, or none) [${taken}]: `;
+}
+
+/**
+ * The features a reply chooses: an empty reply takes the template's
+ * defaults, and `none` takes no feature.
+ * @param {string} reply
+ * @param {string} name
+ * @param {Template} template
+ */
+function pickFeatures(reply, name, template) {
+    if (reply === "none") return [];
+    const chosen = reply ? parseFeatures(reply) : (template.defaultFeatures ?? []);
+    return checkFeatures(name, template, chosen);
+}
+```
+
+and in `completeAnswers` replace the prompt's parser
+
+```js
+                    (reply) =>
+                        checkFeatures(
+                            templateName,
+                            template,
+                            parseFeatures(reply),
+                        ),
+```
+
+with
+
+```js
+                    (reply) => pickFeatures(reply, templateName, template),
+```
+
+- [ ] **Step 4: Add the catalogue field**
+
+In `lib/templates.js`, add to the `Template` typedef, after `features`:
+
+```js
+ * @property {string[]} [defaultFeatures] the features an empty reply to the
+ *     features prompt takes; the flags and a missing terminal choose none
+```
+
+and to the `typescript` entry, after `features`:
+
+```js
+        defaultFeatures: ["publish"],
+```
+
+- [ ] **Step 5: Run the tests to see them pass**
+
+Run: `npx --no -- biome check --write lib test && npm test`
+
+Expected: `# fail 0`.
+
+- [ ] **Step 6: Amend the spec, then commit**
+
+In `docs/specs/2026-09-30-multiple-templates-design.md`, in "The command
+line", after the bullet beginning "In a terminal, whichever of the template",
+add:
+
+```markdown
+- A template may name `defaultFeatures`, which an empty reply to the features
+  prompt takes; `none` takes no feature. The flags, `--with ""` included, and
+  a missing terminal never take them. `typescript` names `publish`, so its
+  prompt offers the publishable package unless told otherwise.
+```
+
+Run: `npm run typecheck && npm run lint:md && npm run lint:emdash`
+
+Expected: all exit 0.
+
+```sh
+git add lib test docs/specs
+git commit -m "feat: Take publish by default at the prompt" \
+  -m "A template may name defaultFeatures, which an empty reply to the
+features prompt takes. Flags and a missing terminal never do, so
+scripts get the private package as before."
+```
+
+---
+
+### Task 5: Dependabot and the docs
 
 **Files:**
 
@@ -1246,6 +1470,14 @@ regenerate it with `npm install --package-lock-only` in the layer's
 directory.
 ```
 
+After the paragraph that says `--template` chooses one, add:
+
+```markdown
+At the prompt, `typescript` takes `publish` unless the reply chooses other
+features or `none`. `--with`, and a run without a terminal, choose only what
+they name.
+```
+
 Remove the sentence "To update an npm layer's lock after changing its
 `package.json`, run `npm install --package-lock-only` in the layer's
 directory." from the Development section, which the new sentence now covers.
@@ -1288,7 +1520,7 @@ Expected: every step passes, `# fail 0`.
 ```sh
 git add README.md bin/create-repo.js
 git commit -m "docs: Describe the typescript template" \
-  -m "The table gains its row and a comma it lacked, the layers
-sentence names the new layers and the lock note, and the entry point's
+  -m "The table gains its row and a comma it lacked, the prompt's
+default is described, the layers sentence names the new layers and the lock note, and the entry point's
 header no longer says the template is singular."
 ```
