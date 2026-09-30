@@ -19,6 +19,7 @@ import {
     existsSync,
     mkdirSync,
     mkdtempSync,
+    readdirSync,
     readFileSync,
     renameSync,
     rmSync,
@@ -424,10 +425,10 @@ test("short input does not hide a leftover it is part of", () => {
 
 /**
  * Runs `edits` over a copy holding only `files`, then hands `body` a reader
- * of the result.
+ * of the result, and the copy's directory.
  * @param {Record<string, string>} files
  * @param {import("../lib/init.js").Edit[]} edits
- * @param {(read: (file: string) => string) => void} body
+ * @param {(read: (file: string) => string, dir: string) => void} body
  * @param {Partial<typeof IDENTITY>} [changes]
  */
 function edited(files, edits, body, changes = {}) {
@@ -437,7 +438,7 @@ function edited(files, edits, body, changes = {}) {
             edits,
             today: "2026-10-01",
         });
-        body((file) => read(copy.dir, file));
+        body((file) => read(copy.dir, file), copy.dir);
     });
 }
 
@@ -523,6 +524,60 @@ test("moduleName takes its value literally, not as a replacement pattern", () =>
     edited({ "a.txt": "repo_tmpl\n" }, [moduleName(() => "$&$1")], (read) => {
         assert.equal(read("a.txt"), "$&$1\n");
     }));
+
+test("moduleName renames the paths that hold the token, and removes the emptied directories", () =>
+    edited(
+        {
+            "lua/repo_tmpl/init.lua": "return {}\n",
+            "lua/repo_tmpl/health.lua": "return {}\n",
+            "plugin/repo_tmpl.lua": "-- plugin\n",
+            "doc/keep.txt": "keep\n",
+        },
+        [moduleName((name) => name)],
+        (read, dir) => {
+            assert.equal(read("lua/derived-repo/init.lua"), "return {}\n");
+            assert.equal(read("lua/derived-repo/health.lua"), "return {}\n");
+            assert.equal(read("plugin/derived-repo.lua"), "-- plugin\n");
+            assert.equal(read("doc/keep.txt"), "keep\n");
+            assert.deepEqual(readdirSync(join(dir, "lua")), ["derived-repo"]);
+        },
+    ));
+
+test("moduleName leaves a path alone when the name is the token", () =>
+    edited(
+        { "repo_tmpl.txt": "repo_tmpl\n" },
+        [moduleName(() => "repo_tmpl")],
+        (read) => {
+            assert.equal(read("repo_tmpl.txt"), "repo_tmpl\n");
+        },
+    ));
+
+test("moduleName does not overwrite a file its name lands on", () => {
+    assert.throws(
+        () =>
+            edited(
+                { "repo_tmpl.txt": "a\n", "derived-repo.txt": "b\n" },
+                [moduleName((name) => name)],
+                () => {},
+            ),
+        (error) =>
+            error instanceof TemplateError &&
+            /derived-repo\.txt already exists/.test(error.message),
+    );
+});
+
+// The module is the name, changed; the guard knows the name's own words, so
+// it has to know the module's too.
+test("a module name that holds the template's identity is not a leftover", () =>
+    edited(
+        { "a.txt": "repo_tmpl\n", "lua/repo_tmpl/init.lua": "x\n" },
+        [moduleName((name) => name.replaceAll("-", "_"))],
+        (read) => {
+            assert.equal(read("a.txt"), "my_repo_tmpl\n");
+            assert.equal(read("lua/my_repo_tmpl/init.lua"), "x\n");
+        },
+        { name: "my-repo-tmpl" },
+    ));
 
 test("moduleName asks nothing of a repository without the token", () =>
     edited({ "a.txt": "a\n" }, [moduleName((name) => name)], (read) => {
