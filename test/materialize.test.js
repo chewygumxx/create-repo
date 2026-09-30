@@ -105,6 +105,16 @@ test("--all refuses a directory that is not its own output", () =>
         assert.ok(existsSync(join(all, "keep.txt")));
     }));
 
+test("--all refuses a file", () =>
+    inTemp((root) => {
+        const file = join(root, "file.txt");
+        writeFileSync(file, "precious\n");
+        const result = materialize(["--all", file]);
+        assert.equal(result.status, 2, result.stderr);
+        assert.match(result.stderr, /not a directory/);
+        assert.ok(existsSync(file));
+    }));
+
 test("--all takes no template, --with or directory", () =>
     inTemp((root) => {
         for (const extra of [["standard"], ["--with", "a"]]) {

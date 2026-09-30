@@ -24,6 +24,7 @@ import {
     mkdirSync,
     readdirSync,
     rmSync,
+    statSync,
     writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
@@ -45,6 +46,9 @@ const MARKER = ".materialized";
  */
 function clear(root) {
     if (existsSync(root)) {
+        if (!statSync(root).isDirectory()) {
+            throw new UsageError(`${root} is not a directory.`);
+        }
         if (readdirSync(root).length && !existsSync(join(root, MARKER))) {
             throw new UsageError(
                 `${root} is not empty and was not made by this script; refusing to clear it.`,
