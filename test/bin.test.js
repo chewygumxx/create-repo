@@ -165,8 +165,8 @@ test("the first commit names the template", () => {
     assert.match(dryRun(["--template", "standard"]).commit, /\(standard\)\./);
 });
 
-test("an unknown template stops before anything is copied", () => {
-    const { result, copied } = runBin((root) => [
+test("an unknown template stops before any tool runs", () => {
+    const { result, copied, lines } = runBin((root) => [
         "x",
         "--description",
         "D",
@@ -186,6 +186,29 @@ test("an unknown template stops before anything is copied", () => {
         /Unknown template "nope": choose one of standard/,
     );
     assert.ok(!copied);
+    assert.deepEqual(lines, [""], "no gh, mise or npm was run");
+});
+
+test("an unknown feature stops before any tool runs", () => {
+    const { result, lines } = runBin((root) => [
+        "x",
+        "--description",
+        "D",
+        "--owner",
+        "example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        "--template",
+        "standard",
+        "--with",
+        "wasm",
+    ]);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /has no features/);
+    assert.deepEqual(lines, [""], "no gh, mise or npm was run");
 });
 
 test("--help lists the templates", () => {

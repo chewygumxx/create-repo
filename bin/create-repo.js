@@ -35,7 +35,13 @@ import {
     TemplateError,
     VERSION,
 } from "../lib/template.js";
-import { FAMILIES, label, TEMPLATES } from "../lib/templates.js";
+import {
+    checkFeatures,
+    FAMILIES,
+    getTemplate,
+    label,
+    TEMPLATES,
+} from "../lib/templates.js";
 
 const USAGE = `Usage: npm create @chewygumxx/repo -- [name] [flags]
 
@@ -86,6 +92,13 @@ async function main(argv) {
     if (options.help) {
         console.log(usage());
         return 0;
+    }
+    // Needs neither gh nor the network, so it comes before the preflight.
+    if (options.template !== undefined) {
+        const template = getTemplate(options.template);
+        if (options.features !== undefined) {
+            checkFeatures(options.template, template, options.features);
+        }
     }
 
     const env = { ...process.env };
