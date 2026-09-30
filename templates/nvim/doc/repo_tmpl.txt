@@ -1,4 +1,5 @@
-# vim:set textwidth=78 tabstop=8 filetype=help:
+*repo_tmpl.txt*  A Neovim plugin
+
 # SPDX-License-Identifier: GPL-3.0-only
 
 #
@@ -7,8 +8,6 @@
 # ::: :/doc/repo_tmpl.txt
 #
 #
-
-*repo_tmpl.txt*  A Neovim plugin
 
 ==============================================================================
 CONTENTS                                                     *repo_tmpl-contents*

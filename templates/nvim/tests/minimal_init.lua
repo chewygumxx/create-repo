@@ -8,9 +8,9 @@
 --
 --
 
--- The runtimepath of a test run: this plugin, Neovim's own runtime and
--- mini.test, and nothing from the machine's configuration, so a run means the
--- same everywhere.
+-- The runtimepath and packpath of a test run: this plugin, Neovim's own runtime
+-- and mini.test, and nothing from the machine's configuration or packages, so
+-- a run means the same everywhere.
 --
 --     nvim --headless -u tests/minimal_init.lua -l tests/run.lua
 
@@ -24,3 +24,4 @@ if vim.fn.isdirectory(mini_test) == 0 then
 end
 
 vim.o.runtimepath = table.concat({ root, vim.env.VIMRUNTIME, mini_test }, ",")
+vim.o.packpath    = vim.env.VIMRUNTIME

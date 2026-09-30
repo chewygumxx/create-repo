@@ -81,6 +81,7 @@ is the directory under `lua/`, the file in `plugin/` and the help file in
 - `plugin/`: a load guard, so the plugin loads once, and the example user
   command `:Hello`. Rename it with the plugin.
 - `doc/`: the help file. Run `:helptags doc` to use it from a checkout.
-- `tests/`: mini.test's `test_*.lua` files, `minimal_init.lua`, which gives a
-  run a runtimepath of only this plugin, Neovim's runtime and mini.test, and
-  `run.lua`, which fails when it collects no test.
+- `tests/`: mini.test's `test_*.lua` files, in any subdirectory,
+  `minimal_init.lua`, which gives a run a runtimepath and packpath of only this
+  plugin, Neovim's runtime and mini.test, and `run.lua`, which fails when it
+  collects no test.

@@ -377,9 +377,11 @@ when that file exists.
   on the summary line, since some releases exit 0 with problems); `test:nvim`
   (depends on `deps`; `nvim --headless -u tests/minimal_init.lua -l
   tests/run.lua`); `format:lua`; `pre-commit:lua`.
-- `tests/minimal_init.lua` gives a run a runtimepath of the plugin, Neovim's
-  runtime and mini.test only, so the machine's own configuration cannot change
-  the result. `tests/run.lua` fails when it collects no test.
+- `tests/minimal_init.lua` gives a run a runtimepath and a packpath of the
+  plugin, Neovim's runtime and mini.test only, so the machine's own
+  configuration and packages cannot change the result. `tests/run.lua`
+  collects `test_*.lua` in any subdirectory of `tests/` and fails when it
+  collects no test.
 - The Lua is luafmt's output, written so that a long module name re-wraps to a
   fixed point: no line holding the name chains calls, and no README line
   holds it.

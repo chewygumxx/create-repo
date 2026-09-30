@@ -433,6 +433,36 @@ test("the nvim layer names one mini.test tag, which its types read", () => {
     assert.ok(luarc["workspace.ignoreDir"].includes(".tests"));
 });
 
+// `-u` with `-l` leaves `packpath` alone, so a package installed on the
+// machine is sourced into every run, and a test that needs one passes here and
+// fails in CI.
+test("the nvim test run isolates the packpath as well as the runtimepath", () => {
+    const init = readFileSync(
+        join(TEMPLATES_DIR, "nvim", "tests/minimal_init.lua"),
+        "utf8",
+    );
+    assert.match(init, /^vim\.o\.packpath\s*= vim\.env\.VIMRUNTIME$/m);
+});
+
+// mini.test's own default is recursive; a narrower one skips nested tests
+// while `mise run check` stays green.
+test("the nvim test run collects tests in subdirectories", () => {
+    const run = readFileSync(
+        join(TEMPLATES_DIR, "nvim", "tests/run.lua"),
+        "utf8",
+    );
+    assert.match(run, /"\*\*\/test_\*\.lua"/);
+});
+
+// `:help local-additions` reads only a doc file's first line, for its tag.
+test("the nvim help file opens with its tag", () => {
+    const doc = readFileSync(
+        join(TEMPLATES_DIR, "nvim", "doc/repo_tmpl.txt"),
+        "utf8",
+    );
+    assert.match(doc.split("\n")[0], /^\*repo_tmpl\.txt\*\s+\S/);
+});
+
 test("a plugin's module is the name without .nvim or nvim-, and a Lua name", () => {
     const { checkName } = TEMPLATES.nvim;
     assert.ok(checkName);

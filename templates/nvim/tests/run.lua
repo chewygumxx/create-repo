@@ -8,16 +8,16 @@
 --
 --
 
--- Runs every `tests/test_*.lua`. mini.test exits 0 when nothing failed, and a
--- run that collected nothing has nothing to fail, so an empty collection is an
--- error here.
+-- Runs every `test_*.lua` under `tests/`, nested directories included.
+-- mini.test exits 0 when nothing failed, and a run that collected nothing has
+-- nothing to fail, so an empty collection is an error here.
 --
 --     nvim --headless -u tests/minimal_init.lua -l tests/run.lua
 
 local MiniTest = require("mini.test")
 
 local function find_files()
-    return vim.fn.glob("tests/test_*.lua", true, true)
+    return vim.fn.globpath("tests", "**/test_*.lua", true, true)
 end
 
 if #MiniTest.collect({ find_files = find_files }) == 0 then
