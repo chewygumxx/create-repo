@@ -48,11 +48,11 @@ sync pushed.
 ## Development
 
 - `npm run commit` composes a commit interactively.
-- `npm run check` runs the typecheck, format check, lint, Markdown lint and YAML
-  checks (prettier, then yamllint with `@chewygumxx/yamllint-config`) that CI
-  runs.
+- `npm run check` runs the checks CI runs: the typecheck, Biome's format and
+  lint checks, Markdown lint, the YAML checks (prettier, then yamllint with
+  `@chewygumxx/yamllint-config`) and a check that rejects em dashes.
 - `npm run format` applies Biome formatting, and prettier's to YAML, which Biome
   does not read.
 
-The pre-commit hook runs the same checks on staged files, and rejects em dashes.
-The commit-msg hook runs commitlint.
+The pre-commit hook runs the same checks on staged files. The commit-msg hook
+runs commitlint.
