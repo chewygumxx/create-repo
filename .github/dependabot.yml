@@ -95,3 +95,10 @@ updates:
           interval: weekly
       commit-message:
           prefix: ci(template)
+
+    - package-ecosystem: github-actions
+      directory: /templates/native
+      schedule:
+          interval: weekly
+      commit-message:
+          prefix: ci(template)
