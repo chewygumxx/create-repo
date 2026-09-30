@@ -781,7 +781,8 @@ as passing, until you set these in the repository's settings:
 ````
 
 `templates/cloudflare/worker-configuration.d.ts` is Wrangler's output. Write it
-exactly as generated (its indentation is tabs, and Biome ignores it):
+exactly as generated (Wrangler indents with tabs, shown here as spaces; Biome
+ignores the file, and the layer's `.editorconfig` allows the tabs):
 
 ```ts
 /* eslint-disable */
@@ -789,10 +790,10 @@ exactly as generated (its indentation is tabs, and Biome ignores it):
 interface __BaseEnv_Env {
 }
 declare namespace Cloudflare {
-	interface GlobalProps {
-		mainModule: typeof import("./src/index");
-	}
-	interface Env extends __BaseEnv_Env {}
+    interface GlobalProps {
+        mainModule: typeof import("./src/index");
+    }
+    interface Env extends __BaseEnv_Env {}
 }
 interface Env extends __BaseEnv_Env {}
 ```

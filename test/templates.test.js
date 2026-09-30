@@ -128,6 +128,29 @@ test("no template file holds an em dash", () => {
 
 // The job must stay skipped until the account is configured, and must not
 // deploy a pull request's run.
+// CI's editorconfig-checker refuses tabs where the .editorconfig says spaces,
+// and Wrangler writes worker-configuration.d.ts with tabs.
+test("a template file indented with tabs is allowed by its .editorconfig", () => {
+    for (const combination of combinations()) {
+        const sources = compose(layersOf(combination));
+        const config = readFileSync(sources.get(".editorconfig") ?? "", "utf8");
+        const tabs = (/** @type {string} */ name) =>
+            new RegExp(
+                `^\\[${name.replaceAll(".", "\\.")}\\]\\n(?:(?!\\[).*\\n)*?indent_style = tab$`,
+                "m",
+            ).test(config);
+        const refused = [...sources]
+            .filter(([, source]) => /^\t/m.test(readFileSync(source, "utf8")))
+            .map(([file]) => file)
+            .filter((file) => !tabs(file.split("/").at(-1) ?? file));
+        assert.deepEqual(
+            refused,
+            [],
+            label(combination.template, combination.features),
+        );
+    }
+});
+
 test("the deploy job needs the account, and a push or a manual run", () => {
     const text = readFileSync(
         compose(TEMPLATES.cloudflare.layers(new Set())).get(
