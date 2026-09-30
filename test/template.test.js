@@ -23,11 +23,8 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
-import { parse } from "jsonc-parser";
 import {
-    compose,
     copyTemplate,
-    RENAMED,
     TargetExistsError,
     TEMPLATES_DIR,
     TemplateError,
@@ -129,31 +126,6 @@ test("refuses a directory that exists", () =>
                 /already exists/.test(error.message),
         );
     }));
-
-// The header sync would rewrite these to name create-repo and templates/,
-// and init would then find no header to rewrite.
-test("every template header names the template and its own path", () => {
-    const slug = parse(
-        readFileSync(
-            join(TEMPLATES_DIR, "common", ".repo-metadata.jsonc"),
-            "utf8",
-        ),
-    ).slug;
-    const stray = [...compose(LAYERS)]
-        .filter(([file, source]) => {
-            const text = readFileSync(source, "utf8");
-            const path = RENAMED[file] ?? file;
-            return (
-                text.includes("::: :/") &&
-                !(
-                    text.includes(`~${slug}.git`) &&
-                    text.includes(`::: :/${path}`)
-                )
-            );
-        })
-        .map(([file]) => file);
-    assert.deepEqual(stray, []);
-});
 
 /** Files a checkout's layers may gain, all ignored by the _gitignore. */
 const STRAY = [

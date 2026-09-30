@@ -20,6 +20,7 @@ import { join, relative } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { compose } from "../lib/template.js";
+import { combinations, TEMPLATES } from "../lib/templates.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -41,8 +42,13 @@ function packed() {
 
 test("the package carries every template file", () => {
     const files = packed();
+    const sources = new Set(
+        combinations().flatMap(({ template, features }) => [
+            ...compose(TEMPLATES[template].layers(new Set(features))).values(),
+        ]),
+    );
     assert.deepEqual(
-        [...compose(["common", "npm"]).values()]
+        [...sources]
             .map((source) => relative(ROOT, source))
             .filter((file) => !files.has(file)),
         [],
