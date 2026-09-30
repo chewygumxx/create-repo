@@ -11,5 +11,11 @@
         "types": ["node"],
         "skipLibCheck": true
     },
-    "include": [".commitlintrc.mts", "bin/*.js", "lib/*.js", "test/*.js"]
+    "include": [
+        ".commitlintrc.mts",
+        "bin/*.js",
+        "lib/*.js",
+        "test/*.js",
+        "scripts/*.js"
+    ]
 }

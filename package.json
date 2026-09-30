@@ -48,7 +48,7 @@
         "typescript": "^7.0.2"
     },
     "scripts": {
-        "check": "npm run typecheck && npm run lint:biome && npm run lint:md && npm run lint:yaml && npm run lint:emdash && npm run lint:template && npm test",
+        "check": "npm run typecheck && npm run lint:biome && npm run lint:md && npm run lint:yaml && npm run lint:emdash && npm run lint:templates && npm test",
         "commit": "cz",
         "format": "biome format --write . && npm run format:yaml",
         "format:check": "biome format .",
@@ -57,7 +57,7 @@
         "lint:biome": "biome ci .",
         "lint:emdash": "git grep -nIP --untracked '\\x{2014}'; test $? -eq 1",
         "lint:md": "git ls-files -z '*.md' | xargs -0 -r remark --frail --quiet --no-stdout",
-        "lint:template": "rm -rf .templates && node -e \"import('./lib/template.js').then((m) => m.copyTemplate('.templates/standard', ['common', 'npm']))\" && cd .templates/standard && biome ci --vcs-use-ignore-file=false .",
+        "lint:templates": "node scripts/materialize.js --all .templates && for dir in .templates/*/; do (cd \"$dir\" && biome ci --vcs-use-ignore-file=false .) || exit 1; done",
         "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamllint --strict",
         "prepare": "test -d node_modules/husky && husky || true",
         "test": "node --test 'test/*.test.js'",
