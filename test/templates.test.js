@@ -713,6 +713,12 @@ test("a zsh plugin's name is a function's: no leading -, no reserved word", () =
         "autoload",
         "unfunction",
         "unset",
+        // The runner's own names: `test_*` functions are its tests, and the
+        // others are functions its helpers define.
+        "test_x",
+        "test_greets",
+        "assert_equal",
+        "on_fpath",
     ]) {
         assert.throws(
             () => check(name),
