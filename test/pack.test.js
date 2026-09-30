@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { listFiles, TEMPLATE_DIR } from "../lib/template.js";
+import { templateFiles } from "../lib/template.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -42,7 +42,7 @@ function packed() {
 test("the package carries every template file", () => {
     const files = packed();
     assert.deepEqual(
-        listFiles(TEMPLATE_DIR)
+        templateFiles()
             .map((file) => `template/${file}`)
             .filter((file) => !files.has(file)),
         [],

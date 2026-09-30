@@ -11,17 +11,25 @@
 // @ts-check
 
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+    cpSync,
+    existsSync,
+    mkdirSync,
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { parse } from "jsonc-parser";
 import {
     copyTemplate,
-    listFiles,
     RENAMED,
     TEMPLATE_DIR,
     TemplateError,
+    templateFiles,
 } from "../lib/template.js";
 
 /** @param {(root: string) => void} body */
@@ -39,7 +47,7 @@ test("copies every file, restoring .gitignore", () =>
         const files = copyTemplate(join(root, "x"));
         assert.ok(files.includes(".gitignore"));
         assert.ok(!files.includes("_gitignore"));
-        assert.equal(files.length, listFiles(TEMPLATE_DIR).length);
+        assert.equal(files.length, templateFiles().length);
         assert.equal(
             readFileSync(join(root, "x", ".gitignore"), "utf8"),
             readFileSync(join(TEMPLATE_DIR, "_gitignore"), "utf8"),
@@ -63,7 +71,7 @@ test("every template header names the template and its own path", () => {
     const slug = parse(
         readFileSync(join(TEMPLATE_DIR, ".repo-metadata.jsonc"), "utf8"),
     ).slug;
-    const stray = listFiles(TEMPLATE_DIR).filter((file) => {
+    const stray = templateFiles().filter((file) => {
         const text = readFileSync(join(TEMPLATE_DIR, file), "utf8");
         const path = RENAMED[file] ?? file;
         return (
@@ -73,3 +81,60 @@ test("every template header names the template and its own path", () => {
     });
     assert.deepEqual(stray, []);
 });
+
+/** Files a checkout's template/ may gain, all ignored by its _gitignore. */
+const STRAY = [
+    "node_modules/pkg/index.js",
+    ".env.local",
+    "docs/notes.local.md",
+    ".claude/worktrees/x/file",
+];
+
+/**
+ * A copy of the template with stray files added.
+ * @param {string} root
+ */
+function strayTemplate(root) {
+    const from = join(root, "template");
+    cpSync(TEMPLATE_DIR, from, { recursive: true });
+    for (const file of STRAY) {
+        mkdirSync(dirname(join(from, file)), { recursive: true });
+        writeFileSync(join(from, file), "stray\n");
+    }
+    return from;
+}
+
+test("lists no file the template's own .gitignore ignores", () =>
+    inTemp((root) => {
+        const files = templateFiles(strayTemplate(root));
+        assert.deepEqual(
+            STRAY.filter((file) => files.includes(file)),
+            [],
+        );
+        assert.deepEqual(files, templateFiles());
+    }));
+
+test("copies no file the template's own .gitignore ignores", () =>
+    inTemp((root) => {
+        const from = strayTemplate(root);
+        const files = copyTemplate(join(root, "x"), from);
+        assert.deepEqual(
+            STRAY.filter(
+                (file) =>
+                    files.includes(file) || existsSync(join(root, "x", file)),
+            ),
+            [],
+        );
+    }));
+
+test("an ignore rule it cannot follow fails loudly", () =>
+    inTemp((root) => {
+        const from = strayTemplate(root);
+        writeFileSync(join(from, "_gitignore"), "*.log\n!keep.log\n");
+        assert.throws(
+            () => templateFiles(from),
+            (error) =>
+                error instanceof TemplateError &&
+                /!keep\.log/.test(error.message),
+        );
+    }));
