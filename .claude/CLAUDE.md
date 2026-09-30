@@ -26,3 +26,7 @@ work.
 `template/` is the template this package copies into every new repository.
 Its `.claude/`, `README.md` and configuration describe those repositories,
 not this one.
+
+Leave the template's `chewygumxx/repo-tmpl` identity in its file headers and
+`.repo-metadata.jsonc` as it is: `lib/init.js` finds and rewrites it in each
+new repository. Its `_gitignore` is renamed to `.gitignore` on copy.
