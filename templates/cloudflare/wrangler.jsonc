@@ -1,0 +1,25 @@
+// vim:set expandtab shiftwidth=4 filetype=jsonc:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/repo-tmpl.git
+// ::: :/wrangler.jsonc
+//
+//
+
+// https://developers.cloudflare.com/workers/wrangler/configuration/
+//
+// After changing this file's bindings or vars, run `npm run types`.
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "repo-tmpl",
+    "main": "src/index.ts",
+    // Pinned, and bumped by hand. It cannot be later than the newest date the
+    // workerd inside @cloudflare/vitest-pool-workers supports, or the tests
+    // will not start: bump it with that package.
+    "compatibility_date": "2026-08-15",
+    "observability": {
+        "enabled": true
+    }
+}

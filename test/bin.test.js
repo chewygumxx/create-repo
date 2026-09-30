@@ -85,6 +85,9 @@ function runBin(argv) {
                 ? JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))
                 : undefined,
             gitignore: existsSync(join(dir, ".gitignore")),
+            wrangler: existsSync(join(dir, "wrangler.jsonc"))
+                ? readFileSync(join(dir, "wrangler.jsonc"), "utf8")
+                : undefined,
         };
     } finally {
         rmSync(root, { recursive: true, force: true });
@@ -173,6 +176,33 @@ test("typescript is copied, initialised and named in the commit", () => {
     assert.equal(pkg.private, true);
 });
 
+test("cloudflare is copied, initialised and named in the commit", () => {
+    const { commit, pkg, wrangler } = dryRun(["--template", "cloudflare"]);
+    assert.match(commit, /\(cloudflare\)\./);
+    assert.equal(pkg.name, "x");
+    assert.equal(pkg.private, true);
+    assert.match(wrangler ?? "", /"name": "x"/);
+});
+
+test("a name a Worker cannot use stops before anything is copied", () => {
+    const { result, copied } = runBin((root) => [
+        "My_Worker",
+        "--description",
+        "D",
+        "--owner",
+        "example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        "--template",
+        "cloudflare",
+    ]);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /Worker name/);
+    assert.ok(!copied);
+});
 test("publish names the package @owner/name and the commit", () => {
     const { commit, pkg } = dryRun([
         "--template",
@@ -280,4 +310,5 @@ test("--help lists the templates", () => {
     assert.match(result.stdout, /--template <name>/);
     assert.match(result.stdout, /\nTemplates:\n {2}standard {4}Any repository/);
     assert.match(result.stdout, /\n {2}typescript {2}A Node library or CLI/);
+    assert.match(result.stdout, /\n {2}cloudflare {2}A Cloudflare Worker/);
 });

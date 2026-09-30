@@ -79,6 +79,91 @@ test("every layer belongs to a template", () => {
     );
 });
 
+test("cloudflare replaces the npm package and adds the Worker", () => {
+    const sources = compose(TEMPLATES.cloudflare.layers(new Set()));
+    for (const file of [
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        ".biome.json",
+        "_gitignore",
+        "README.md",
+        "wrangler.jsonc",
+        "worker-configuration.d.ts",
+        "vitest.config.ts",
+        "src/index.ts",
+        "test/index.test.ts",
+        ".github/workflows/deploy.yaml",
+    ]) {
+        assert.ok(sources.has(file), file);
+        assert.match(sources.get(file) ?? "", /templates\/cloudflare\//, file);
+    }
+    // The typescript layer's test imports a function the Worker replaces.
+    assert.ok(!sources.has("src/index.test.ts"));
+    const pkg = JSON.parse(
+        readFileSync(sources.get("package.json") ?? "", "utf8"),
+    );
+    assert.equal(pkg.private, true);
+    assert.equal(pkg.scripts.test, "vitest run");
+    assert.equal(pkg.scripts.types, "wrangler types --include-runtime=false");
+    assert.match(pkg.scripts.check, /npm run types:check/);
+});
+
+// The full runtime types are 600 KB of Cloudflare's doc comments, em dashes
+// included, which lint:emdash and the hooks refuse.
+test("no template file holds an em dash", () => {
+    for (const combination of combinations()) {
+        const bad = [...compose(layersOf(combination)).entries()]
+            .filter(([, source]) =>
+                readFileSync(source, "utf8").includes("\u2014"),
+            )
+            .map(([file]) => file);
+        assert.deepEqual(
+            bad,
+            [],
+            label(combination.template, combination.features),
+        );
+    }
+});
+
+// The job must stay skipped until the account is configured, and must not
+// deploy a pull request's run.
+test("the deploy job needs the account, and a push or a manual run", () => {
+    const text = readFileSync(
+        compose(TEMPLATES.cloudflare.layers(new Set())).get(
+            ".github/workflows/deploy.yaml",
+        ) ?? "",
+        "utf8",
+    );
+    assert.match(text, /vars\.CLOUDFLARE_ACCOUNT_ID != ''/);
+    assert.match(text, /github\.event_name == 'workflow_dispatch'/);
+    assert.match(text, /github\.event\.workflow_run\.event == 'push'/);
+    assert.match(text, /github\.event\.workflow_run\.conclusion == 'success'/);
+});
+
+test("a Worker's name must be a lowercase label of 1 to 63 characters", () => {
+    const { checkName } = TEMPLATES.cloudflare;
+    assert.ok(checkName);
+    for (const name of ["a", "my-worker", "w2", "a".repeat(63)]) {
+        checkName({ owner: "example", name }, new Set());
+    }
+    for (const name of [
+        "My-Worker",
+        "my_worker",
+        "my.worker",
+        "-worker",
+        "worker-",
+        "a".repeat(64),
+    ]) {
+        assert.throws(
+            () => checkName({ owner: "example", name }, new Set()),
+            (error) =>
+                error instanceof UsageError &&
+                /Worker name/.test(error.message),
+            name,
+        );
+    }
+});
 test("typescript takes publish by default at the prompt", () => {
     assert.deepEqual(TEMPLATES.typescript.defaultFeatures, ["publish"]);
 });
