@@ -1,8 +1,7 @@
 # @chewygumxx/create-repo
 
-Creates a GitHub repository from
-[`chewygumxx/repo-tmpl`](https://github.com/chewygumxx/repo-tmpl) whose first
-CI run passes, including the repository metadata sync.
+Creates a GitHub repository from the template bundled in this package, whose
+first CI run passes, including the repository metadata sync.
 
 ```sh
 npm create @chewygumxx/repo my-thing
@@ -10,14 +9,19 @@ npm create @chewygumxx/repo my-thing
 
 It asks for anything not given as a flag, shows a summary, and on
 confirmation copies the template, installs its toolchain with mise and its
-dependencies with npm, runs the template's `scripts/init.mjs`, and commits
-once `npm run check` passes. Only then does it create the repository, set the
+dependencies with npm, rewrites its identity, and commits once
+`npm run check` passes. Only then does it create the repository, set the
 metadata App's `METADATA_APP_CLIENT_ID` variable and
 `METADATA_APP_PRIVATE_KEY` secret, and push. A failure before that leaves
 nothing on GitHub.
 
-It needs Node 22 or later, `git`, `mise`, and `gh` logged in with
+It needs Node 24 or later, `git`, `mise`, and `gh` logged in with
 `gh auth login`.
+
+## The template
+
+`template/` is the whole template. A package version always creates the
+same repository, and the first commit names the version that made it.
 
 ## Flags
 
@@ -38,8 +42,8 @@ secret.
 
 ## The metadata App private key
 
-The client ID is read from the template repository's variable. The private
-key comes from the first of:
+The client ID is read from the `chewygumxx/create-repo` repository's
+variable. The private key comes from the first of:
 
 1. `--metadata-key-file <path>`, or `-` for standard input
 2. `METADATA_APP_PRIVATE_KEY`, the key itself
