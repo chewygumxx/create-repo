@@ -321,3 +321,15 @@ test("an edit left out leaves identity the guard reports", () =>
             error instanceof TemplateError &&
             /remains in .*README\.md/.test(error.message),
     ));
+
+// The guard looks for the template's identity, not for text the user chose.
+test("input that contains the template's identity is not a leftover", () => {
+    for (const changes of [
+        { name: "repo-tmpl-fork" },
+        { description: "Based on repo-tmpl, with is_template off." },
+        { description: `${"word ".repeat(14)}Using this template is easy.` },
+        { topics: ["repo_tmpl"] },
+    ]) {
+        initialised(() => {}, changes);
+    }
+});
