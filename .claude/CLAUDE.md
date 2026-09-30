@@ -20,13 +20,18 @@ tags:
 
 # CLAUDE.md
 
-Compose single-line commits for granular commits and continuously commit as you
-work.
+Continuously granularly commit as you work. Compose single-line commit messages
+whenever appropriate. If the granular commit does indeed warrant further
+context, include such within the commit message body.
 
-`template/` is the template this package copies into every new repository.
-Its `.claude/`, `README.md` and configuration describe those repositories,
-not this one.
+## Repository Information
 
-Leave the template's `chewygumxx/repo-tmpl` identity in its file headers and
-`.repo-metadata.jsonc` as it is: `lib/init.js` finds and rewrites it in each
-new repository. Its `_gitignore` is renamed to `.gitignore` on copy.
+`templates/` holds the templates this package copies into every new
+repository, as layer directories that `lib/templates.js` composes. Their
+`.claude/`, `README.md` and configuration describe those repositories, not
+this one.
+
+Leave the templates' `chewygumxx/repo-tmpl` identity in their file headers
+and `.repo-metadata.jsonc` as it is: `lib/init.js` finds and rewrites it in
+each new repository, and fails if `repo-tmpl` or `repo_tmpl` remains
+anywhere. Each layer's `_gitignore` is renamed to `.gitignore` on copy.

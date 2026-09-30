@@ -1,15 +1,15 @@
 # @chewygumxx/create-repo
 
-Creates a GitHub repository from the template bundled in this package, whose
-first CI run passes, including the repository metadata sync.
+Creates a GitHub repository from one of the templates bundled in this
+package, whose first CI run passes, including the repository metadata sync.
 
 ```sh
 npm create @chewygumxx/repo my-thing
 ```
 
 It asks for anything not given as a flag, shows a summary, and on
-confirmation copies the template, installs its toolchain with mise and its
-dependencies with npm, rewrites its identity, and commits once
+confirmation copies the chosen template, installs its toolchain with mise
+and its dependencies with npm, rewrites its identity, and commits once
 `npm run check` passes. Only then does it create the repository, set the
 metadata App's `METADATA_APP_CLIENT_ID` variable and
 `METADATA_APP_PRIVATE_KEY` secret, and push. A failure before that leaves
@@ -23,25 +23,47 @@ report the package's `prepare` script as blocked. It only sets up this
 repository's own development tooling and is never needed, so the notice is
 safe to ignore.
 
-## The template
+## The templates
 
-`template/` is the whole template. A package version always creates the
-same repository, and the first commit names the version that made it.
+| Template   | For                                                  |
+| ---------- | ---------------------------------------------------- |
+| `standard` | Any repository: commit rules, lint and format checks |
+|            | CI and Claude Code settings                          |
 
-Its identity stays `chewygumxx/repo-tmpl`: `~chewygumxx/repo-tmpl.git` in every
-file header and the slug in `.repo-metadata.jsonc` are what `lib/init.js`
-finds and rewrites for each new repository. They look stale but are not, so
-`.gitattributes` keeps the header sync out of `template/`.
+`--template` chooses one, `standard` by default, and `--with` turns on its
+optional features; `--help` lists both. A package version always creates
+the same repository, and the first commit names the version and template
+that made it.
 
-Its `.gitignore` is stored as `_gitignore`, since npm drops nested `.gitignore`
-files from the package, and is renamed back on copy.
+Each template is an ordered list of layers under `templates/`, declared in
+`lib/templates.js`: a later layer's file replaces the same file from an
+earlier one. `common` holds what every repository carries, and `npm` the
+npm-based checks.
+
+The templates' identity stays `chewygumxx/repo-tmpl`:
+`~chewygumxx/repo-tmpl.git` in every file header and the slug in
+`.repo-metadata.jsonc` are what `lib/init.js` finds and rewrites for each
+new repository. They look stale but are not, so `.gitattributes` keeps the
+header sync out of `templates/`. After its edits, init fails if
+`repo-tmpl`, or the identifier form `repo_tmpl`, remains anywhere.
+
+A layer stores `.gitignore` as `_gitignore`, since npm drops nested
+`.gitignore` files from the package, and it is renamed back on copy. The
+last layer's applies to all of them.
 
 ## Development
 
-`npm run check` runs the typecheck, the lint checks, `npm run lint:template`
-(the template's own Biome rules) and the tests. The Create Repo workflow runs
-`--dry-run` on the template, so it also catches the template drifting from
-`lib/init.js` or failing its own `npm run check`.
+`npm run check` runs the typecheck, the lint checks,
+`npm run lint:templates` (each template's own Biome rules, run on every
+combination materialised under `.templates/`) and the tests. The Create Repo
+workflow runs `--dry-run` on every template and combination of features, so
+it also catches a template drifting from `lib/init.js` or failing its own
+`npm run check`.
+
+`node scripts/materialize.js <template> [--with <features>] <dir>` writes
+a template as it is before init. To update an npm layer's lock after
+changing its `package.json`, run `npm install --package-lock-only` in the
+layer's directory.
 
 To release, bump `version` in `package.json` and `package-lock.json`, commit,
 and push a matching `v*` tag. The Publish workflow runs the check and the dry
@@ -53,6 +75,7 @@ npmjs.com to publish it.
 ```sh
 npm create @chewygumxx/repo -- \
     my-thing \
+    --template standard \
     --description "…" \
     --topics a,b \
     --scopes api,"cli:Command Line" \
