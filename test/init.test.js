@@ -31,8 +31,10 @@ import { test } from "node:test";
 import { parse } from "jsonc-parser";
 import {
     commitlintScopes,
+    committedScopes,
     headers,
     init,
+    moduleName,
     packageJson,
     packageLock,
     readme,
@@ -417,3 +419,110 @@ test("short input does not hide a leftover it is part of", () => {
         );
     }
 });
+
+/**
+ * Runs `edits` over a copy holding only `files`, then hands `body` a reader
+ * of the result.
+ * @param {Record<string, string>} files
+ * @param {import("../lib/init.js").Edit[]} edits
+ * @param {(read: (file: string) => string) => void} body
+ * @param {Partial<typeof IDENTITY>} [changes]
+ */
+function edited(files, edits, body, changes = {}) {
+    inTemp((root) => {
+        const copy = bare(root, { ...METADATA, ...files });
+        init(copy.dir, { ...IDENTITY, ...changes }, copy.files, {
+            edits,
+            today: "2026-10-01",
+        });
+        body((file) => read(copy.dir, file));
+    });
+}
+
+const COMMITTED = `allowed_scopes = [
+    # Claude Code assets
+    "claude",
+]
+`;
+
+test("committedScopes adds each scope, its full name as a comment", () =>
+    edited({ "committed.toml": COMMITTED }, [committedScopes], (read) => {
+        assert.equal(
+            read("committed.toml"),
+            `allowed_scopes = [
+    # Claude Code assets
+    "claude",
+    # Api
+    "api",
+    # Command Line
+    "cli",
+]
+`,
+        );
+    }));
+
+test("committedScopes leaves the file alone when no scope is asked for", () =>
+    edited(
+        { "committed.toml": COMMITTED },
+        [committedScopes],
+        (read) => {
+            assert.equal(read("committed.toml"), COMMITTED);
+        },
+        { scopes: [] },
+    ));
+
+test("committedScopes keeps a scope's quotes and lines out of the TOML", () =>
+    edited(
+        { "committed.toml": COMMITTED },
+        [committedScopes],
+        (read) => {
+            assert.match(
+                read("committed.toml"),
+                /^ {4}# Two lines # not code$/m,
+            );
+            assert.match(read("committed.toml"), /^ {4}"a\\"b",$/m);
+        },
+        { scopes: [{ name: 'a"b', fullName: "Two\nlines # not code" }] },
+    ));
+
+test("committedScopes fails when committed.toml has no allowed_scopes", () => {
+    assert.throws(
+        () =>
+            edited(
+                { "committed.toml": 'style = "conventional"\n' },
+                [committedScopes],
+                () => {},
+            ),
+        (error) =>
+            error instanceof TemplateError &&
+            /allowed_scopes in committed\.toml/.test(error.message),
+    );
+});
+
+test("moduleName names the module in every file that holds the token", () =>
+    edited(
+        {
+            "src/lib.rs": "use repo_tmpl::greeting;\n",
+            "docs/a.md": "repo_tmpl, twice: repo_tmpl\n",
+            "notes.txt": "nothing to rename\n",
+        },
+        [moduleName((name) => name.replaceAll("-", "_"))],
+        (read) => {
+            assert.equal(read("src/lib.rs"), "use derived_repo::greeting;\n");
+            assert.equal(
+                read("docs/a.md"),
+                "derived_repo, twice: derived_repo\n",
+            );
+            assert.equal(read("notes.txt"), "nothing to rename\n");
+        },
+    ));
+
+test("moduleName takes its value literally, not as a replacement pattern", () =>
+    edited({ "a.txt": "repo_tmpl\n" }, [moduleName(() => "$&$1")], (read) => {
+        assert.equal(read("a.txt"), "$&$1\n");
+    }));
+
+test("moduleName asks nothing of a repository without the token", () =>
+    edited({ "a.txt": "a\n" }, [moduleName((name) => name)], (read) => {
+        assert.equal(read("a.txt"), "a\n");
+    }));
