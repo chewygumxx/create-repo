@@ -74,8 +74,9 @@ const read = (dir, file) => readFileSync(join(dir, file), "utf8");
  * @param {(dir: string, files: string[]) => void} body
  * @param {Partial<typeof IDENTITY>} [changes]
  * @param {(dir: string) => void} [before]
+ * @param {string[]} [features] the template's chosen features
  */
-function initialised(body, changes = {}, before = () => {}) {
+function initialised(body, changes = {}, before = () => {}, features = []) {
     const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
     try {
         const dir = join(root, "derived");
@@ -83,6 +84,7 @@ function initialised(body, changes = {}, before = () => {}) {
         before(dir);
         init(dir, { ...IDENTITY, ...changes }, files, {
             edits: EDITS,
+            features,
             today: "2026-10-01",
         });
         body(dir, files);
@@ -127,6 +129,20 @@ test("metadata, package and lockfile carry the identity", () =>
         assert.equal(lock.name, "derived-repo");
         assert.equal(lock.packages[""].name, "derived-repo");
     }));
+
+test("a published package is @owner/name, in package and lockfile", () =>
+    initialised(
+        (dir) => {
+            const name = "@example/derived-repo";
+            assert.equal(JSON.parse(read(dir, "package.json")).name, name);
+            const lock = JSON.parse(read(dir, "package-lock.json"));
+            assert.equal(lock.name, name);
+            assert.equal(lock.packages[""].name, name);
+        },
+        {},
+        undefined,
+        ["publish"],
+    ));
 
 test("README frontmatter, heading and body", () =>
     initialised((dir) => {
