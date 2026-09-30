@@ -51,6 +51,8 @@ test("prompts for every missing value", async () => {
             { name: "api", fullName: "Api" },
             { name: "cli", fullName: "Command Line" },
         ],
+        template: "standard",
+        features: [],
         owner: "someone",
         visibility: "public",
         dir: resolve("my-thing"),
@@ -105,6 +107,8 @@ test("without a terminal, a missing name fails and topics are empty", async () =
     );
     assert.deepEqual(answers.topics, []);
     assert.deepEqual(answers.scopes, []);
+    assert.equal(answers.template, "standard");
+    assert.deepEqual(answers.features, []);
 });
 
 test("the summary says what will happen", async () => {
@@ -143,4 +147,157 @@ test("confirm accepts only yes", async () => {
             expected,
         );
     }
+});
+
+/** @type {Record<string, import("../lib/templates.js").Template>} */
+const CATALOGUE = {
+    standard: {
+        description: "S",
+        family: "npm",
+        features: {},
+        layers: () => [],
+        edits: [],
+    },
+    crate: {
+        description: "C",
+        family: "npm",
+        features: { lib: "L", bin: "B" },
+        layers: () => [],
+        edits: [],
+        checkName: ({ name }) => {
+            if (name.includes(".")) throw new UsageError("No dots.");
+        },
+    },
+};
+
+test("prompts for the template and its features when there is a choice", async () => {
+    const { ask, asked } = asker(["2", "lib", "my-thing", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        templates: CATALOGUE,
+    });
+    assert.equal(answers.template, "crate");
+    assert.deepEqual(answers.features, ["lib"]);
+    assert.match(
+        asked[0],
+        /1\. standard +S\n {2}2\. crate +C\nTemplate \[standard\]: $/,
+    );
+    assert.match(asked[1], /lib +L/);
+});
+
+test("an empty reply takes standard, which asks for no features", async () => {
+    const { ask, asked } = asker(["", "x", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        templates: CATALOGUE,
+    });
+    assert.equal(answers.template, "standard");
+    assert.deepEqual(answers.features, []);
+    assert.equal(asked.length, 5);
+});
+
+test("a bad template reply asks again", async () => {
+    /** @type {string[]} */
+    const warnings = [];
+    const { ask } = asker(["0", "9", "nope", "crate", "", "x", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        warn: (message) => warnings.push(message),
+        templates: CATALOGUE,
+    });
+    assert.equal(answers.template, "crate");
+    assert.deepEqual(warnings.slice(0, 2), [
+        "Choose 1 to 2.",
+        "Choose 1 to 2.",
+    ]);
+    assert.match(warnings[2], /Unknown template "nope"/);
+});
+
+test("the template's name rule asks again, and refuses a flag", async () => {
+    /** @type {string[]} */
+    const warnings = [];
+    const { ask } = asker(["crate", "", "a.b", "ab", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        warn: (message) => warnings.push(message),
+        templates: CATALOGUE,
+    });
+    assert.equal(answers.name, "ab");
+    assert.deepEqual(warnings, ["No dots."]);
+    await assert.rejects(
+        completeAnswers(
+            parseOptions(["a.b", "--template", "crate", "--description", "D"]),
+            { owner: "o", templates: CATALOGUE },
+        ),
+        /No dots\./,
+    );
+});
+
+test("flags choose the template and features without asking", async () => {
+    const answers = await completeAnswers(
+        parseOptions([
+            "x",
+            "--description",
+            "D",
+            "--template",
+            "crate",
+            "--with",
+            "bin,lib",
+            "--topics",
+            "",
+            "--scopes",
+            "",
+        ]),
+        { owner: "o", ask: asker([]).ask, templates: CATALOGUE },
+    );
+    assert.equal(answers.template, "crate");
+    assert.deepEqual(answers.features, ["lib", "bin"]);
+});
+
+test("without a terminal, a template's features default to none", async () => {
+    const answers = await completeAnswers(
+        parseOptions(["x", "--description", "D", "--template", "crate"]),
+        { owner: "o", templates: CATALOGUE },
+    );
+    assert.deepEqual(answers.features, []);
+});
+
+test("unknown templates and features are refused", async () => {
+    const run = (/** @type {string[]} */ argv) =>
+        completeAnswers(parseOptions(["x", "--description", "D", ...argv]), {
+            owner: "o",
+            templates: CATALOGUE,
+        });
+    await assert.rejects(
+        run(["--template", "nope"]),
+        /Unknown template "nope"/,
+    );
+    await assert.rejects(
+        run(["--template", "crate", "--with", "wasm"]),
+        /no feature "wasm"/,
+    );
+    await assert.rejects(run(["--with", "lib"]), /has no features/);
+});
+
+test("the summary names the template and its features", async () => {
+    const answers = await completeAnswers(
+        parseOptions([
+            "x",
+            "--description",
+            "D",
+            "--template",
+            "crate",
+            "--with",
+            "lib",
+        ]),
+        { owner: "o", templates: CATALOGUE },
+    );
+    assert.match(
+        summary(answers, { dryRun: false }),
+        /Template +crate, with lib/,
+    );
 });
