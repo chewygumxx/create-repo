@@ -35,3 +35,9 @@ indent_size = 2
 # ------------------------------------------------------
 [worker-configuration.d.ts]
 indent_style = tab
+
+# ----------------------------------------------------------------------
+# The rust layer's YAML, which the native layer's yamlfmt indents by two
+# ----------------------------------------------------------------------
+[templates/rust/**.{yaml,yml}]
+indent_size = 2
