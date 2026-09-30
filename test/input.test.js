@@ -17,7 +17,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { UsageError } from "../lib/args.js";
+import { parseOptions, UsageError } from "../lib/args.js";
+import { completeAnswers } from "../lib/prompt.js";
 import { checkKnownFeatures } from "../lib/templates.js";
 
 const BIN = fileURLToPath(new URL("../bin/create-repo.js", import.meta.url));
@@ -69,4 +70,28 @@ test("a feature no template offers is refused when a terminal may choose", () =>
             /"nonsense"/.test(error.message) &&
             /lib/.test(error.message),
     );
+});
+
+test("None at the features prompt means no feature, in any case", async () => {
+    let asked = 0;
+    const answers = await completeAnswers(
+        parseOptions([
+            "x",
+            "--template",
+            "rust",
+            "--description",
+            "D",
+            "--owner",
+            "o",
+        ]),
+        {
+            owner: "o",
+            ask: async (question) => {
+                if (!/Features/.test(question)) return "";
+                if (++asked > 1) throw new Error("asked the features again");
+                return " None ";
+            },
+        },
+    );
+    assert.deepEqual(answers.features, []);
 });
