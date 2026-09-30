@@ -102,6 +102,73 @@ test("typescript adds sources, tests and its own package over npm", () => {
     assert.match(pkg.scripts.check, /npm run test/);
 });
 
+test("publish replaces the package, adds the build and the workflow", () => {
+    const sources = compose(TEMPLATES.typescript.layers(new Set(["publish"])));
+    for (const file of [
+        "package.json",
+        "package-lock.json",
+        "_gitignore",
+        "README.md",
+        "tsconfig.build.json",
+        ".github/workflows/publish.yaml",
+    ]) {
+        assert.ok(sources.has(file), file);
+        assert.match(
+            sources.get(file) ?? "",
+            /templates\/typescript-publish\//,
+            file,
+        );
+    }
+    const pkg = JSON.parse(
+        readFileSync(sources.get("package.json") ?? "", "utf8"),
+    );
+    assert.ok(!("private" in pkg));
+    assert.equal(pkg.name, "@chewygumxx/repo-tmpl");
+    assert.deepEqual(pkg.files, ["dist"]);
+    assert.equal(pkg.scripts.prepack, "npm run build");
+    assert.equal(pkg.publishConfig.provenance, true);
+    assert.match(pkg.scripts.check, /npm run build/);
+    assert.match(
+        readFileSync(sources.get("_gitignore") ?? "", "utf8"),
+        /^\/dist\/$/m,
+    );
+});
+
+// The package stays private, and unpublishable by accident.
+test("typescript without publish carries no publishing", () => {
+    const sources = compose(TEMPLATES.typescript.layers(new Set()));
+    assert.ok(!sources.has(".github/workflows/publish.yaml"));
+    assert.ok(!sources.has("tsconfig.build.json"));
+    assert.doesNotMatch(
+        readFileSync(sources.get("_gitignore") ?? "", "utf8"),
+        /dist/,
+    );
+});
+
+test("a published package's owner and name must be lowercase npm names", () => {
+    const { checkName } = TEMPLATES.typescript;
+    assert.ok(checkName);
+    const publish = new Set(["publish"]);
+    checkName({ owner: "example", name: "my.thing_2" }, publish);
+    // Not published: any GitHub name will do.
+    checkName({ owner: "Example", name: ".Github" }, new Set());
+    for (const identity of [
+        { owner: "Example", name: "x" },
+        { owner: "example", name: "X" },
+        { owner: "example", name: ".github" },
+        { owner: "example", name: "_notes" },
+    ]) {
+        assert.throws(
+            () => checkName(identity, publish),
+            (error) =>
+                error instanceof UsageError &&
+                /@\S+\/\S+/.test(error.message) &&
+                /lowercase/.test(error.message),
+            JSON.stringify(identity),
+        );
+    }
+});
+
 // `npm ci` fails when they differ, which only the CI matrix would notice.
 test("each layer's lockfile matches its package.json", () => {
     for (const layer of readdirSync(TEMPLATES_DIR)) {

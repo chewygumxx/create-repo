@@ -173,6 +173,61 @@ test("typescript is copied, initialised and named in the commit", () => {
     assert.equal(pkg.private, true);
 });
 
+test("publish names the package @owner/name and the commit", () => {
+    const { commit, pkg } = dryRun([
+        "--template",
+        "typescript",
+        "--with",
+        "publish",
+    ]);
+    assert.match(commit, /\(typescript, with publish\)\./);
+    assert.equal(pkg.name, "@example/x");
+    assert.ok(!("private" in pkg));
+    assert.equal(pkg.publishConfig.access, "public");
+});
+
+test("a name npm refuses stops publish before anything is copied", () => {
+    const { result, copied } = runBin((root) => [
+        "x",
+        "--description",
+        "D",
+        "--owner",
+        "Example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        "--template",
+        "typescript",
+        "--with",
+        "publish",
+    ]);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /@Example\/x.*lowercase/);
+    assert.ok(!copied);
+});
+
+test("--with publish is refused by a template without it", () => {
+    const { result, copied } = runBin((root) => [
+        "x",
+        "--description",
+        "D",
+        "--owner",
+        "example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        "--with",
+        "publish",
+    ]);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /standard template has no features/);
+    assert.ok(!copied);
+});
+
 test("an unknown template stops before any tool runs", () => {
     const { result, copied, lines } = runBin((root) => [
         "x",
