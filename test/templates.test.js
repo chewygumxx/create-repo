@@ -345,6 +345,32 @@ test("a crate's name is 1 to 64 letters, digits, - and _, a library's lowercase"
             name,
         );
     }
+    // Cargo refuses a keyword and `test` for every crate.
+    for (const name of ["fn", "match", "self", "async", "try", "test"]) {
+        assert.throws(
+            () => check(name),
+            (error) =>
+                error instanceof UsageError && /crate name/.test(error.message),
+            name,
+        );
+        assert.throws(() => check(name, "lib"), UsageError, name);
+    }
+    // `std` shadows the standard library in the library's own tests, and
+    // `gen` is a keyword from edition 2024, which the template uses. Cargo
+    // accepts both. `core` and its like only draw a Cargo warning.
+    for (const name of ["std", "gen"]) {
+        assert.doesNotThrow(() => check(name), name);
+        assert.throws(() => check(name, "lib"), UsageError, name);
+    }
+    for (const name of ["core", "alloc", "proc_macro", "proc-macro"]) {
+        assert.doesNotThrow(() => check(name), name);
+        assert.doesNotThrow(() => check(name, "lib"), name);
+    }
+    // A binary named for Cargo's build directories fails to parse.
+    for (const name of ["build", "deps", "examples", "incremental"]) {
+        assert.doesNotThrow(() => check(name, "lib"), name);
+        assert.throws(() => check(name), UsageError, name);
+    }
     assert.doesNotThrow(() => check("my-lib", "lib"));
     for (const name of ["My-Lib", "myLib", "my--lib", "my__lib", "a_-b"]) {
         assert.doesNotThrow(() => check(name), name);
