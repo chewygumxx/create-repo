@@ -77,6 +77,11 @@ jobs:
             - name: Dry Run
               env:
                   GH_TOKEN: ""
+                  # mise's github: backend (Neovim, luafmt) reads release
+                  # metadata from the API, which a shared runner is rate
+                  # limited on without a token. Not GITHUB_TOKEN: that would
+                  # log gh in.
+                  MISE_GITHUB_TOKEN: ${{ github.token }}
                   TEMPLATE: ${{ matrix.template }}
                   WITH: ${{ matrix.with }}
               run: |
