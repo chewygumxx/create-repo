@@ -168,7 +168,7 @@ today.
 | `cargoToml`        | `name`, `description`, `repository` in `[package]`     | rust       |
 | `cargoLock`        | The crate's own `[[package]]` name                     | rust       |
 | `module`           | The `repo_tmpl` token, from `moduleName(rename)`, in   | rust with  |
-|                    | the contents of every file holding it                  | `lib`,     |
+|                    | the contents and path of every file holding it         | `lib`,     |
 |                    |                                                        | nvim, zsh  |
 
 The TOML edits are anchored regular expressions, adding no dependency.
@@ -186,7 +186,11 @@ value per template:
 | zsh        | The name                                                      |
 
 `moduleName` is built from a function of the repository's name, asks nothing of
-a repository with no token, and renames contents only; phase 5 adds paths.
+a repository with no token, and renames paths as well as contents. A path that
+would land on an existing file is an error, and a directory it empties is
+removed. The guard takes the word it writes for the repository's own, as it
+does the name and description, so a name that holds `repo-tmpl` is not a
+leftover.
 
 After every edit, `init` fails if any path or content of the copy still
 holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
@@ -202,7 +206,7 @@ holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 | `rust` with `lib`    |                          | `^[a-z][a-z0-9_-]{0,63}$`: a library's   |
 |                      |                          | name must be snake case for Clippy       |
 | `nvim`               | Lua module               | `^[A-Za-z_][A-Za-z0-9_-]*$` once affixes |
-|                      |                          | are removed                              |
+|                      |                          | are removed: `nvim-` first, then `.nvim` |
 | `zsh`                | Plugin and function      | `^[A-Za-z0-9_-]+$`                       |
 
 ## npm family
@@ -355,21 +359,31 @@ when that file exists.
 
 `common`, `native`, `nvim`, following `chewygumxx/nvim-config`.
 
-- Tools: `github:neovim/neovim` (a pinned stable release),
-  `aqua:LuaLS/lua-language-server`, `aqua:Kampfkarren/selene`, and `luafmt`
-  through `tool_alias` and `matching` as in `nvim-config`.
+- Tools: `github:neovim/neovim` (0.12.5, the stable release `nvim-config`
+  pins), `aqua:LuaLS/lua-language-server`, `aqua:Kampfkarren/selene`, and
+  `luafmt` through `tool_alias` and `matching` as in `nvim-config`.
 - `lua/repo_tmpl/init.lua` (`setup(opts)` over defaults with
   `vim.tbl_deep_extend`), `lua/repo_tmpl/health.lua`, `plugin/repo_tmpl.lua`
-  (a load guard and one user command), `doc/repo_tmpl.txt`,
+  (a load guard and one user command, `:Hello`: its name is fixed, since a
+  command's cannot hold the `-` or `_` a module's can), `doc/repo_tmpl.txt`,
   `tests/test_repo_tmpl.lua`, `tests/minimal_init.lua`, `tests/run.lua`.
-- `.luarc.json` (LuaJIT, the `vim` global), `selene.toml` with `vim.yml`
-  (`std = "lua51+vim"`), `.luafmt.toml` as in `nvim-config`.
-- Tasks: `deps` clones mini.test at a pinned tag into `.tests/`; `lint:lua`
-  (selene, `luafmt --check`); `lint:types` (lua-language-server `--check`,
-  failing at warnings); `test:nvim` (depends on `deps`; `nvim --headless -u
-  tests/minimal_init.lua -l tests/run.lua`); `format:lua`; `pre-commit:lua`.
-- `tests/run.lua` fails when it collects no test.
-- `_gitignore` adds `/.tests/`.
+- `.luarc.json` (LuaJIT, the `vim` global, and `$VIMRUNTIME/lua` and mini.test
+  as libraries, so the tests' types are known), `selene.toml` with `vim.yml`
+  (`std = "lua51+vim"`, in two-space YAML like every native file), and
+  `.luafmt.toml` as in `nvim-config`.
+- Tasks: `deps` clones mini.test at a pinned tag (v0.18.0) into `.tests/`;
+  `lint:lua` (selene, `luafmt --check --verify`); `lint:types` (depends on
+  `deps`; lua-language-server `--check`, failing at warnings, which it asserts
+  on the summary line, since some releases exit 0 with problems); `test:nvim`
+  (depends on `deps`; `nvim --headless -u tests/minimal_init.lua -l
+  tests/run.lua`); `format:lua`; `pre-commit:lua`.
+- `tests/minimal_init.lua` gives a run a runtimepath of the plugin, Neovim's
+  runtime and mini.test only, so the machine's own configuration cannot change
+  the result. `tests/run.lua` fails when it collects no test.
+- The Lua is luafmt's output, written so that a long module name re-wraps to a
+  fixed point: no line holding the name chains calls, and no README line
+  holds it.
+- `_gitignore` adds `/.tests/` and `/doc/tags`.
 
 ### zsh
 
@@ -408,7 +422,9 @@ The Create Repo workflow runs a matrix: `standard`, `typescript`,
 `nvim`, `zsh`. Each materialises the pristine template with
 `scripts/materialize.js`, installs it and runs its family's format check,
 replacing `npm run lint:template`; then runs the dry run with `--template`
-and `--with`, and the sentinel grep. Publish needs the whole matrix.
+and `--with`, and the sentinel grep. The dry run step passes
+`MISE_GITHUB_TOKEN`, so mise's `github:` backend (Neovim, luafmt) is not held
+to the unauthenticated API rate limit. Publish needs the whole matrix.
 
 ## Development
 
@@ -449,6 +465,8 @@ they would close:
    without npm, so native templates stop carrying copies that can drift.
 3. Reusable `mise` check and committed workflows in `chewygumxx/.github`,
    replacing the native `ci.yaml`'s own jobs.
+4. Bumping the native templates' mise pins and the tag `deps` clones:
+   Dependabot has no mise ecosystem, so they are bumped by hand.
 
 ## Further templates
 
