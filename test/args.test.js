@@ -15,6 +15,7 @@ import { test } from "node:test";
 import {
     checkDescription,
     checkName,
+    parseFeatures,
     parseOptions,
     parseTopics,
     UsageError,
@@ -29,6 +30,10 @@ test("reads the name and every flag", () => {
         "a, b",
         "--scopes",
         "api,cli:Command Line",
+        "--template",
+        "standard",
+        "--with",
+        "a, b",
         "--owner",
         "someone",
         "--private",
@@ -49,6 +54,8 @@ test("reads the name and every flag", () => {
             { name: "api", fullName: "Api" },
             { name: "cli", fullName: "Command Line" },
         ],
+        template: "standard",
+        features: ["a", "b"],
         owner: "someone",
         visibility: "private",
         dir: "here",
@@ -62,8 +69,23 @@ test("reads the name and every flag", () => {
     });
 });
 
-test("--template is no longer accepted", () => {
-    assert.throws(() => parseOptions(["--template", "a/b"]), UsageError);
+// It once named a GitHub repository; now it names a bundled template.
+test("--template takes a bundled template's name, not a repository", () => {
+    for (const name of ["a/b", "Standard", "x_y", ""]) {
+        assert.throws(
+            () => parseOptions(["--template", name]),
+            (error) =>
+                error instanceof UsageError &&
+                /Invalid template/.test(error.message),
+            name,
+        );
+    }
+});
+
+test("an empty --with is no features", () => {
+    assert.deepEqual(parseOptions(["--with", ""]).features, []);
+    assert.deepEqual(parseOptions(["--with", " , "]).features, []);
+    assert.deepEqual(parseFeatures("lib, lib,bin"), ["lib", "bin"]);
 });
 
 test("defaults leave prompted values undefined", () => {
@@ -73,6 +95,8 @@ test("defaults leave prompted values undefined", () => {
     assert.equal(options.visibility, "public");
     assert.equal(options.metadata, true);
     assert.equal(options.yes, false);
+    assert.equal(options.template, undefined);
+    assert.equal(options.features, undefined);
 });
 
 test("--no-metadata switches the metadata off", () => {
@@ -105,6 +129,8 @@ test("rejects mistakes before anything is created", () => {
         ["--owner", "some_user"],
         ["--topics", "a--b"],
         ["--scopes", "x".repeat(16)],
+        ["--with", "Bad"],
+        ["--with", "a b"],
     ]) {
         assert.throws(() => parseOptions(argv), UsageError, argv.join(" "));
     }
