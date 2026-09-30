@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# vim:set expandtab shiftwidth=4 filetype=sh:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.config/mise/tasks/commitlint
+#
+#
+
+#MISE description="Lint commit messages with committed"
+#MISE quiet=true
+
+# Usage: mise run commitlint -- <revision>...
+#
+# Lints each commit `git rev-list <revision>...` names, so `from..to` lints a
+# range and `-1 HEAD` the latest commit. A Dependabot bump is skipped when it
+# carries Dependabot's own Signed-off-by trailer: its headers name the package
+# and both versions, and its bodies carry release-note URLs, neither of which
+# fits the limits. The trailer is required as well as the header, rather than
+# trusting the header alone.
+
+set -euo pipefail
+
+((${#})) || {
+    echo "usage: mise run commitlint -- <revision>..." >&2
+    exit 2
+}
+
+status=0
+while IFS= read -r commit; do
+    message=$(git log -1 --format=%B "$commit")
+    if [[ $message =~ ^(build|ci):\ bump\  ]] &&
+        grep -q '^Signed-off-by: dependabot\[bot\]' <<<"$message"; then
+        continue
+    fi
+    printf '%s\n' "$message" |
+        committed --commit-file - || {
+        echo "committed rejected ${commit:0:7}" >&2
+        status=1
+    }
+done < <(git rev-list --reverse "$@")
+exit "$status"
