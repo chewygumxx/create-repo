@@ -15,9 +15,12 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { init } from "../lib/init.js";
 import { copyTemplate } from "../lib/template.js";
 import { TEMPLATES } from "../lib/templates.js";
+
+const TEMPLATES_DIR = fileURLToPath(new URL("../templates", import.meta.url));
 
 /**
  * Copies and initialises a template, and hands `body` a reader of its files.
@@ -76,4 +79,31 @@ test("a description that mentions repo_tmpl is not rewritten", () => {
         );
         assert.match(at("README.md"), /Wraps repo_tmpl/);
     });
+});
+
+test("the vimdoc's right-aligned lines keep their width for any module", () => {
+    const original = readFileSync(
+        join(TEMPLATES_DIR, "nvim/doc/repo_tmpl.txt"),
+        "utf8",
+    ).split("\n");
+    for (const name of ["nvim-a", "nvim-plugin_name_x"]) {
+        const module = name.replace(/^nvim-/, "");
+        initialised("nvim", [], { name }, (at) => {
+            const lines = at(`doc/${module}.txt`).split("\n");
+            assert.equal(lines.length, original.length, name);
+            original.forEach((line, index) => {
+                if (!/[*|]$/.test(line) || /^\*/.test(line)) return;
+                assert.equal(
+                    lines[index].length,
+                    line.length,
+                    `${name}: ${line}`,
+                );
+                assert.match(
+                    lines[index],
+                    new RegExp(`[*|]${module}[-.:\\w]*[*|]$|[*|]:Hello[*|]$`),
+                    name,
+                );
+            });
+        });
+    }
 });
