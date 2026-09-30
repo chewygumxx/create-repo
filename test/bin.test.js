@@ -129,3 +129,18 @@ test("the copy is the bundled template, initialised", () => {
     assert.equal(pkg.repository, "github:example/x");
     assert.ok(gitignore);
 });
+
+// The template's format:yaml formats only the files git tracks.
+test("the copy is staged before it is formatted", () => {
+    const { lines } = dryRun();
+    const installed = lines.findIndex((line) => line.startsWith("npm ci"));
+    const format = lines.findIndex(
+        (line, index) => index > installed && line.startsWith("npm run"),
+    );
+    assert.ok(
+        lines
+            .slice(installed + 1, format)
+            .some((line) => line.startsWith("git add")),
+        lines.join("\n"),
+    );
+});

@@ -148,6 +148,8 @@ async function main(argv) {
 
         step("Initialising");
         init(dir, answers, files);
+        // Staged first: the template's format:yaml reads `git ls-files`.
+        await run("git", ["add", "--all"], local);
         await run("npm", ["run", "--silent", "format"], local);
 
         step("Checking and committing");
