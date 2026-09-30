@@ -289,11 +289,13 @@ Its tasks are aggregates that language layers extend by adding
 
 `commitlint` is a file task, `.config/mise/tasks/commitlint`, that runs
 committed over each commit `git rev-list <arguments>` names (`mise run
-commitlint -- origin/main..HEAD`, or `-1 HEAD`) and skips a commit whose
-header is `build|ci: bump` and which carries Dependabot's `Signed-off-by`
-trailer, as the shared commitlint configuration's `ignores` does. mise runs
-a task's `run` with `errexit`, so `lint:emdash` is `git grep ... && exit 1
-|| test $? -eq 1`.
+commitlint -- origin/main..HEAD`, or `-1 HEAD`) and skips a commit whose header
+is `build|ci: bump` and which carries Dependabot's `Signed-off-by` trailer, as
+the shared commitlint configuration's `ignores` does. It also skips merge
+commits and a message that begins `Merge `, `Revert `, `amend!`, `fixup!` or
+`squash!`, which the shared configuration ignores by default, and the
+`commit-msg` hook skips the same messages. mise runs a task's `run` with
+`errexit`, so `lint:emdash` is `git grep ... && exit 1 || test $? -eq 1`.
 
 `.githooks/pre-commit` runs `mise run pre-commit`; `.githooks/commit-msg`
 runs `mise exec -- committed --commit-file "$1"`. Both use mise's pinned

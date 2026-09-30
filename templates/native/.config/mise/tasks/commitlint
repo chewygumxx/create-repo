@@ -19,7 +19,9 @@
 # carries Dependabot's own Signed-off-by trailer: its headers name the package
 # and both versions, and its bodies carry release-note URLs, neither of which
 # fits the limits. The trailer is required as well as the header, rather than
-# trusting the header alone.
+# trusting the header alone. Nor are merge commits, and a message that begins
+# `Merge `, `Revert `, `amend!`, `fixup!` or `squash!`, which the shared
+# commitlint configuration ignores by default and commit-msg skips.
 
 set -euo pipefail
 
@@ -29,8 +31,13 @@ set -euo pipefail
 }
 
 status=0
-while IFS= read -r commit; do
+while read -r commit _first second _; do
+    # A second parent makes a merge commit.
+    [[ -z $second ]] || continue
     message=$(git log -1 --format=%B "$commit")
+    if [[ $message =~ ^(Merge\ |[Rr]evert\ |(amend|fixup|squash)!) ]]; then
+        continue
+    fi
     if [[ $message =~ ^(build|ci):\ bump\  ]] &&
         grep -q '^Signed-off-by: dependabot\[bot\]' <<<"$message"; then
         continue
@@ -40,5 +47,5 @@ while IFS= read -r commit; do
         echo "committed rejected ${commit:0:7}" >&2
         status=1
     }
-done < <(git rev-list --reverse "$@")
+done < <(git rev-list --reverse --parents "$@")
 exit "$status"
