@@ -333,3 +333,23 @@ test("input that contains the template's identity is not a leftover", () => {
         initialised(() => {}, changes);
     }
 });
+
+test("short input does not hide a leftover it is part of", () => {
+    for (const changes of [{ name: "repo" }, { topics: ["tmpl"] }]) {
+        assert.throws(
+            () =>
+                initialised(
+                    () => {},
+                    changes,
+                    (dir) =>
+                        writeFileSync(join(dir, "LICENSE"), "repo-tmpl\n", {
+                            flag: "a",
+                        }),
+                ),
+            (error) =>
+                error instanceof TemplateError &&
+                /remains in .*LICENSE/.test(error.message),
+            JSON.stringify(changes),
+        );
+    }
+});
