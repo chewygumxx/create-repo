@@ -15,7 +15,13 @@
 // its wrapping are exercised.
 
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    unlinkSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -145,5 +151,32 @@ test("a template change init does not know about fails", () => {
         (error) =>
             error instanceof TemplateError &&
             /ctime not found/.test(error.message),
+    );
+});
+
+test("a file init cannot parse is a TemplateError naming it", () => {
+    assert.throws(
+        () =>
+            initialised(
+                () => {},
+                {},
+                (dir) => writeFileSync(join(dir, "package.json"), "{ nope"),
+            ),
+        (error) =>
+            error instanceof TemplateError &&
+            /package\.json/.test(error.message),
+    );
+});
+
+test("a file init cannot read is a TemplateError naming it", () => {
+    assert.throws(
+        () =>
+            initialised(
+                () => {},
+                {},
+                (dir) => unlinkSync(join(dir, "README.md")),
+            ),
+        (error) =>
+            error instanceof TemplateError && /README\.md/.test(error.message),
     );
 });

@@ -27,6 +27,7 @@ import { parse } from "jsonc-parser";
 import {
     copyTemplate,
     RENAMED,
+    TargetExistsError,
     TEMPLATE_DIR,
     TemplateError,
     templateFiles,
@@ -60,6 +61,7 @@ test("refuses a directory that exists", () =>
         assert.throws(
             () => copyTemplate(join(root, "x")),
             (error) =>
+                error instanceof TargetExistsError &&
                 error instanceof TemplateError &&
                 /already exists/.test(error.message),
         );
@@ -136,5 +138,17 @@ test("an ignore rule it cannot follow fails loudly", () =>
             (error) =>
                 error instanceof TemplateError &&
                 /!keep\.log/.test(error.message),
+        );
+    }));
+
+test("a copy that fails is a TemplateError naming the cause", () =>
+    inTemp((root) => {
+        const from = strayTemplate(root);
+        rmSync(join(from, "_gitignore"));
+        assert.throws(
+            () => copyTemplate(join(root, "x"), from),
+            (error) =>
+                error instanceof TemplateError &&
+                /_gitignore/.test(error.message),
         );
     }));

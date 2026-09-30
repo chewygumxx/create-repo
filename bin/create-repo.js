@@ -29,7 +29,12 @@ import {
     terminalAsk,
 } from "../lib/prompt.js";
 import { CommandError, run } from "../lib/run.js";
-import { copyTemplate, TemplateError, VERSION } from "../lib/template.js";
+import {
+    copyTemplate,
+    TargetExistsError,
+    TemplateError,
+    VERSION,
+} from "../lib/template.js";
 
 const USAGE = `Usage: npm create @chewygumxx/repo -- [name] [flags]
 
@@ -162,7 +167,10 @@ async function main(argv) {
         );
     } catch (error) {
         console.error(
-            `\nStopped; nothing was created on GitHub. ${dir} is left for inspection.`,
+            // A directory that appeared after checkTarget is not this run's.
+            !(error instanceof TargetExistsError) && existsSync(dir)
+                ? `\nStopped; nothing was created on GitHub. ${dir} is left for inspection.`
+                : "\nStopped; nothing was created.",
         );
         throw error;
     }
