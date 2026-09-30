@@ -85,8 +85,9 @@ subdirectory is a layer:
 | `rust-lib`           | `src/lib.rs`                                             |
 | `nvim`               | The plugin, its tests, tool configurations and mise      |
 |                      | tasks; replaces `_gitignore` and `README.md`             |
-| `zsh`                | The plugin, its tests, `.github/apt-packages.txt` and    |
-|                      | its mise tasks; replaces `README.md`                     |
+| `zsh`                | The plugin, its tests, `.shuck.toml`,                    |
+|                      | `.github/apt-packages.txt` and its mise tasks;           |
+|                      | replaces `README.md`                                     |
 
 `copyTemplate(dir, layers)` copies each layer in order; a file in a later
 layer replaces the same path from an earlier one. No layer deletes: shapes
@@ -207,7 +208,10 @@ holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 |                      |                          | name must be snake case for Clippy       |
 | `nvim`               | Lua module               | `^[A-Za-z_][A-Za-z0-9_-]*$` once affixes |
 |                      |                          | are removed: `nvim-` first, then `.nvim` |
-| `zsh`                | Plugin and function      | `^[A-Za-z0-9_-]+$`                       |
+| `zsh`                | Plugin and function      | `^[A-Za-z0-9_][A-Za-z0-9_-]*$`, and not  |
+|                      |                          | a word zsh reads as syntax, such as `if` |
+|                      |                          | or `while`, which a function cannot be   |
+|                      |                          | named                                    |
 
 ## npm family
 
@@ -392,17 +396,36 @@ when that file exists.
 `common`, `native`, `zsh`, following the Zsh Plugin Standard as `zsh-als`
 does.
 
-- `repo_tmpl.plugin.zsh`: the standard's `$0` handling, `functions/` on
-  `fpath` once, `autoload -Uz repo_tmpl`, and `repo_tmpl_plugin_unload`.
+- `repo_tmpl.plugin.zsh`: the standard's `$0` handling, the plugin's directory
+  kept in `Plugins[repo_tmpl_dir]` (`$0` inside a function is the function's
+  name, so `repo_tmpl_plugin_unload` could not find it otherwise), `functions/`
+  on `fpath` once, `autoload -Uz repo_tmpl`, and `repo_tmpl_plugin_unload`,
+  which undoes all of it.
 - `functions/repo_tmpl`, an example function; `tests/test_repo_tmpl.zsh` and
-  `tests/run.zsh`, which sources the plugin, runs every `test_*` function
-  and fails when there are none.
-- Tools: `github:ewhauser/shuck`.
-- Tasks: `lint:zsh` (`zsh -n` on each tracked zsh file, then shuck),
-  `test:zsh` (`zsh tests/run.zsh`), `pre-commit:zsh` (`zsh -n` on staged
-  files).
+  `tests/run.zsh`, which sources the plugin and every `test_*.zsh` under
+  `tests/`, runs each `test_*` function in a subshell of its own and fails
+  when there are none. `assert_equal` ends its test with `exit 1`, since a
+  test's status is its last command's, and `plugin_root` is the plugin's
+  directory.
+- Tools: `github:ewhauser/shuck`, configured by `.shuck.toml`:
+  `[per-file-shell]` maps `**/*.zsh` and `functions/*` to zsh, which shuck
+  would read as sh, and `[format]` sets four-space indentation and nothing
+  else. A repository with a shuck configuration makes the shared CI run shuck
+  over every shell script, and the native hooks are formatted as shfmt does,
+  so the other format options stay at their defaults. The lint ignores C001 to
+  C003, and a contract gives `tests/` the `plugin_root` that `run.zsh` sets.
+  Shuck's own walk skips an extensionless file with no shebang, such as an
+  autoloaded function, so the shared `lint-zsh` names the detected zsh scripts
+  too (chewygumxx/.github, `actions/lib/shuck.sh`).
+- Tasks: `lint:zsh` (`zsh -n` on each tracked zsh file, then `shuck check` and
+  `shuck format --diff`), `test:zsh` (`zsh -f tests/run.zsh`, so the machine's
+  startup files cannot change the result), `format:zsh` (`shuck format`) and
+  `pre-commit:zsh` (the same checks on staged files). The tasks name the files,
+  `*.zsh` and `functions/*`: shuck finds a file by its extension or shebang,
+  and an autoloaded function has neither.
 - zsh is a system prerequisite, named in the README;
-  `.github/apt-packages.txt` lists `zsh` for CI.
+  `.github/apt-packages.txt` lists `zsh` for CI, and the Create Repo workflow
+  installs it for the `zsh` entry.
 
 ## Testing
 
@@ -425,8 +448,9 @@ The Create Repo workflow runs a matrix: `standard`, `typescript`,
 `scripts/materialize.js`, installs it and runs its family's format check,
 replacing `npm run lint:template`; then runs the dry run with `--template`
 and `--with`, and the sentinel grep. The dry run step passes
-`MISE_GITHUB_TOKEN`, so mise's `github:` backend (Neovim, luafmt) is not held
-to the unauthenticated API rate limit. Publish needs the whole matrix.
+`MISE_GITHUB_TOKEN`, so mise's `github:` backend (Neovim, luafmt, shuck) is
+not held to the unauthenticated API rate limit, and the `zsh` entry installs
+zsh first, which mise does not provide. Publish needs the whole matrix.
 
 ## Development
 
@@ -469,6 +493,9 @@ they would close:
    replacing the native `ci.yaml`'s own jobs.
 4. Bumping the native templates' mise pins and the tag `deps` clones:
    Dependabot has no mise ecosystem, so they are bumped by hand.
+5. zsh on the machine that runs `create-repo`: the `zsh` template's first
+   check needs it, and the README names it. No preflight asks for it, since
+   the template may be chosen at the prompt, after the preflight.
 
 ## Further templates
 

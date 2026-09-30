@@ -16,7 +16,8 @@ metadata App's `METADATA_APP_CLIENT_ID` variable and
 nothing on GitHub.
 
 It needs Node 24 or later, `git`, `mise`, and `gh` logged in with
-`gh auth login`.
+`gh auth login`. The `zsh` template also needs zsh, which mise does not
+install.
 
 Installed with `npm install` rather than run with `npm create`, npm may
 report the package's `prepare` script as blocked. It only sets up this
@@ -38,6 +39,8 @@ safe to ignore.
 |              | with `--with lib` a library                               |
 | `nvim`       | A Neovim plugin in Lua without npm, tested in headless    |
 |              | Neovim with mini.test, checked with mise                  |
+| `zsh`        | A zsh plugin without npm, following the Zsh Plugin        |
+|              | Standard, tested with zsh and linted with shuck           |
 
 `--template` chooses one, `standard` by default, and `--with` turns on its
 optional features; `--help` lists both. A package version always creates
@@ -57,7 +60,8 @@ the hygiene layer without npm: mise pins the tools and aggregates the tasks,
 `committed` lints commit messages, and Biome, rumdl, yamlfmt and yamllint
 carry copies of the shared configurations. `rust` adds Cargo and its mise
 tasks, and `rust-bin` or `rust-lib` the source. `nvim` adds the plugin, its
-tests and the Lua tools' mise tasks. A layer that holds a `package.json` holds
+tests and the Lua tools' mise tasks, and `zsh` the plugin, its tests, shuck's
+configuration and its mise tasks. A layer that holds a `package.json` holds
 its lock; regenerate it with `npm install --package-lock-only` in the layer's
 directory. `rust` holds its `Cargo.lock`: materialise the template, run
 `cargo generate-lockfile` there, and copy the file back.
@@ -68,9 +72,9 @@ The templates' identity stays `chewygumxx/repo-tmpl`:
 new repository. They look stale but are not, so `.gitattributes` keeps the
 header sync out of `templates/`. After its edits, init fails if
 `repo-tmpl`, or the identifier form `repo_tmpl`, remains anywhere. `rust`
-with `lib` names its crate in a doc test as `repo_tmpl`, and `nvim` names its
-module so in code and in paths (`lua/repo_tmpl/`); the `moduleName` edit
-rewrites them.
+with `lib` names its crate in a doc test as `repo_tmpl`, and `nvim` and `zsh`
+name their module so in code and in paths (`lua/repo_tmpl/`,
+`repo_tmpl.plugin.zsh`); the `moduleName` edit rewrites them.
 
 A layer stores `.gitignore` as `_gitignore`, since npm drops nested
 `.gitignore` files from the package, and it is renamed back on copy. The
