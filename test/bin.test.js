@@ -21,6 +21,7 @@ import {
     existsSync,
     mkdirSync,
     mkdtempSync,
+    readdirSync,
     readFileSync,
     rmSync,
     writeFileSync,
@@ -93,6 +94,9 @@ function runBin(argv) {
                 : undefined,
             lib: existsSync(join(dir, "src/lib.rs"))
                 ? readFileSync(join(dir, "src/lib.rs"), "utf8")
+                : undefined,
+            lua: existsSync(join(dir, "lua"))
+                ? readdirSync(join(dir, "lua"))
                 : undefined,
         };
     } finally {
@@ -277,6 +281,61 @@ test("a name a crate cannot use stops before anything is copied", () => {
     }
 });
 
+test("nvim is copied, initialised and run through mise, not npm", () => {
+    const { commit, lua, lines } = dryRun(["--template", "nvim"]);
+    assert.match(commit, /\(nvim\)\./);
+    assert.deepEqual(lua, ["x"]);
+    const env = lines.findIndex((line) => line.startsWith("mise env"));
+    assert.deepEqual(
+        lines
+            .slice(env + 1)
+            .map((line) => line.split(" ").slice(0, 2).join(" ")),
+        ["git add", "mise run", "git add", "mise run", "git commit"],
+        lines.join("\n"),
+    );
+});
+
+test("nvim names its module without the affixes", () => {
+    const run = runBin((root) => [
+        "nvim-my-tool.nvim",
+        "--description",
+        "D",
+        "--owner",
+        "example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        "--template",
+        "nvim",
+    ]);
+    assert.equal(run.result.status, 0, run.result.stderr);
+    assert.deepEqual(run.lua, ["my-tool"]);
+});
+
+test("a name a Lua module cannot use stops before anything is copied", () => {
+    for (const name of ["my.plugin.nvim", "nvim-", "1plugin"]) {
+        const { result, copied } = runBin((root) => [
+            name,
+            "--description",
+            "D",
+            "--owner",
+            "example",
+            "--dir",
+            join(root, "x"),
+            "--no-metadata",
+            "--dry-run",
+            "--yes",
+            "--template",
+            "nvim",
+        ]);
+        assert.equal(result.status, 2, name);
+        assert.match(result.stderr, /module/, name);
+        assert.ok(!copied, name);
+    }
+});
+
 test("publish names the package @owner/name and the commit", () => {
     const { commit, pkg } = dryRun([
         "--template",
@@ -386,4 +445,5 @@ test("--help lists the templates", () => {
     assert.match(result.stdout, /\n {2}typescript {2}A Node library or CLI/);
     assert.match(result.stdout, /\n {2}cloudflare {2}A Cloudflare Worker/);
     assert.match(result.stdout, /\n {2}rust {8}A Rust crate/);
+    assert.match(result.stdout, /\n {2}nvim {8}A Neovim plugin/);
 });

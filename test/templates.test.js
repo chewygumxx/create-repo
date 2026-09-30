@@ -373,6 +373,142 @@ test("rust is initialised with the crate's name, scopes and module", () => {
     }
 });
 
+test("nvim is the native layer, a Lua plugin and its tests", () => {
+    const sources = compose(TEMPLATES.nvim.layers(new Set()));
+    for (const [file, layer] of [
+        ["mise.toml", "native"],
+        ["committed.toml", "native"],
+        [".githooks/pre-commit", "native"],
+        [".github/workflows/ci.yaml", "native"],
+        [".config/mise/conf.d/nvim.toml", "nvim"],
+        [".luafmt.toml", "nvim"],
+        [".luarc.json", "nvim"],
+        ["selene.toml", "nvim"],
+        ["vim.yml", "nvim"],
+        ["lua/repo_tmpl/init.lua", "nvim"],
+        ["lua/repo_tmpl/health.lua", "nvim"],
+        ["plugin/repo_tmpl.lua", "nvim"],
+        ["doc/repo_tmpl.txt", "nvim"],
+        ["tests/minimal_init.lua", "nvim"],
+        ["tests/run.lua", "nvim"],
+        ["tests/test_repo_tmpl.lua", "nvim"],
+        ["_gitignore", "nvim"],
+        ["README.md", "nvim"],
+    ]) {
+        assert.ok(sources.has(file), file);
+        assert.match(
+            sources.get(file) ?? "",
+            new RegExp(`templates/${layer}/`),
+            file,
+        );
+    }
+    for (const file of ["package.json", "Cargo.toml", "src/main.rs"]) {
+        assert.ok(!sources.has(file), file);
+    }
+    const ignored = readFileSync(sources.get("_gitignore") ?? "", "utf8");
+    assert.match(ignored, /^\/\.tests\/$/m);
+    assert.match(ignored, /^\/doc\/tags$/m);
+});
+
+test("nvim has no features", () => {
+    assert.deepEqual(TEMPLATES.nvim.features, {});
+    assert.equal(TEMPLATES.nvim.family, "native");
+});
+
+// mini.test is cloned at this tag by `deps`, and LuaLS reads it as a library,
+// so the two must be one thing.
+test("the nvim layer names one mini.test tag, which its types read", () => {
+    const toml = readFileSync(
+        join(TEMPLATES_DIR, "nvim", ".config/mise/conf.d/nvim.toml"),
+        "utf8",
+    );
+    assert.equal(
+        toml.match(/MINI_TEST_TAG\s*=\s*"v\d+\.\d+\.\d+"/g)?.length,
+        1,
+    );
+    const luarc = JSON.parse(
+        readFileSync(join(TEMPLATES_DIR, "nvim", ".luarc.json"), "utf8"),
+    );
+    assert.ok(luarc["workspace.library"].includes(".tests/mini.test"));
+    assert.ok(luarc["workspace.ignoreDir"].includes(".tests"));
+});
+
+test("a plugin's module is the name without .nvim or nvim-, and a Lua name", () => {
+    const { checkName } = TEMPLATES.nvim;
+    assert.ok(checkName);
+    /** @param {string} name */
+    const check = (name) => checkName({ owner: "example", name }, new Set());
+    for (const name of [
+        "a",
+        "my-plugin",
+        "my-plugin.nvim",
+        "nvim-my-plugin",
+        "nvim-my-plugin.nvim",
+        "_x",
+        "My_Plugin2",
+        "a".repeat(100),
+    ]) {
+        assert.doesNotThrow(() => check(name), name);
+    }
+    for (const name of [
+        "my.plugin",
+        "my.plugin.nvim",
+        "nvim-",
+        ".nvim",
+        "nvim-.nvim",
+        "1plugin",
+        "nvim-1plugin",
+        "-plugin",
+        "my plugin",
+    ]) {
+        assert.throws(
+            () => check(name),
+            (error) =>
+                error instanceof UsageError && /module/.test(error.message),
+            name,
+        );
+    }
+});
+
+test("nvim is initialised with the module's name in every path", () => {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-templates-"));
+    try {
+        const dir = join(root, "x");
+        const files = copyTemplate(
+            dir,
+            layersOf({ template: "nvim", features: [] }),
+        );
+        init(dir, { ...IDENTITY, name: "nvim-derived.nvim" }, files, {
+            edits: TEMPLATES.nvim.edits,
+            today: "2026-10-01",
+        });
+        /** @param {string} file */
+        const at = (file) => readFileSync(join(dir, file), "utf8");
+        for (const file of [
+            "lua/derived/init.lua",
+            "lua/derived/health.lua",
+            "plugin/derived.lua",
+            "doc/derived.txt",
+            "tests/test_derived.lua",
+        ]) {
+            assert.ok(existsSync(join(dir, file)), file);
+        }
+        assert.ok(!existsSync(join(dir, "lua/repo_tmpl")));
+        assert.match(
+            at("lua/derived/init.lua"),
+            /^-- ::: :\/lua\/derived\/init\.lua$/m,
+        );
+        assert.match(
+            at("lua/derived/init.lua"),
+            /^-- ~example\/nvim-derived\.nvim\.git$/m,
+        );
+        assert.match(at("plugin/derived.lua"), /vim\.g\["loaded_derived"\]/);
+        assert.match(at("committed.toml"), /^ {4}"api",$/m);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
 test("typescript takes publish by default at the prompt", () => {
     assert.deepEqual(TEMPLATES.typescript.defaultFeatures, ["publish"]);
 });
