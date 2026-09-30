@@ -36,8 +36,13 @@ jobs:
     check:
         uses: chewygumxx/.github/.github/workflows/lint.yaml@v1
 
+    dry-run:
+        permissions:
+            contents: read
+        uses: ./.github/workflows/create-repo.yaml
+
     publish:
-        needs: check
+        needs: [check, dry-run]
         runs-on: ubuntu-latest
 
         permissions:
