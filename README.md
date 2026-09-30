@@ -18,6 +18,11 @@ nothing on GitHub.
 It needs Node 24 or later, `git`, `mise`, and `gh` logged in with
 `gh auth login`.
 
+Installed with `npm install` rather than run with `npm create`, npm may
+report the package's `prepare` script as blocked. It only sets up this
+repository's own development tooling and is never needed, so the notice is
+safe to ignore.
+
 ## The template
 
 `template/` is the whole template. A package version always creates the
