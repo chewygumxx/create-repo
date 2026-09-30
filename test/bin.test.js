@@ -45,57 +45,72 @@ printf '%s %s key=%s pinned=%s\\n' "$(basename "$0")" "$1" \\
 case "$(basename "$0") $1" in
 "mise env") printf '{"PATH":"%s","MISE_PINNED":"yes"}' "$PATH" ;;
 "gh "*) exit 1 ;;
+"git commit") printf '%s\\n' "$*" >> '${log}.commit' ;;
 esac
 `;
 }
 
-/** Runs a dry run; returns the stand-ins' log lines and what the copy became. */
-function dryRun() {
+/**
+ * Runs the entry point with stand-ins first on PATH.
+ * @param {(root: string) => string[]} argv given the temporary root
+ */
+function runBin(argv) {
     const root = mkdtempSync(join(tmpdir(), "create-repo-bin-"));
     try {
         const bin = join(root, "bin");
         const log = join(root, "log");
         mkdirSync(bin);
         writeFileSync(log, "");
+        writeFileSync(`${log}.commit`, "");
         for (const tool of ["gh", "git", "mise", "npm", "node"]) {
             writeFileSync(join(bin, tool), standIn(log));
             chmodSync(join(bin, tool), 0o755);
         }
-        const result = spawnSync(
-            process.execPath,
-            [
-                BIN,
-                "x",
-                "--description",
-                "D",
-                "--owner",
-                "example",
-                "--dir",
-                join(root, "x"),
-                "--no-metadata",
-                "--dry-run",
-                "--yes",
-            ],
-            {
-                input: "",
-                encoding: "utf8",
-                env: {
-                    HOME: root,
-                    PATH: `${bin}:/usr/bin:/bin`,
-                    METADATA_APP_PRIVATE_KEY: "not for children",
-                },
+        const result = spawnSync(process.execPath, [BIN, ...argv(root)], {
+            input: "",
+            encoding: "utf8",
+            env: {
+                HOME: root,
+                PATH: `${bin}:/usr/bin:/bin`,
+                METADATA_APP_PRIVATE_KEY: "not for children",
             },
-        );
-        assert.equal(result.status, 0, result.stderr);
+        });
         const dir = join(root, "x");
         return {
+            result,
             lines: readFileSync(log, "utf8").trim().split("\n"),
-            pkg: JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
+            commit: readFileSync(`${log}.commit`, "utf8"),
+            copied: existsSync(dir),
+            pkg: existsSync(join(dir, "package.json"))
+                ? JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))
+                : undefined,
             gitignore: existsSync(join(dir, ".gitignore")),
         };
     } finally {
         rmSync(root, { recursive: true, force: true });
     }
+}
+
+/**
+ * A dry run that must succeed.
+ * @param {string[]} [extra] more flags
+ */
+function dryRun(extra = []) {
+    const run = runBin((root) => [
+        "x",
+        "--description",
+        "D",
+        "--owner",
+        "example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        ...extra,
+    ]);
+    assert.equal(run.result.status, 0, run.result.stderr);
+    return run;
 }
 
 test("no child, preflight included, sees the key variables", () => {
@@ -143,4 +158,39 @@ test("the copy is staged before it is formatted", () => {
             .some((line) => line.startsWith("git add")),
         lines.join("\n"),
     );
+});
+
+test("the first commit names the template", () => {
+    assert.match(dryRun().commit, /create-repo \S+ \(standard\)\./);
+    assert.match(dryRun(["--template", "standard"]).commit, /\(standard\)\./);
+});
+
+test("an unknown template stops before anything is copied", () => {
+    const { result, copied } = runBin((root) => [
+        "x",
+        "--description",
+        "D",
+        "--owner",
+        "example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        "--template",
+        "nope",
+    ]);
+    assert.equal(result.status, 2);
+    assert.match(
+        result.stderr,
+        /Unknown template "nope": choose one of standard/,
+    );
+    assert.ok(!copied);
+});
+
+test("--help lists the templates", () => {
+    const { result } = runBin(() => ["--help"]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /--template <name>/);
+    assert.match(result.stdout, /\nTemplates:\n {2}standard {2}Any repository/);
 });
