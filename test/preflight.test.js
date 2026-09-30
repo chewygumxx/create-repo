@@ -111,6 +111,49 @@ test("an existing directory or repository stops it", async () => {
     );
 });
 
+test("a native template refuses a path with a bracket", async () => {
+    // mise skips .config/mise/conf.d in a path holding "[", so the tasks of
+    // the native templates are not found.
+    for (const template of ["rust", "nvim", "zsh"]) {
+        const target = await answers([
+            "x",
+            "--template",
+            template,
+            "--description",
+            "D",
+            "--dir",
+            "/a[b]/x",
+        ]);
+        await assert.rejects(
+            checkTarget(target, tools({}), { remote: false }),
+            (error) =>
+                error instanceof UsageError &&
+                /\/a\[b\]\/x/.test(error.message) &&
+                /mise/.test(error.message),
+            template,
+        );
+    }
+});
+
+test("an npm template and other pattern characters pass", async () => {
+    for (const [template, dir] of [
+        ["standard", "/a[b]/x"],
+        ["rust", "/a]b/x"],
+        ["zsh", "/st*r/q?z/{a,b}/(x)/x"],
+    ]) {
+        const target = await answers([
+            "x",
+            "--template",
+            template,
+            "--description",
+            "D",
+            "--dir",
+            dir,
+        ]);
+        await checkTarget(target, tools({}), { remote: false });
+    }
+});
+
 test("a 404 means the repository is free; other errors stop it", async () => {
     const target = await answers(["x", "--description", "D", "--dir", "/d"]);
     await checkTarget(
