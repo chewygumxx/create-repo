@@ -18,6 +18,7 @@ import {
     mkdtempSync,
     readFileSync,
     rmSync,
+    symlinkSync,
     writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -196,4 +197,28 @@ test("layers without a _gitignore are a TemplateError naming it", () =>
                 error instanceof TemplateError &&
                 /_gitignore/.test(error.message),
         );
+    }));
+
+test("a symlink in a layer is a TemplateError, not silently dropped", () =>
+    inTemp((root) => {
+        const from = join(root, "layers");
+        write(from, { "a/_gitignore": "", "a/real.txt": "x\n" });
+        symlinkSync("real.txt", join(from, "a", "link.txt"));
+        assert.throws(
+            () => templateFiles(["a"], from),
+            (error) =>
+                error instanceof TemplateError &&
+                /link\.txt/.test(error.message),
+        );
+    }));
+
+test("an ignored symlink is left alone", () =>
+    inTemp((root) => {
+        const from = join(root, "layers");
+        write(from, { "a/_gitignore": "link.txt\n", "a/real.txt": "x\n" });
+        symlinkSync("real.txt", join(from, "a", "link.txt"));
+        assert.deepEqual(templateFiles(["a"], from), [
+            "_gitignore",
+            "real.txt",
+        ]);
     }));
