@@ -79,6 +79,18 @@ test("every layer belongs to a template", () => {
     );
 });
 
+test("typescript takes publish by default at the prompt", () => {
+    assert.deepEqual(TEMPLATES.typescript.defaultFeatures, ["publish"]);
+});
+
+test("every default feature is one the template has", () => {
+    for (const [name, template] of Object.entries(TEMPLATES)) {
+        for (const feature of template.defaultFeatures ?? []) {
+            assert.ok(Object.hasOwn(template.features, feature), name);
+        }
+    }
+});
+
 test("typescript adds sources, tests and its own package over npm", () => {
     const sources = compose(TEMPLATES.typescript.layers(new Set()));
     for (const file of [

@@ -215,6 +215,70 @@ test("an empty reply takes standard, which asks for no features", async () => {
     assert.equal(asked.length, 5);
 });
 
+/** The crate template, taking `lib` when its features are not chosen. */
+const DEFAULTING = {
+    ...CATALOGUE,
+    crate: { ...CATALOGUE.crate, defaultFeatures: ["lib"] },
+};
+
+test("an empty reply to the features prompt takes the defaults", async () => {
+    const { ask, asked } = asker(["crate", "", "x", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        templates: DEFAULTING,
+    });
+    assert.deepEqual(answers.features, ["lib"]);
+    assert.match(asked[1], /\[lib\]: $/);
+});
+
+test("none takes no feature, and other replies replace the defaults", async () => {
+    /** @type {[string, string[]][]} */
+    const cases = [
+        ["none", []],
+        ["bin", ["bin"]],
+        ["lib, bin", ["lib", "bin"]],
+    ];
+    for (const [reply, expected] of cases) {
+        const { ask } = asker(["crate", reply, "x", "D", "", ""]);
+        const answers = await completeAnswers(parseOptions([]), {
+            owner: "o",
+            ask,
+            templates: DEFAULTING,
+        });
+        assert.deepEqual(answers.features, expected, reply);
+    }
+});
+
+test("a template without defaults shows none, and an empty reply takes it", async () => {
+    const { ask, asked } = asker(["crate", "", "x", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        templates: CATALOGUE,
+    });
+    assert.deepEqual(answers.features, []);
+    assert.match(asked[1], /\[none\]: $/);
+});
+
+test("flags and a missing terminal never take the defaults", async () => {
+    const run = (/** @type {string[]} */ extra) =>
+        completeAnswers(
+            parseOptions([
+                "x",
+                "--description",
+                "D",
+                "--template",
+                "crate",
+                ...extra,
+            ]),
+            { owner: "o", templates: DEFAULTING },
+        );
+    assert.deepEqual((await run([])).features, []);
+    assert.deepEqual((await run(["--with", ""])).features, []);
+    assert.deepEqual((await run(["--with", "bin"])).features, ["bin"]);
+});
+
 test("a bad template reply asks again", async () => {
     /** @type {string[]} */
     const warnings = [];
