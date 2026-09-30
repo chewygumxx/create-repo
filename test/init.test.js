@@ -37,6 +37,7 @@ import {
     packageLock,
     readme,
     repoMetadata,
+    wranglerName,
 } from "../lib/init.js";
 import { copyTemplate, TEMPLATES_DIR, TemplateError } from "../lib/template.js";
 
@@ -144,6 +145,47 @@ test("a published package is @owner/name, in package and lockfile", () =>
         ["publish"],
     ));
 
+/**
+ * Initialises a copy holding a wrangler.jsonc with `text`.
+ * @param {string} text
+ */
+function withWrangler(text) {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
+    try {
+        const dir = join(root, "derived");
+        const files = copyTemplate(dir, ["common", "npm"]);
+        writeFileSync(join(dir, "wrangler.jsonc"), text);
+        init(dir, IDENTITY, [...files, "wrangler.jsonc"], {
+            edits: [...EDITS, wranglerName],
+            today: "2026-10-01",
+        });
+        return read(dir, "wrangler.jsonc");
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+}
+
+test("wranglerName names the Worker and keeps the comments", () => {
+    const text = withWrangler(`// ~chewygumxx/repo-tmpl.git
+{
+    // The Worker's name.
+    "name": "repo-tmpl",
+    "main": "src/index.ts"
+}
+`);
+    assert.match(text, /"name": "derived-repo"/);
+    assert.match(text, /\/\/ The Worker's name\./);
+    assert.match(text, /~example\/derived-repo\.git/);
+});
+
+test("wranglerName fails when wrangler.jsonc has no name", () => {
+    assert.throws(
+        () => withWrangler(`{ "main": "src/index.ts" }\n`),
+        (error) =>
+            error instanceof TemplateError &&
+            /"name" in wrangler\.jsonc not found/.test(error.message),
+    );
+});
 test("README frontmatter, heading and body", () =>
     initialised((dir) => {
         const readme = read(dir, "README.md");
