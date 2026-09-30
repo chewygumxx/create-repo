@@ -5,7 +5,7 @@ __cgxx: |
 
   #
   #
-  # ~chewygumxx/shared-config.git
+  # ~chewygumxx/create-repo.git
   # ::: :/docs/specs/2026-09-29-create-repo-design.md
   #
   #

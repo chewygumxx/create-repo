@@ -5,7 +5,7 @@ __cgxx: |
 
   #
   #
-  # ~chewygumxx/shared-config.git
+  # ~chewygumxx/create-repo.git
   # ::: :/docs/plans/2026-09-30-create-repo-migration.md
   #
   #
@@ -19,7 +19,6 @@ tags: []
 
 # Implementation Plan: create-repo Migration
 
-> [!IMPORTANT]
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use

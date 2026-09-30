@@ -1,0 +1,39 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/create-repo.git
+# ::: :/.github/dependabot.yml
+#
+#
+
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: weekly
+      commit-message:
+          prefix: build
+
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: weekly
+      commit-message:
+          prefix: ci
+
+    - package-ecosystem: npm
+      directory: /template
+      schedule:
+          interval: weekly
+      commit-message:
+          prefix: build(template)
+
+    - package-ecosystem: github-actions
+      directory: /template
+      schedule:
+          interval: weekly
+      commit-message:
+          prefix: ci(template)

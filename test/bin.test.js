@@ -3,8 +3,8 @@
 
 //
 //
-// ~chewygumxx/shared-config.git
-// ::: :/packages/create-repo/test/bin.test.js
+// ~chewygumxx/create-repo.git
+// ::: :/test/bin.test.js
 //
 //
 

@@ -4,8 +4,8 @@
 
 //
 //
-// ~chewygumxx/shared-config.git
-// ::: :/packages/create-repo/bin/create-repo.js
+// ~chewygumxx/create-repo.git
+// ::: :/bin/create-repo.js
 //
 //
 

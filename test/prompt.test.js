@@ -3,8 +3,8 @@
 
 //
 //
-// ~chewygumxx/shared-config.git
-// ::: :/packages/create-repo/test/prompt.test.js
+// ~chewygumxx/create-repo.git
+// ::: :/test/prompt.test.js
 //
 //
 

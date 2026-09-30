@@ -3,8 +3,8 @@
 
 //
 //
-// ~chewygumxx/shared-config.git
-// ::: :/packages/create-repo/test/preflight.test.js
+// ~chewygumxx/create-repo.git
+// ::: :/test/preflight.test.js
 //
 //
 

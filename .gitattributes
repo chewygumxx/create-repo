@@ -1,0 +1,16 @@
+# vim:set expandtab shiftwidth=4 filetype=gitattributes:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/create-repo.git
+# ::: :/.gitattributes
+#
+#
+
+* text=auto eol=lf
+
+# The bundled template's headers name the template itself, a sentinel that
+# lib/init.js rewrites for each new repository; the header sync must leave
+# them alone.
+/template/** -sync-header-metadata
