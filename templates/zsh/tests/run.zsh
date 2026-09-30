@@ -11,8 +11,8 @@
 
 # Sources the plugin and every `test_*.zsh` under `tests/`, nested directories
 # included, then runs each `test_*` function in a subshell of its own, so one
-# test's changes reach no other. A run that finds no test has nothing to fail,
-# so it is an error.
+# test's changes reach no other. A test file that cannot be sourced fails the
+# run, and so does a run that finds no test, which has nothing to fail.
 #
 #     zsh -f tests/run.zsh
 #
@@ -33,9 +33,13 @@ assert_equal() {
     exit 1
 }
 
+local -i failed=0
 local file
 for file in "$plugin_root"/tests/**/test_*.zsh(N); do
-    source $file
+    source $file || {
+        print -r -- "could not load $file" >&2
+        ((failed++))
+    }
 done
 source $plugin_root/repo_tmpl.plugin.zsh
 
@@ -46,7 +50,6 @@ if ((!$#tests)) {
 }
 
 local name
-local -i failed=0
 for name in $tests; do
     if ($name); then
         print -r -- "ok   $name"

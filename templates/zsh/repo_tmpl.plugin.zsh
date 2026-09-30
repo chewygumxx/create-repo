@@ -20,7 +20,7 @@ typeset -gA Plugins
 Plugins[repo_tmpl_dir]=${0:h}
 
 # `functions/` goes on `fpath` once, however many times the plugin is sourced.
-if [[ ${zsh_loaded_plugins[-1]-} != */repo_tmpl && -z ${fpath[(r)${0:h}/functions]-} ]] {
+if [[ ${zsh_loaded_plugins[-1]-} != */repo_tmpl && -z ${fpath[(re)${0:h}/functions]-} ]] {
     fpath+=("${0:h}/functions")
 }
 
@@ -30,7 +30,7 @@ autoload -Uz repo_tmpl
 repo_tmpl_plugin_unload() {
     emulate -L zsh
 
-    fpath=(${fpath:#${(b)Plugins[repo_tmpl_dir]}/functions})
+    fpath=(${fpath:#${Plugins[repo_tmpl_dir]}/functions})
     ((${+functions[repo_tmpl]})) && unfunction repo_tmpl
     unset "Plugins[repo_tmpl_dir]"
     unfunction repo_tmpl_plugin_unload

@@ -34,11 +34,12 @@ const skip =
  * Copies the zsh template, and hands `body` its directory and a function that
  * runs its tests as its mise task does.
  * @param {(dir: string, run: () => import("node:child_process").SpawnSyncReturns<string>) => void} body
+ * @param {string} [name] the copy's directory name
  */
-function inCopy(body) {
+function inCopy(body, name = "x") {
     const root = mkdtempSync(join(tmpdir(), "create-repo-zsh-"));
     try {
-        const dir = join(root, "x");
+        const dir = join(root, name);
         copyTemplate(dir, TEMPLATES.zsh.layers(new Set()));
         body(dir, () =>
             spawnSync("zsh", ["-f", "tests/run.zsh"], {
@@ -126,3 +127,31 @@ test("a test's changes reach no other", { skip }, () =>
         assert.equal(result.status, 0, result.stdout + result.stderr);
     }),
 );
+
+test("a test file that cannot be sourced fails the run", { skip }, () =>
+    inCopy((dir, run) => {
+        addTest(dir, "test_broken.zsh", [
+            "test_syntax() {",
+            "    if true; then",
+            "}",
+        ]);
+        const result = run();
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stderr, /could not load .*test_broken\.zsh/);
+    }),
+);
+
+test("a plugin in a path with pattern characters passes its tests", {
+    skip,
+}, () => {
+    for (const name of ["a[b]", "st*r", "q?z", "(x)"]) {
+        inCopy((_dir, run) => {
+            const result = run();
+            assert.equal(
+                result.status,
+                0,
+                `${name}\n${result.stdout}${result.stderr}`,
+            );
+        }, name);
+    }
+});

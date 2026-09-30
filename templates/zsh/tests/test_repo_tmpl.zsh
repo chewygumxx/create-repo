@@ -13,7 +13,7 @@
 
 # How many times the plugin's `functions/` is on `fpath`.
 on_fpath() {
-    local -a found=(${(M)fpath:#${(b)plugin_root}/functions})
+    local -a found=(${(M)fpath:#${plugin_root}/functions})
     print -r -- $#found
 }
 

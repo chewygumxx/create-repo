@@ -82,7 +82,7 @@ function and the test file.
 - `tests/`: `test_*.zsh` files, in any subdirectory, whose `test_*` functions
   `run.zsh` runs, each in a subshell of its own, after sourcing the plugin. It
   runs under `zsh -f`, so the machine's own configuration cannot change the
-  result, and fails when it collects no test. `assert_equal` and `plugin_root`
-  are available to the tests.
+  result, and fails when it collects no test or cannot source a test file.
+  `assert_equal` and `plugin_root` are available to the tests.
 - `.shuck.toml`: maps the scripts to the zsh dialect, which shuck would
   otherwise read as sh, and sets the format.
