@@ -15,10 +15,7 @@ import { test } from "node:test";
 import {
     checkDescription,
     checkName,
-    DEFAULT_TEMPLATE,
-    formatScopes,
     parseOptions,
-    parseScopes,
     parseTopics,
     UsageError,
 } from "../lib/args.js";
@@ -37,8 +34,6 @@ test("reads the name and every flag", () => {
         "--private",
         "--dir",
         "here",
-        "--template",
-        "someone/tmpl",
         "--env-file",
         "e.env",
         "--metadata-key-command",
@@ -57,7 +52,6 @@ test("reads the name and every flag", () => {
         owner: "someone",
         visibility: "private",
         dir: "here",
-        template: "someone/tmpl",
         envFile: "e.env",
         metadataKeyFile: undefined,
         metadataKeyCommand: "pass show k",
@@ -68,12 +62,15 @@ test("reads the name and every flag", () => {
     });
 });
 
+test("--template is no longer accepted", () => {
+    assert.throws(() => parseOptions(["--template", "a/b"]), UsageError);
+});
+
 test("defaults leave prompted values undefined", () => {
     const options = parseOptions([]);
     assert.equal(options.name, undefined);
     assert.equal(options.topics, undefined);
     assert.equal(options.visibility, "public");
-    assert.equal(options.template, DEFAULT_TEMPLATE);
     assert.equal(options.metadata, true);
     assert.equal(options.yes, false);
 });
@@ -108,7 +105,6 @@ test("rejects mistakes before anything is created", () => {
         ["--owner", "some_user"],
         ["--topics", "a--b"],
         ["--scopes", "x".repeat(16)],
-        ["--template", "no-slash"],
     ]) {
         assert.throws(() => parseOptions(argv), UsageError, argv.join(" "));
     }
@@ -139,12 +135,6 @@ test("the key on standard input needs the name, description and --yes", () => {
         "--yes",
     ]);
     assert.equal(options.metadataKeyFile, "-");
-});
-
-test("scopes round-trip through the form init reads", () => {
-    const scopes = parseScopes("api, cli:Command Line");
-    assert.deepEqual(parseScopes(formatScopes(scopes)), scopes);
-    assert.equal(formatScopes(scopes), "api:Api,cli:Command Line");
 });
 
 test("topics trim and drop empty items", () => {

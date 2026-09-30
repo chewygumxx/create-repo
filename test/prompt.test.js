@@ -54,7 +54,6 @@ test("prompts for every missing value", async () => {
         owner: "someone",
         visibility: "public",
         dir: resolve("my-thing"),
-        template: "chewygumxx/repo-tmpl",
     });
 });
 

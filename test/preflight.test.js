@@ -13,7 +13,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parseOptions, UsageError } from "../lib/args.js";
-import { checkTarget, checkTools } from "../lib/preflight.js";
+import { checkTarget, checkTools, METADATA_REPO } from "../lib/preflight.js";
 import { completeAnswers } from "../lib/prompt.js";
 import { CommandError } from "../lib/run.js";
 
@@ -52,7 +52,7 @@ const present = {
 };
 const loggedIn = { ...present, "gh api user --jq .login": "someone\n" };
 const clientId = {
-    "gh variable get METADATA_APP_CLIENT_ID --repo chewygumxx/repo-tmpl":
+    [`gh variable get METADATA_APP_CLIENT_ID --repo ${METADATA_REPO}`]:
         "Iv1.abc\n",
 };
 
@@ -75,7 +75,8 @@ test("gh must be logged in unless dry running", async () => {
     );
 });
 
-test("the client ID comes from the template's variable", async () => {
+test("the client ID comes from create-repo's variable", async () => {
+    assert.equal(METADATA_REPO, "chewygumxx/create-repo");
     assert.deepEqual(
         await checkTools(parseOptions([]), tools({ ...loggedIn, ...clientId })),
         { login: "someone", clientId: "Iv1.abc" },

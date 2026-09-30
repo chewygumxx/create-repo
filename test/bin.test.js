@@ -18,6 +18,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
     chmodSync,
+    existsSync,
     mkdirSync,
     mkdtempSync,
     readFileSync,
@@ -33,8 +34,8 @@ const BIN = fileURLToPath(new URL("../bin/create-repo.js", import.meta.url));
 
 /**
  * Each stand-in logs `<tool> <first argument> key=<PRESENT or empty>
- * pinned=<MISE_PINNED>`. `git clone` creates its target, `mise env --json`
- * reports a pinned environment, and gh fails as if not logged in.
+ * pinned=<MISE_PINNED>`. `mise env --json` reports a pinned environment, and
+ * gh fails as if not logged in.
  * @param {string} log
  */
 function standIn(log) {
@@ -42,17 +43,13 @@ function standIn(log) {
 printf '%s %s key=%s pinned=%s\\n' "$(basename "$0")" "$1" \\
     "\${METADATA_APP_PRIVATE_KEY:+PRESENT}" "\${MISE_PINNED:-}" >> '${log}'
 case "$(basename "$0") $1" in
-"git clone")
-    for last; do :; done
-    mkdir -p "$last"
-    ;;
 "mise env") printf '{"PATH":"%s","MISE_PINNED":"yes"}' "$PATH" ;;
 "gh "*) exit 1 ;;
 esac
 `;
 }
 
-/** Runs a dry run and returns the stand-ins' log lines. */
+/** Runs a dry run; returns the stand-ins' log lines and what the copy became. */
 function dryRun() {
     const root = mkdtempSync(join(tmpdir(), "create-repo-bin-"));
     try {
@@ -90,14 +87,19 @@ function dryRun() {
             },
         );
         assert.equal(result.status, 0, result.stderr);
-        return readFileSync(log, "utf8").trim().split("\n");
+        const dir = join(root, "x");
+        return {
+            lines: readFileSync(log, "utf8").trim().split("\n"),
+            pkg: JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
+            gitignore: existsSync(join(dir, ".gitignore")),
+        };
     } finally {
         rmSync(root, { recursive: true, force: true });
     }
 }
 
 test("no child, preflight included, sees the key variables", () => {
-    const lines = dryRun();
+    const { lines } = dryRun();
     assert.ok(lines.some((line) => line.startsWith("gh ")));
     assert.deepEqual(
         lines.filter((line) => line.includes("key=PRESENT")),
@@ -106,7 +108,7 @@ test("no child, preflight included, sees the key variables", () => {
 });
 
 test("every step after mise install runs with the pinned toolchain", () => {
-    const lines = dryRun();
+    const { lines } = dryRun();
     const env = lines.findIndex((line) => line.startsWith("mise env"));
     assert.ok(
         env > lines.indexOf("mise install key= pinned="),
@@ -118,4 +120,12 @@ test("every step after mise install runs with the pinned toolchain", () => {
         after.filter((line) => !line.endsWith("pinned=yes")),
         [],
     );
+});
+
+test("the copy is the bundled template, initialised", () => {
+    const { lines, pkg, gitignore } = dryRun();
+    assert.ok(!lines.some((line) => line.startsWith("git clone")));
+    assert.equal(pkg.name, "x");
+    assert.equal(pkg.repository, "github:example/x");
+    assert.ok(gitignore);
 });
