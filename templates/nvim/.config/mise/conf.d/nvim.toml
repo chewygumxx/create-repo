@@ -1,0 +1,83 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.config/mise/conf.d/nvim.toml
+#
+#
+
+#
+# https://mise.jdx.dev/configuration.html
+#
+# Neovim's tools and tasks, merged into `mise.toml`'s aggregates: mise reads
+# every file in this directory beside it.
+#
+
+#
+# The same repository ships `luafmt`, `emmylua_check` and `emmylua_doc_cli` as
+# independent per-platform assets, and a `[tools]` key has to be unique, so
+# `luafmt` is an alias for the one backend. `matching` narrows the candidate
+# assets, keeping the choice of OS and architecture automatic; it has to be set
+# on the `[tools]` entry, not on the alias, where it is ignored.
+#
+[tool_alias.luafmt]
+backend = "github:EmmyLuaLs/emmylua-analyzer-rust"
+
+[tools]
+"github:neovim/neovim"           = "0.12.5"
+"aqua:LuaLS/lua-language-server" = "3.19.1"
+"aqua:Kampfkarren/selene"        = "0.31.0"
+luafmt                           = { version = "0.25.1", matching = "luafmt" }
+
+[tasks.deps]
+description = "Clone mini.test at its pinned tag into .tests/"
+env         = { MINI_TEST_TAG = "v0.18.0" }
+run         = """
+if [ "$(git -C .tests/mini.test describe --tags 2>/dev/null)" != "$MINI_TEST_TAG" ]; then
+    rm -rf .tests/mini.test
+    git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$MINI_TEST_TAG" \\
+        https://github.com/nvim-mini/mini.test .tests/mini.test
+fi
+"""
+
+[tasks."lint:lua"]
+description = "Lua format (luafmt) and lint (selene)"
+run         = """
+git ls-files -z '*.lua' | xargs -0 -r luafmt --check --verify
+git ls-files -z '*.lua' | xargs -0 -r selene
+"""
+
+[tasks."lint:types"]
+description = "lua-language-server's check, with every warning a failure"
+depends     = [ "deps" ]
+# `$VIMRUNTIME` and mini.test, which `deps` clones, are `.luarc.json`'s
+# `workspace.library`, so the tests' types are known. Some
+# releases report problems and still exit 0, so the summary line is what is
+# asserted on.
+run         = """
+export VIMRUNTIME=$(nvim --headless --clean --cmd 'lua io.stdout:write(vim.env.VIMRUNTIME)' --cmd quit)
+out=$(lua-language-server --check=. --checklevel=Warning --logpath="$(mktemp -d)" 2>&1) || status=$?
+printf '%s\\n' "$out"
+case $out in
+*"no problems found"*) exit "${status:-0}" ;;
+*) exit 1 ;;
+esac
+"""
+
+[tasks."test:nvim"]
+description = "The plugin's tests, in headless Neovim"
+depends     = [ "deps" ]
+run         = "nvim --headless -u tests/minimal_init.lua -l tests/run.lua"
+
+[tasks."format:lua"]
+description = "Apply luafmt"
+run         = "git ls-files -z '*.lua' | xargs -0 -r luafmt --write"
+
+[tasks."pre-commit:lua"]
+description = "luafmt's check and selene on staged files"
+run         = """
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.lua' | xargs -0 -r luafmt --check --verify
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.lua' | xargs -0 -r selene
+"""

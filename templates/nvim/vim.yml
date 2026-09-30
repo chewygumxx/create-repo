@@ -1,0 +1,15 @@
+# vim:set expandtab shiftwidth=2 filetype=yaml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/vim.yml
+#
+#
+
+# selene standard library for Neovim's `vim` global. Referenced from
+# `selene.toml`'s `std`; see https://kampfkarren.github.io/selene/usage/std.html
+globals:
+  vim:
+    any: true

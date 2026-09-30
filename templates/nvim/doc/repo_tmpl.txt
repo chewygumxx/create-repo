@@ -1,0 +1,33 @@
+# vim:set textwidth=78 tabstop=8 filetype=help:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/doc/repo_tmpl.txt
+#
+#
+
+*repo_tmpl.txt*  A Neovim plugin
+
+==============================================================================
+CONTENTS                                                     *repo_tmpl-contents*
+
+    1. SETUP ........................................................|repo_tmpl-setup|
+    2. COMMANDS ..................................................|repo_tmpl-commands|
+
+==============================================================================
+SETUP                                                           *repo_tmpl-setup*
+
+Calling `setup()` is optional; it merges its options over the defaults.
+>lua
+    require("repo_tmpl").setup({ greeting = "Hello" })
+<
+
+==============================================================================
+COMMANDS                                                     *repo_tmpl-commands*
+
+:Hello [{name}]                                                          *:Hello*
+    Greets {name}, or the world.
+
+ vim:tw=78:ts=8:ft=help:norl:
