@@ -539,6 +539,169 @@ test("nvim is initialised with the module's name in every path", () => {
     }
 });
 
+test("zsh is the native layer, a zsh plugin and its tests", () => {
+    const sources = compose(TEMPLATES.zsh.layers(new Set()));
+    for (const [file, layer] of [
+        ["mise.toml", "native"],
+        ["committed.toml", "native"],
+        [".githooks/pre-commit", "native"],
+        [".github/workflows/ci.yaml", "native"],
+        ["_gitignore", "native"],
+        [".config/mise/conf.d/zsh.toml", "zsh"],
+        [".shuck.toml", "zsh"],
+        [".github/apt-packages.txt", "zsh"],
+        ["repo_tmpl.plugin.zsh", "zsh"],
+        ["functions/repo_tmpl", "zsh"],
+        ["tests/run.zsh", "zsh"],
+        ["tests/test_repo_tmpl.zsh", "zsh"],
+        ["README.md", "zsh"],
+    ]) {
+        assert.ok(sources.has(file), file);
+        assert.match(
+            sources.get(file) ?? "",
+            new RegExp(`templates/${layer}/`),
+            file,
+        );
+    }
+    for (const file of [
+        "package.json",
+        "Cargo.toml",
+        "lua/repo_tmpl/init.lua",
+    ]) {
+        assert.ok(!sources.has(file), file);
+    }
+});
+
+test("zsh has no features", () => {
+    assert.deepEqual(TEMPLATES.zsh.features, {});
+    assert.equal(TEMPLATES.zsh.family, "native");
+});
+
+test("the zsh layer's apt packages name zsh, which mise does not install", () => {
+    assert.equal(
+        readFileSync(
+            join(TEMPLATES_DIR, "zsh", ".github/apt-packages.txt"),
+            "utf8",
+        ),
+        "zsh\n",
+    );
+});
+
+test("shuck reads the zsh scripts as zsh and formats as the native hooks are", () => {
+    const config = readFileSync(
+        join(TEMPLATES_DIR, "zsh", ".shuck.toml"),
+        "utf8",
+    );
+    assert.match(config, /^"\*\*\/\*\.zsh"\s+= "zsh"$/m);
+    assert.match(config, /^"functions\/\*"\s+= "zsh"$/m);
+    // A repository's shuck configuration makes the shared CI run shuck over
+    // the hooks too, which are formatted as shfmt does: only the indentation
+    // is set.
+    assert.match(config, /^indent-style = "space"$/m);
+    assert.match(config, /^indent-width = 4$/m);
+    assert.doesNotMatch(
+        config,
+        /space-redirects|keep-padding|switch-case-indent|binary-next-line|function-next-line|never-split/,
+    );
+});
+
+test("the zsh tasks name the files, which shuck's own walk never finds", () => {
+    const tasks = readFileSync(
+        join(TEMPLATES_DIR, "zsh", ".config/mise/conf.d/zsh.toml"),
+        "utf8",
+    );
+    // An autoloaded function has no extension and no shebang, so a bare
+    // `shuck` command would skip `functions/*`.
+    assert.doesNotMatch(tasks, /^shuck /m);
+    assert.match(
+        tasks,
+        /'\*\.zsh' 'functions\/\*' \| xargs -0 -r shuck check --$/m,
+    );
+    assert.match(
+        tasks,
+        /'\*\.zsh' 'functions\/\*' \| xargs -0 -r shuck format --diff --$/m,
+    );
+    assert.match(tasks, /xargs -0 -r -n 1 zsh -n --$/m);
+    // `-f` skips the startup files, so the machine's cannot change a run.
+    assert.match(tasks, /^run\s+= "zsh -f tests\/run\.zsh"$/m);
+});
+
+test("a zsh plugin's name is a function's: no leading -, no reserved word", () => {
+    const { checkName } = TEMPLATES.zsh;
+    assert.ok(checkName);
+    /** @param {string} name */
+    const check = (name) => checkName({ owner: "example", name }, new Set());
+    for (const name of [
+        "a",
+        "my-plugin",
+        "zsh-my-plugin",
+        "My_Plugin2",
+        "_x",
+        "0",
+        "1a",
+        "a--b",
+        "test",
+        "echo",
+        "a".repeat(100),
+    ]) {
+        assert.doesNotThrow(() => check(name), name);
+    }
+    for (const name of [
+        "-plugin",
+        "my.plugin",
+        "my plugin",
+        "if",
+        "while",
+        "until",
+        "function",
+        "time",
+        "end",
+        "select",
+    ]) {
+        assert.throws(
+            () => check(name),
+            (error) =>
+                error instanceof UsageError &&
+                /plugin name/.test(error.message),
+            name,
+        );
+    }
+});
+
+test("zsh is initialised with the plugin's name in every path", () => {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-templates-"));
+    try {
+        const dir = join(root, "x");
+        const files = copyTemplate(
+            dir,
+            layersOf({ template: "zsh", features: [] }),
+        );
+        init(dir, { ...IDENTITY, name: "zsh-derived" }, files, {
+            edits: TEMPLATES.zsh.edits,
+            today: "2026-10-01",
+        });
+        /** @param {string} file */
+        const at = (file) => readFileSync(join(dir, file), "utf8");
+        for (const file of [
+            "zsh-derived.plugin.zsh",
+            "functions/zsh-derived",
+            "tests/test_zsh-derived.zsh",
+        ]) {
+            assert.ok(existsSync(join(dir, file)), file);
+        }
+        assert.ok(!existsSync(join(dir, "repo_tmpl.plugin.zsh")));
+        assert.ok(!existsSync(join(dir, "functions/repo_tmpl")));
+        const plugin = at("zsh-derived.plugin.zsh");
+        assert.match(plugin, /^# ::: :\/zsh-derived\.plugin\.zsh$/m);
+        assert.match(plugin, /^# ~example\/zsh-derived\.git$/m);
+        assert.match(plugin, /^Plugins\[zsh-derived_dir\]=/m);
+        assert.match(plugin, /^zsh-derived_plugin_unload\(\) \{$/m);
+        assert.match(at("committed.toml"), /^ {4}"api",$/m);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
 test("typescript takes publish by default at the prompt", () => {
     assert.deepEqual(TEMPLATES.typescript.defaultFeatures, ["publish"]);
 });

@@ -98,6 +98,11 @@ function runBin(argv) {
             lua: existsSync(join(dir, "lua"))
                 ? readdirSync(join(dir, "lua"))
                 : undefined,
+            plugin: existsSync(dir)
+                ? readdirSync(dir).filter((file) =>
+                      file.endsWith(".plugin.zsh"),
+                  )
+                : undefined,
         };
     } finally {
         rmSync(root, { recursive: true, force: true });
@@ -336,6 +341,61 @@ test("a name a Lua module cannot use stops before anything is copied", () => {
     }
 });
 
+test("zsh is copied, initialised and run through mise, not npm", () => {
+    const { commit, plugin, lines } = dryRun(["--template", "zsh"]);
+    assert.match(commit, /\(zsh\)\./);
+    assert.deepEqual(plugin, ["x.plugin.zsh"]);
+    const env = lines.findIndex((line) => line.startsWith("mise env"));
+    assert.deepEqual(
+        lines
+            .slice(env + 1)
+            .map((line) => line.split(" ").slice(0, 2).join(" ")),
+        ["git add", "mise run", "git add", "mise run", "git commit"],
+        lines.join("\n"),
+    );
+});
+
+test("zsh names its plugin for the repository", () => {
+    const run = runBin((root) => [
+        "zsh-my-tool",
+        "--description",
+        "D",
+        "--owner",
+        "example",
+        "--dir",
+        join(root, "x"),
+        "--no-metadata",
+        "--dry-run",
+        "--yes",
+        "--template",
+        "zsh",
+    ]);
+    assert.equal(run.result.status, 0, run.result.stderr);
+    assert.deepEqual(run.plugin, ["zsh-my-tool.plugin.zsh"]);
+});
+
+test("a name a zsh function cannot have stops before anything is copied", () => {
+    for (const name of ["my.plugin", "if", "while"]) {
+        const { result, copied } = runBin((root) => [
+            name,
+            "--description",
+            "D",
+            "--owner",
+            "example",
+            "--dir",
+            join(root, "x"),
+            "--no-metadata",
+            "--dry-run",
+            "--yes",
+            "--template",
+            "zsh",
+        ]);
+        assert.equal(result.status, 2, name);
+        assert.match(result.stderr, /plugin name/, name);
+        assert.ok(!copied, name);
+    }
+});
+
 test("publish names the package @owner/name and the commit", () => {
     const { commit, pkg } = dryRun([
         "--template",
@@ -446,4 +506,5 @@ test("--help lists the templates", () => {
     assert.match(result.stdout, /\n {2}cloudflare {2}A Cloudflare Worker/);
     assert.match(result.stdout, /\n {2}rust {8}A Rust crate/);
     assert.match(result.stdout, /\n {2}nvim {8}A Neovim plugin/);
+    assert.match(result.stdout, /\n {2}zsh {9}A zsh plugin/);
 });
