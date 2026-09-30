@@ -120,3 +120,19 @@ test("a word that is the template's own is refused, a longer one is not", () => 
     assert.equal(checkName("my-repo-tmpl"), "my-repo-tmpl");
     assert.equal(checkDescription("A repo_tmpl fork"), "A repo_tmpl fork");
 });
+
+test("a control character in a description or scope name is refused", () => {
+    for (const control of ["\u0000", "\u0007", "\t", "\u007f"]) {
+        assert.throws(
+            () => checkDescription(`a${control}b`),
+            (error) =>
+                error instanceof UsageError && /control/.test(error.message),
+            JSON.stringify(control),
+        );
+        assert.throws(() => parseScopes(`a:b${control}c`), UsageError);
+    }
+    assert.equal(
+        checkDescription("plain, with punctuation: ok"),
+        "plain, with punctuation: ok",
+    );
+});
