@@ -74,3 +74,24 @@ updates:
           interval: weekly
       commit-message:
           prefix: ci(template)
+
+    - package-ecosystem: npm
+      directory: /templates/cloudflare
+      schedule:
+          interval: weekly
+      commit-message:
+          prefix: build(template)
+      ignore:
+          # Its majors follow Node's; bumped by hand with the Node floor.
+          - dependency-name: "@types/node"
+            update-types: ["version-update:semver-major"]
+          # @cloudflare/vitest-pool-workers peers on Vitest 4.
+          - dependency-name: "vitest"
+            update-types: ["version-update:semver-major"]
+
+    - package-ecosystem: github-actions
+      directory: /templates/cloudflare
+      schedule:
+          interval: weekly
+      commit-message:
+          prefix: ci(template)
