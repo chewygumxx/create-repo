@@ -128,7 +128,10 @@ test("metadata, package and lockfile carry the identity", () =>
         assert.ok(!("is_template" in metadata));
         const pkg = JSON.parse(read(dir, "package.json"));
         assert.equal(pkg.name, "derived-repo");
-        assert.equal(pkg.repository, "github:example/derived-repo");
+        assert.deepEqual(pkg.repository, {
+            type: "git",
+            url: "git+https://github.com/example/derived-repo.git",
+        });
         assert.equal(pkg.homepage, "https://github.com/example/derived-repo");
         assert.deepEqual(pkg.keywords, ["alpha", "beta"]);
         const lock = JSON.parse(read(dir, "package-lock.json"));

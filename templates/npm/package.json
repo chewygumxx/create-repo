@@ -9,7 +9,10 @@
     ],
     "license": "GPL-3.0-only",
     "homepage": "https://github.com/chewygumxx/repo-tmpl",
-    "repository": "github:chewygumxx/repo-tmpl",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/chewygumxx/repo-tmpl.git"
+    },
     "devDependencies": {
         "@biomejs/biome": "2.5.14",
         "@chewygumxx/biome-config": "^1.0.0",

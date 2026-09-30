@@ -10,7 +10,10 @@
     ],
     "license": "GPL-3.0-only",
     "homepage": "https://github.com/chewygumxx/repo-tmpl",
-    "repository": "github:chewygumxx/repo-tmpl",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/chewygumxx/repo-tmpl.git"
+    },
     "engines": {
         "node": ">=24"
     },

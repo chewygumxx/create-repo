@@ -159,7 +159,10 @@ test("the copy is the bundled template, initialised", () => {
     const { lines, pkg, gitignore } = dryRun();
     assert.ok(!lines.some((line) => line.startsWith("git clone")));
     assert.equal(pkg.name, "x");
-    assert.equal(pkg.repository, "github:example/x");
+    assert.deepEqual(pkg.repository, {
+        type: "git",
+        url: "git+https://github.com/example/x.git",
+    });
     assert.ok(gitignore);
 });
 
