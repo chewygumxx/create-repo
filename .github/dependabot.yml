@@ -28,30 +28,34 @@ updates:
       commit-message:
           prefix: ci
 
+    # A template's workflows are read from their own directory: Dependabot
+    # scans a directory other than `/` itself, not its `.github/workflows`.
+    # The prefixes carry no scope because commitlint ignores a Dependabot
+    # commit only when its header is an unscoped `build: bump` or `ci: bump`.
     - package-ecosystem: npm
       directory: /templates/npm
       schedule:
           interval: weekly
       commit-message:
-          prefix: build(template)
+          prefix: build
       ignore:
           # Its majors follow Node's; bumped by hand with the Node floor.
           - dependency-name: "@types/node"
             update-types: ["version-update:semver-major"]
 
     - package-ecosystem: github-actions
-      directory: /templates/npm
+      directory: /templates/npm/.github/workflows
       schedule:
           interval: weekly
       commit-message:
-          prefix: ci(template)
+          prefix: ci
 
     - package-ecosystem: npm
       directory: /templates/typescript
       schedule:
           interval: weekly
       commit-message:
-          prefix: build(template)
+          prefix: build
       ignore:
           # Its majors follow Node's; bumped by hand with the Node floor.
           - dependency-name: "@types/node"
@@ -62,25 +66,25 @@ updates:
       schedule:
           interval: weekly
       commit-message:
-          prefix: build(template)
+          prefix: build
       ignore:
           # Its majors follow Node's; bumped by hand with the Node floor.
           - dependency-name: "@types/node"
             update-types: ["version-update:semver-major"]
 
     - package-ecosystem: github-actions
-      directory: /templates/typescript-publish
+      directory: /templates/typescript-publish/.github/workflows
       schedule:
           interval: weekly
       commit-message:
-          prefix: ci(template)
+          prefix: ci
 
     - package-ecosystem: npm
       directory: /templates/cloudflare
       schedule:
           interval: weekly
       commit-message:
-          prefix: build(template)
+          prefix: build
       ignore:
           # Its majors follow Node's; bumped by hand with the Node floor.
           - dependency-name: "@types/node"
@@ -90,15 +94,15 @@ updates:
             update-types: ["version-update:semver-major"]
 
     - package-ecosystem: github-actions
-      directory: /templates/cloudflare
+      directory: /templates/cloudflare/.github/workflows
       schedule:
           interval: weekly
       commit-message:
-          prefix: ci(template)
+          prefix: ci
 
     - package-ecosystem: github-actions
-      directory: /templates/native
+      directory: /templates/native/.github/workflows
       schedule:
           interval: weekly
       commit-message:
-          prefix: ci(template)
+          prefix: ci
