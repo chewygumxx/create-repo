@@ -279,6 +279,98 @@ test("flags and a missing terminal never take the defaults", async () => {
     assert.deepEqual((await run(["--with", "bin"])).features, ["bin"]);
 });
 
+/**
+ * A template that publishes by default, where the owner names an npm scope
+ * and the name has a rule of its own.
+ * @type {Record<string, import("../lib/templates.js").Template>}
+ */
+const PUBLISHING = {
+    pkg: {
+        description: "P",
+        family: "npm",
+        features: { publish: "Publish it" },
+        defaultFeatures: ["publish"],
+        layers: () => [],
+        edits: [],
+        checkOwner: (owner, features) => {
+            if (features.has("publish") && owner !== owner.toLowerCase()) {
+                throw new UsageError("Owner must be lowercase.");
+            }
+        },
+        checkName: ({ name }, features) => {
+            if (features.has("publish") && name !== name.toLowerCase()) {
+                throw new UsageError("Name must be lowercase.");
+            }
+        },
+    },
+};
+
+// The owner cannot be changed at the name prompt, so asking for names again
+// would never end.
+test("an owner the features make unusable asks for the features again", async () => {
+    /** @type {string[]} */
+    const warnings = [];
+    const { ask } = asker(["", "none", "x", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "ChewyGum",
+        ask,
+        warn: (message) => warnings.push(message),
+        templates: PUBLISHING,
+    });
+    assert.deepEqual(answers.features, []);
+    assert.equal(answers.name, "x");
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /Owner must be lowercase\..*none/);
+});
+
+test("a name given as a flag that the defaults refuse asks for the features again", async () => {
+    /** @type {string[]} */
+    const warnings = [];
+    const { ask } = asker(["", "none", "", ""]);
+    const answers = await completeAnswers(
+        parseOptions(["MyThing", "--description", "D"]),
+        {
+            owner: "o",
+            ask,
+            warn: (message) => warnings.push(message),
+            templates: PUBLISHING,
+        },
+    );
+    assert.deepEqual(answers.features, []);
+    assert.equal(answers.name, "MyThing");
+    assert.match(warnings[0], /Name must be lowercase\..*none/);
+});
+
+test("a typed name the features refuse asks for the name again", async () => {
+    /** @type {string[]} */
+    const warnings = [];
+    const { ask } = asker(["", "MyThing", "my-thing", "D", "", ""]);
+    const answers = await completeAnswers(parseOptions([]), {
+        owner: "o",
+        ask,
+        warn: (message) => warnings.push(message),
+        templates: PUBLISHING,
+    });
+    assert.deepEqual(answers.features, ["publish"]);
+    assert.equal(answers.name, "my-thing");
+    assert.deepEqual(warnings, ["Name must be lowercase."]);
+});
+
+test("an owner a --with feature makes unusable is refused, without asking", async () => {
+    await assert.rejects(
+        completeAnswers(
+            parseOptions(["x", "--description", "D", "--with", "publish"]),
+            { owner: "ChewyGum", templates: PUBLISHING },
+        ),
+        /Owner must be lowercase\./,
+    );
+    const answers = await completeAnswers(
+        parseOptions(["x", "--description", "D", "--with", ""]),
+        { owner: "ChewyGum", templates: PUBLISHING },
+    );
+    assert.deepEqual(answers.features, []);
+});
+
 test("a bad template reply asks again", async () => {
     /** @type {string[]} */
     const warnings = [];

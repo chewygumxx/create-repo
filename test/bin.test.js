@@ -186,7 +186,7 @@ test("publish names the package @owner/name and the commit", () => {
     assert.equal(pkg.publishConfig.access, "public");
 });
 
-test("a name npm refuses stops publish before anything is copied", () => {
+test("an owner npm refuses stops publish before anything is copied", () => {
     const { result, copied } = runBin((root) => [
         "x",
         "--description",
@@ -204,7 +204,7 @@ test("a name npm refuses stops publish before anything is copied", () => {
         "publish",
     ]);
     assert.equal(result.status, 2);
-    assert.match(result.stderr, /@Example\/x.*lowercase/);
+    assert.match(result.stderr, /owner "Example".*lowercase.*--owner/);
     assert.ok(!copied);
 });
 

@@ -157,28 +157,40 @@ test("typescript without publish carries no publishing", () => {
     );
 });
 
-test("a published package's owner and name must be lowercase npm names", () => {
+test("a published package's name must be a lowercase npm name", () => {
     const { checkName } = TEMPLATES.typescript;
     assert.ok(checkName);
     const publish = new Set(["publish"]);
     checkName({ owner: "example", name: "my.thing_2" }, publish);
     // Not published: any GitHub name will do.
     checkName({ owner: "Example", name: ".Github" }, new Set());
-    for (const identity of [
-        { owner: "Example", name: "x" },
-        { owner: "example", name: "X" },
-        { owner: "example", name: ".github" },
-        { owner: "example", name: "_notes" },
-    ]) {
+    for (const name of ["X", ".github", "_notes"]) {
         assert.throws(
-            () => checkName(identity, publish),
+            () => checkName({ owner: "example", name }, publish),
             (error) =>
                 error instanceof UsageError &&
-                /@\S+\/\S+/.test(error.message) &&
+                error.message.includes(`@example/${name}`) &&
                 /lowercase/.test(error.message),
-            JSON.stringify(identity),
+            name,
         );
     }
+});
+
+// It comes from --owner or the gh login, so the message says where to change it.
+test("a published package's owner must be lowercase, and says how to change it", () => {
+    const { checkOwner } = TEMPLATES.typescript;
+    assert.ok(checkOwner);
+    checkOwner("example", new Set(["publish"]));
+    checkOwner("Example", new Set());
+    assert.throws(
+        () => checkOwner("Example", new Set(["publish"])),
+        (error) =>
+            error instanceof UsageError &&
+            /"Example"/.test(error.message) &&
+            /lowercase/.test(error.message) &&
+            /--owner/.test(error.message) &&
+            /gh login/.test(error.message),
+    );
 });
 
 // `npm ci` fails when they differ, which only the CI matrix would notice.
