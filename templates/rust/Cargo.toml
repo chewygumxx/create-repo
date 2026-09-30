@@ -1,0 +1,20 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/Cargo.toml
+#
+#
+
+# https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package]
+name        = "repo-tmpl"
+version     = "0.1.0"
+edition     = "2024"
+description = "Repository Template"
+repository  = "https://github.com/chewygumxx/repo-tmpl"
+license     = "GPL-3.0-only"
+publish     = false

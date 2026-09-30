@@ -1,0 +1,39 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.config/mise/conf.d/rust.toml
+#
+#
+
+#
+# https://mise.jdx.dev/configuration.html
+#
+# Rust's tools and tasks, merged into `mise.toml`'s aggregates: mise reads
+# every file in this directory beside it.
+#
+
+[tools]
+rust = { version = "1.98.1", components = "clippy,rustfmt" }
+
+[tasks."lint:fmt"]
+description = "rustfmt's check"
+run         = "cargo fmt --check"
+
+[tasks."lint:clippy"]
+description = "Clippy, with every warning an error"
+run         = "cargo clippy --all-targets --locked -- -D warnings"
+
+[tasks."test:cargo"]
+description = "The crate's tests, doc tests included"
+run         = "cargo test --locked"
+
+[tasks."format:rust"]
+description = "Apply rustfmt"
+run         = "cargo fmt"
+
+[tasks."pre-commit:rust"]
+description = "rustfmt's check"
+run         = "cargo fmt --check"
