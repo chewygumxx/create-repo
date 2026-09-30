@@ -74,10 +74,17 @@ jobs:
             - name: NPM Clean Install
               run: npm ci
 
+            # What a template's checks need and mise does not provide.
+            - name: Install System Packages
+              if: matrix.template == 'zsh'
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install --yes --no-install-recommends zsh
+
             - name: Dry Run
               env:
                   GH_TOKEN: ""
-                  # mise's github: backend (Neovim, luafmt) reads release
+                  # mise's github: backend (Neovim, luafmt, shuck) reads release
                   # metadata from the API, which a shared runner is rate
                   # limited on without a token. Not GITHUB_TOKEN: that would
                   # log gh in.
