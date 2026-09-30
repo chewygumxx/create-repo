@@ -329,6 +329,12 @@ test("input that contains the template's identity is not a leftover", () => {
         { description: "Based on repo-tmpl, with is_template off." },
         { description: `${"word ".repeat(14)}Using this template is easy.` },
         { topics: ["repo_tmpl"] },
+        // The README turns bare URLs into links, so the words differ there.
+        {
+            description:
+                "Fork of https://github.com/chewygumxx/repo-tmpl, trimmed.",
+        },
+        { description: "See www.repo-tmpl.dev for more." },
     ]) {
         initialised(() => {}, changes);
     }
