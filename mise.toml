@@ -43,8 +43,9 @@ node = "24"
 # YAML
 #
 # yamllint is a Python tool, installed with the uv pinned beside it. Its
-# rules come from `@chewygumxx/yamllint-config` in `package.json`; prettier,
-# which formats YAML, is an npm package pinned there too.
+# rules come from `.yamllint.yaml`, which extends `@chewygumxx/yamllint-config`
+# in `package.json`; prettier, which formats YAML, is an npm package pinned
+# there too.
 #
 "aqua:astral-sh/uv" = "0.12.19"
 "pypi:yamllint"     = "1.38.0"
