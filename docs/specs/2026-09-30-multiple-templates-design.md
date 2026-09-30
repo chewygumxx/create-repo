@@ -210,8 +210,9 @@ holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 |                      |                          | are removed: `nvim-` first, then `.nvim` |
 | `zsh`                | Plugin and function      | `^[A-Za-z0-9_][A-Za-z0-9_-]*$`, and not  |
 |                      |                          | a word zsh reads as syntax, such as `if` |
-|                      |                          | or `while`, which a function cannot be   |
-|                      |                          | named                                    |
+|                      |                          | or `local`, or a builtin the layer calls |
+|                      |                          | such as `exit` or `print`, which a       |
+|                      |                          | function cannot be named or would shadow |
 
 ## npm family
 
@@ -404,9 +405,9 @@ does.
 - `functions/repo_tmpl`, an example function; `tests/test_repo_tmpl.zsh` and
   `tests/run.zsh`, which sources the plugin and every `test_*.zsh` under
   `tests/`, runs each `test_*` function in a subshell of its own and fails
-  when there are none. `assert_equal` ends its test with `exit 1`, since a
-  test's status is its last command's, and `plugin_root` is the plugin's
-  directory.
+  when there are none or a file cannot be sourced. `assert_equal` ends its
+  test with `exit 1`, since a test's status is its last command's, and
+  `plugin_root` is the plugin's directory.
 - Tools: `github:ewhauser/shuck`, configured by `.shuck.toml`:
   `[per-file-shell]` maps `**/*.zsh` and `functions/*` to zsh, which shuck
   would read as sh, and `[format]` sets four-space indentation and nothing
