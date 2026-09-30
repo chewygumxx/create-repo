@@ -19,7 +19,13 @@
 //   node scripts/materialize.js --list
 //       every combination, as a GitHub Actions matrix
 
-import { rmSync } from "node:fs";
+import {
+    existsSync,
+    mkdirSync,
+    readdirSync,
+    rmSync,
+    writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { parseFeatures, UsageError } from "../lib/args.js";
@@ -28,6 +34,27 @@ import { checkFeatures, combinations, getTemplate } from "../lib/templates.js";
 
 const USAGE =
     "Usage: node scripts/materialize.js <template> [--with <features>] <dir> | --all <root> | --list";
+
+/** Marks a directory as this script's own output, safe to clear. */
+const MARKER = ".materialized";
+
+/**
+ * Empties `root` for a new run, but only if it is absent, empty, or an
+ * earlier run's output: a mistyped `--all` must not delete a real directory.
+ * @param {string} root
+ */
+function clear(root) {
+    if (existsSync(root)) {
+        if (readdirSync(root).length && !existsSync(join(root, MARKER))) {
+            throw new UsageError(
+                `${root} is not empty and was not made by this script; refusing to clear it.`,
+            );
+        }
+        rmSync(root, { recursive: true });
+    }
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, MARKER), "");
+}
 
 /**
  * @param {string} template
@@ -73,7 +100,10 @@ function main(argv) {
         }));
         console.log(JSON.stringify({ include }));
     } else if (values.all !== undefined) {
-        rmSync(values.all, { recursive: true, force: true });
+        if (positionals.length || values.with !== undefined) {
+            throw new UsageError(USAGE);
+        }
+        clear(values.all);
         for (const { template, features } of combinations()) {
             materialize(
                 join(values.all, nameOf(template, features)),

@@ -12,7 +12,13 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import {
+    existsSync,
+    mkdirSync,
+    mkdtempSync,
+    rmSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -78,3 +84,31 @@ test("materialisations in the root are ignored by git", () => {
     );
     assert.equal(result.status, 0);
 });
+
+test("--all replaces its own earlier output", () =>
+    inTemp((root) => {
+        const all = join(root, "all");
+        assert.equal(materialize(["--all", all]).status, 0);
+        writeFileSync(join(all, "standard", "stale.txt"), "");
+        assert.equal(materialize(["--all", all]).status, 0);
+        assert.ok(!existsSync(join(all, "standard", "stale.txt")));
+    }));
+
+test("--all refuses a directory that is not its own output", () =>
+    inTemp((root) => {
+        const all = join(root, "mine");
+        mkdirSync(all);
+        writeFileSync(join(all, "keep.txt"), "precious\n");
+        const result = materialize(["--all", all]);
+        assert.equal(result.status, 2);
+        assert.match(result.stderr, /not empty/);
+        assert.ok(existsSync(join(all, "keep.txt")));
+    }));
+
+test("--all takes no template, --with or directory", () =>
+    inTemp((root) => {
+        for (const extra of [["standard"], ["--with", "a"]]) {
+            const result = materialize(["--all", join(root, "all"), ...extra]);
+            assert.equal(result.status, 2, extra.join(" "));
+        }
+    }));
