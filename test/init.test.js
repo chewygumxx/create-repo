@@ -16,17 +16,28 @@
 
 import assert from "node:assert/strict";
 import {
+    existsSync,
+    mkdirSync,
     mkdtempSync,
     readFileSync,
+    renameSync,
     rmSync,
     unlinkSync,
     writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { parse } from "jsonc-parser";
-import { init } from "../lib/init.js";
+import {
+    commitlintScopes,
+    headers,
+    init,
+    packageJson,
+    packageLock,
+    readme,
+    repoMetadata,
+} from "../lib/init.js";
 import { copyTemplate, TEMPLATES_DIR, TemplateError } from "../lib/template.js";
 
 const IDENTITY = {
@@ -40,6 +51,16 @@ const IDENTITY = {
         { name: "cli", fullName: "Command Line" },
     ],
 };
+
+/** The standard template's edits. */
+const EDITS = [
+    headers,
+    repoMetadata,
+    packageJson,
+    packageLock,
+    readme,
+    commitlintScopes,
+];
 
 /**
  * @param {string} dir
@@ -60,7 +81,10 @@ function initialised(body, changes = {}, before = () => {}) {
         const dir = join(root, "derived");
         const files = copyTemplate(dir, ["common", "npm"]);
         before(dir);
-        init(dir, { ...IDENTITY, ...changes }, files, { today: "2026-10-01" });
+        init(dir, { ...IDENTITY, ...changes }, files, {
+            edits: EDITS,
+            today: "2026-10-01",
+        });
         body(dir, files);
     } finally {
         rmSync(root, { recursive: true, force: true });
@@ -183,3 +207,117 @@ test("a file init cannot read is a TemplateError naming it", () => {
             error instanceof TemplateError && /README\.md/.test(error.message),
     );
 });
+
+/** @param {(root: string) => void} body */
+function inTemp(body) {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
+    try {
+        body(root);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+}
+
+/**
+ * A copy holding only `files`, and its file list.
+ * @param {string} root
+ * @param {Record<string, string>} files
+ */
+function bare(root, files) {
+    const dir = join(root, "bare");
+    for (const [file, text] of Object.entries(files)) {
+        mkdirSync(dirname(join(dir, file)), { recursive: true });
+        writeFileSync(join(dir, file), text);
+    }
+    return { dir, files: Object.keys(files).sort() };
+}
+
+/** Metadata naming a template slug the guard does not look for. */
+const METADATA = { ".repo-metadata.jsonc": '{ "slug": "someone/tmpl" }\n' };
+
+test("each edit sees the identity, features and both slugs", () =>
+    inTemp((root) => {
+        const { dir, files } = bare(root, { ...METADATA, "a.txt": "a\n" });
+        /** @type {import("../lib/init.js").EditContext[]} */
+        const seen = [];
+        init(dir, IDENTITY, files, {
+            edits: [
+                (context) => {
+                    seen.push(context);
+                },
+            ],
+            features: ["lib"],
+            today: "2026-10-01",
+        });
+        assert.equal(seen.length, 1);
+        assert.equal(seen[0].slug, "example/derived-repo");
+        assert.equal(seen[0].template, "someone/tmpl");
+        assert.deepEqual([...seen[0].features], ["lib"]);
+        assert.equal(seen[0].today, "2026-10-01");
+    }));
+
+test("the template's identity left in a file fails, naming it", () =>
+    inTemp((root) => {
+        const { dir, files } = bare(root, {
+            ...METADATA,
+            "a.txt": "see repo-tmpl\n",
+            "b.txt": "fine\n",
+        });
+        assert.throws(
+            () => init(dir, IDENTITY, files, { edits: [] }),
+            (error) =>
+                error instanceof TemplateError &&
+                /remains in a\.txt$/.test(error.message),
+        );
+    }));
+
+test("the template's identity left in a path fails, naming it", () =>
+    inTemp((root) => {
+        const { dir, files } = bare(root, {
+            ...METADATA,
+            "lua/repo_tmpl/init.lua": "return {}\n",
+        });
+        assert.throws(
+            () => init(dir, IDENTITY, files, { edits: [] }),
+            (error) =>
+                error instanceof TemplateError &&
+                /lua\/repo_tmpl\/init\.lua/.test(error.message),
+        );
+    }));
+
+test("a path an edit renames is checked under its new name", () =>
+    inTemp((root) => {
+        const { dir, files } = bare(root, {
+            ...METADATA,
+            "repo_tmpl.txt": "x\n",
+        });
+        init(dir, IDENTITY, files, {
+            edits: [
+                (context) => {
+                    renameSync(
+                        join(dir, "repo_tmpl.txt"),
+                        join(dir, "derived.txt"),
+                    );
+                    context.files = context.files.map((file) =>
+                        file === "repo_tmpl.txt" ? "derived.txt" : file,
+                    );
+                },
+            ],
+        });
+        assert.ok(existsSync(join(dir, "derived.txt")));
+    }));
+
+test("an edit left out leaves identity the guard reports", () =>
+    assert.throws(
+        () =>
+            inTemp((root) => {
+                const dir = join(root, "derived");
+                const files = copyTemplate(dir, ["common", "npm"]);
+                init(dir, IDENTITY, files, {
+                    edits: EDITS.filter((edit) => edit !== readme),
+                });
+            }),
+        (error) =>
+            error instanceof TemplateError &&
+            /remains in .*README\.md/.test(error.message),
+    ));

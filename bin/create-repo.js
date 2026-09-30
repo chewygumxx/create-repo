@@ -19,7 +19,15 @@
 import { existsSync, readFileSync } from "node:fs";
 import { text } from "node:stream/consumers";
 import { parseOptions, UsageError } from "../lib/args.js";
-import { init } from "../lib/init.js";
+import {
+    commitlintScopes,
+    headers,
+    init,
+    packageJson,
+    packageLock,
+    readme,
+    repoMetadata,
+} from "../lib/init.js";
 import { childEnv, loadEnvFile, resolveKey } from "../lib/key.js";
 import { checkTarget, checkTools, METADATA_REPO } from "../lib/preflight.js";
 import {
@@ -147,7 +155,16 @@ async function main(argv) {
         await run("npm", ["ci", "--no-fund", "--no-audit"], local);
 
         step("Initialising");
-        init(dir, answers, files);
+        init(dir, answers, files, {
+            edits: [
+                headers,
+                repoMetadata,
+                packageJson,
+                packageLock,
+                readme,
+                commitlintScopes,
+            ],
+        });
         // Staged first: the template's format:yaml reads `git ls-files`.
         await run("git", ["add", "--all"], local);
         await run("npm", ["run", "--silent", "format"], local);
