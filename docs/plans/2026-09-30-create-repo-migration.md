@@ -43,7 +43,7 @@ through `git filter-repo`.
 
 ### Tech Stack
 
-- Node ≥ 22 standard library, `node:test`, JSDoc checked by `tsc`
+- Node ≥ 24 standard library, `node:test`, JSDoc checked by `tsc`
 - `jsonc-parser`, the package's single runtime dependency
 - `@biomejs/biome`, `remark`, `prettier`, `yamllint`
 - `git filter-repo`, run with `uvx`
@@ -62,12 +62,14 @@ through `git filter-repo`.
   `METADATA_APP_CLIENT_ID` variable instead of the template repository's.
 - `repo-tmpl` is archived, keeping the README structure 1.x's
   `scripts/init.mjs` edits, and 1.x is deprecated on npm.
+- Node 24 is the floor: `engines.node` becomes `">=24"` and the README
+  says "Node 24 or later".
 - The npm 12 pin (`"npm:npm" = "12"` in `mise.toml`) is dropped, from the
   new repository and from the template: node 24's bundled npm is used.
 
 ## Global Constraints
 
-- `engines.node` stays `">=22"`; mise pins `node = "24"` and no npm.
+- `engines.node` is `">=24"`; mise pins `node = "24"` and no npm.
 - Runtime dependencies: exactly `"jsonc-parser": "^3.3.1"`.
 - `package.json` has no `preinstall`, `install` or `postinstall` script:
   `patch-package` and husky run from `prepare`.
@@ -220,68 +222,68 @@ not `postinstall`, because npm runs `postinstall` for everyone who runs
 
 ```json
 {
-    "name": "@chewygumxx/create-repo",
-    "version": "1.0.1",
-    "description": "Creates a repository from chewygumxx/repo-tmpl: npm create @chewygumxx/repo",
-    "keywords": ["create", "template", "repository"],
-    "license": "GPL-3.0-only",
-    "homepage": "https://github.com/chewygumxx/create-repo#readme",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/chewygumxx/create-repo.git"
-    },
-    "type": "module",
-    "bin": {
-        "create-repo": "bin/create-repo.js"
-    },
-    "files": ["bin", "lib"],
-    "engines": {
-        "node": ">=22"
-    },
-    "publishConfig": {
-        "access": "public",
-        "provenance": true
-    },
-    "dependencies": {
-        "jsonc-parser": "^3.3.1"
-    },
-    "devDependencies": {
-        "@biomejs/biome": "2.5.14",
-        "@chewygumxx/biome-config": "^1.0.0",
-        "@chewygumxx/commitlint-config": "^1.0.0",
-        "@chewygumxx/remark-preset": "^1.0.0",
-        "@chewygumxx/yamllint-config": "^1.0.0",
-        "@commitlint/cli": "^21.2.2",
-        "@commitlint/cz-commitlint": "^21.2.3",
-        "@types/node": "^24.19.0",
-        "commitizen": "^4.3.2",
-        "husky": "^9.1.7",
-        "patch-package": "^8.0.1",
-        "prettier": "^3.9.9",
-        "remark-cli": "^12.0.1",
-        "typescript": "^7.0.2"
-    },
-    "scripts": {
-        "check": "npm run typecheck && npm run format:check && npm run lint && npm run lint:md && npm run lint:yaml && npm test",
-        "commit": "cz",
-        "format": "biome format --write . && npm run format:yaml",
-        "format:check": "biome format .",
-        "format:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --write --log-level warn",
-        "lint": "biome lint .",
-        "lint:md": "git ls-files -z '*.md' | xargs -0 -r remark --frail --quiet --no-stdout",
-        "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | YAMLLINT_CONFIG_FILE=node_modules/@chewygumxx/yamllint-config/config.yaml xargs -0 -r yamllint --strict",
-        "prepare": "patch-package >/dev/null && (test -d node_modules/husky && husky || true)",
-        "test": "node --test 'test/*.test.js'",
-        "typecheck": "tsc"
-    },
-    "config": {
-        "commitizen": {
-            "path": "@commitlint/cz-commitlint"
-        }
-    },
-    "remarkConfig": {
-        "plugins": ["@chewygumxx/remark-preset"]
+  "name": "@chewygumxx/create-repo",
+  "version": "1.0.1",
+  "description": "Creates a repository from chewygumxx/repo-tmpl: npm create @chewygumxx/repo",
+  "keywords": ["create", "template", "repository"],
+  "license": "GPL-3.0-only",
+  "homepage": "https://github.com/chewygumxx/create-repo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chewygumxx/create-repo.git"
+  },
+  "type": "module",
+  "bin": {
+    "create-repo": "bin/create-repo.js"
+  },
+  "files": ["bin", "lib"],
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@chewygumxx/biome-config": "^1.0.0",
+    "@chewygumxx/commitlint-config": "^1.0.0",
+    "@chewygumxx/remark-preset": "^1.0.0",
+    "@chewygumxx/yamllint-config": "^1.0.0",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/cz-commitlint": "^21.2.3",
+    "@types/node": "^24.19.0",
+    "commitizen": "^4.3.2",
+    "husky": "^9.1.7",
+    "patch-package": "^8.0.1",
+    "prettier": "^3.9.9",
+    "remark-cli": "^12.0.1",
+    "typescript": "^7.0.2"
+  },
+  "scripts": {
+    "check": "npm run typecheck && npm run format:check && npm run lint && npm run lint:md && npm run lint:yaml && npm test",
+    "commit": "cz",
+    "format": "biome format --write . && npm run format:yaml",
+    "format:check": "biome format .",
+    "format:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --write --log-level warn",
+    "lint": "biome lint .",
+    "lint:md": "git ls-files -z '*.md' | xargs -0 -r remark --frail --quiet --no-stdout",
+    "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | YAMLLINT_CONFIG_FILE=node_modules/@chewygumxx/yamllint-config/config.yaml xargs -0 -r yamllint --strict",
+    "prepare": "patch-package >/dev/null && (test -d node_modules/husky && husky || true)",
+    "test": "node --test 'test/*.test.js'",
+    "typecheck": "tsc"
+  },
+  "config": {
+    "commitizen": {
+      "path": "@commitlint/cz-commitlint"
     }
+  },
+  "remarkConfig": {
+    "plugins": ["@chewygumxx/remark-preset"]
+  }
 }
 ```
 
@@ -301,11 +303,11 @@ workflow. Replace `biome.json` with:
 
 ```json
 {
-    "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
-    "extends": ["@chewygumxx/biome-config"],
-    "files": {
-        "includes": ["**", "!!**/template"]
-    }
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "extends": ["@chewygumxx/biome-config"],
+  "files": {
+    "includes": ["**", "!!**/template"]
+  }
 }
 ```
 
@@ -340,7 +342,6 @@ In `.commitlintrc.mts`, add after the `claude` scope:
 Append to `.claude/CLAUDE.md`:
 
 ```markdown
-
 `template/` is the template this package copies into every new repository.
 Its `.claude/`, `README.md` and configuration describe those repositories,
 not this one.
@@ -351,19 +352,19 @@ not this one.
 Append to `.github/dependabot.yml`'s `updates`:
 
 ```yaml
-    - package-ecosystem: npm
-      directory: /template
-      schedule:
-          interval: weekly
-      commit-message:
-          prefix: build(template)
+- package-ecosystem: npm
+  directory: /template
+  schedule:
+    interval: weekly
+  commit-message:
+    prefix: build(template)
 
-    - package-ecosystem: github-actions
-      directory: /template
-      schedule:
-          interval: weekly
-      commit-message:
-          prefix: ci(template)
+- package-ecosystem: github-actions
+  directory: /template
+  schedule:
+    interval: weekly
+  commit-message:
+    prefix: ci(template)
 ```
 
 - [ ] **Step 8: Install, rewrite headers, verify**
@@ -437,61 +438,60 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "jsonc-parser";
 import {
-    copyTemplate,
-    listFiles,
-    RENAMED,
-    TEMPLATE_DIR,
-    TemplateError,
+  copyTemplate,
+  listFiles,
+  RENAMED,
+  TEMPLATE_DIR,
+  TemplateError,
 } from "../lib/template.js";
 
 /** @param {(root: string) => void} body */
 function inTemp(body) {
-    const root = mkdtempSync(join(tmpdir(), "create-repo-template-"));
-    try {
-        body(root);
-    } finally {
-        rmSync(root, { recursive: true, force: true });
-    }
+  const root = mkdtempSync(join(tmpdir(), "create-repo-template-"));
+  try {
+    body(root);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 }
 
 test("copies every file, restoring .gitignore", () =>
-    inTemp((root) => {
-        const files = copyTemplate(join(root, "x"));
-        assert.ok(files.includes(".gitignore"));
-        assert.ok(!files.includes("_gitignore"));
-        assert.equal(files.length, listFiles(TEMPLATE_DIR).length);
-        assert.equal(
-            readFileSync(join(root, "x", ".gitignore"), "utf8"),
-            readFileSync(join(TEMPLATE_DIR, "_gitignore"), "utf8"),
-        );
-    }));
+  inTemp((root) => {
+    const files = copyTemplate(join(root, "x"));
+    assert.ok(files.includes(".gitignore"));
+    assert.ok(!files.includes("_gitignore"));
+    assert.equal(files.length, listFiles(TEMPLATE_DIR).length);
+    assert.equal(
+      readFileSync(join(root, "x", ".gitignore"), "utf8"),
+      readFileSync(join(TEMPLATE_DIR, "_gitignore"), "utf8"),
+    );
+  }));
 
 test("refuses a directory that exists", () =>
-    inTemp((root) => {
-        mkdirSync(join(root, "x"));
-        assert.throws(
-            () => copyTemplate(join(root, "x")),
-            (error) =>
-                error instanceof TemplateError &&
-                /already exists/.test(error.message),
-        );
-    }));
+  inTemp((root) => {
+    mkdirSync(join(root, "x"));
+    assert.throws(
+      () => copyTemplate(join(root, "x")),
+      (error) =>
+        error instanceof TemplateError && /already exists/.test(error.message),
+    );
+  }));
 
 // The header sync would rewrite these to name create-repo and template/,
 // and init would then find no header to rewrite.
 test("every template header names the template and its own path", () => {
-    const slug = parse(
-        readFileSync(join(TEMPLATE_DIR, ".repo-metadata.jsonc"), "utf8"),
-    ).slug;
-    const stray = listFiles(TEMPLATE_DIR).filter((file) => {
-        const text = readFileSync(join(TEMPLATE_DIR, file), "utf8");
-        const path = RENAMED[file] ?? file;
-        return (
-            text.includes("::: :/") &&
-            !(text.includes(`~${slug}.git`) && text.includes(`::: :/${path}`))
-        );
-    });
-    assert.deepEqual(stray, []);
+  const slug = parse(
+    readFileSync(join(TEMPLATE_DIR, ".repo-metadata.jsonc"), "utf8"),
+  ).slug;
+  const stray = listFiles(TEMPLATE_DIR).filter((file) => {
+    const text = readFileSync(join(TEMPLATE_DIR, file), "utf8");
+    const path = RENAMED[file] ?? file;
+    return (
+      text.includes("::: :/") &&
+      !(text.includes(`~${slug}.git`) && text.includes(`::: :/${path}`))
+    );
+  });
+  assert.deepEqual(stray, []);
 });
 ```
 
@@ -525,40 +525,38 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 /** The paths `npm pack` would publish. */
 function packed() {
-    const result = spawnSync(
-        "npm",
-        ["pack", "--dry-run", "--json", "--ignore-scripts"],
-        { cwd: ROOT, encoding: "utf8" },
-    );
-    assert.equal(result.status, 0, result.stderr);
-    // npm 11 prints an array, npm 12 an object keyed by package name.
-    const parsed = JSON.parse(result.stdout);
-    const [pack] = Array.isArray(parsed) ? parsed : Object.values(parsed);
-    return new Set(
-        pack.files.map((/** @type {{ path: string }} */ file) => file.path),
-    );
+  const result = spawnSync(
+    "npm",
+    ["pack", "--dry-run", "--json", "--ignore-scripts"],
+    { cwd: ROOT, encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  // npm 11 prints an array, npm 12 an object keyed by package name.
+  const parsed = JSON.parse(result.stdout);
+  const [pack] = Array.isArray(parsed) ? parsed : Object.values(parsed);
+  return new Set(
+    pack.files.map((/** @type {{ path: string }} */ file) => file.path),
+  );
 }
 
 test("the package carries every template file", () => {
-    const files = packed();
-    assert.deepEqual(
-        listFiles(TEMPLATE_DIR)
-            .map((file) => `template/${file}`)
-            .filter((file) => !files.has(file)),
-        [],
-    );
+  const files = packed();
+  assert.deepEqual(
+    listFiles(TEMPLATE_DIR)
+      .map((file) => `template/${file}`)
+      .filter((file) => !files.has(file)),
+    [],
+  );
 });
 
 test("installing the package runs none of its scripts", () => {
-    const { scripts = {} } = JSON.parse(
-        readFileSync(join(ROOT, "package.json"), "utf8"),
-    );
-    assert.deepEqual(
-        ["preinstall", "install", "postinstall"].filter(
-            (name) => name in scripts,
-        ),
-        [],
-    );
+  const { scripts = {} } = JSON.parse(
+    readFileSync(join(ROOT, "package.json"), "utf8"),
+  );
+  assert.deepEqual(
+    ["preinstall", "install", "postinstall"].filter((name) => name in scripts),
+    [],
+  );
 });
 ```
 
@@ -586,12 +584,18 @@ Expected: FAIL with `Cannot find module '.../lib/template.js'`.
 // .gitignore from a package, so the template stores it as _gitignore and
 // copyTemplate() renames it back.
 
-import { cpSync, existsSync, readdirSync, readFileSync, renameSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+} from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const TEMPLATE_DIR = fileURLToPath(
-    new URL("../template", import.meta.url),
+  new URL("../template", import.meta.url),
 );
 
 /** @type {Record<string, string>} Stored name to real name. */
@@ -599,7 +603,7 @@ export const RENAMED = { _gitignore: ".gitignore" };
 
 /** @type {string} This package's version, recorded in the first commit. */
 export const VERSION = JSON.parse(
-    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ).version;
 
 /** The template and the edits init makes to it disagree. */
@@ -610,10 +614,10 @@ export class TemplateError extends Error {}
  * @param {string} dir
  */
 export function listFiles(dir) {
-    return readdirSync(dir, { recursive: true, withFileTypes: true })
-        .filter((entry) => entry.isFile())
-        .map((entry) => relative(dir, join(entry.parentPath, entry.name)))
-        .sort();
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => relative(dir, join(entry.parentPath, entry.name)))
+    .sort();
 }
 
 /**
@@ -623,12 +627,12 @@ export function listFiles(dir) {
  * @returns {string[]} the copy's files, relative to `dir`
  */
 export function copyTemplate(dir, from = TEMPLATE_DIR) {
-    if (existsSync(dir)) throw new TemplateError(`${dir} already exists.`);
-    cpSync(from, dir, { recursive: true });
-    for (const [stored, name] of Object.entries(RENAMED)) {
-        renameSync(join(dir, stored), join(dir, name));
-    }
-    return listFiles(dir);
+  if (existsSync(dir)) throw new TemplateError(`${dir} already exists.`);
+  cpSync(from, dir, { recursive: true });
+  for (const [stored, name] of Object.entries(RENAMED)) {
+    renameSync(join(dir, stored), join(dir, name));
+  }
+  return listFiles(dir);
 }
 ```
 
@@ -672,7 +676,7 @@ git commit -m "feat: Bundle the template in the package"
 - Consumes: `TemplateError`, `copyTemplate`, `TEMPLATE_DIR` from Task 3;
   `Scope` from `lib/args.js` (`{ name: string, fullName: string }`).
 - Produces: `init(dir: string, identity: Identity, files: string[],
-  options?: { today?: string }): void`, where `Identity` is
+options?: { today?: string }): void`, where `Identity` is
   `{ owner, name, description: string, topics: string[], scopes: Scope[] }`.
   `Answers` from `lib/prompt.js` satisfies `Identity`. Throws
   `TemplateError` when a target is missing. Does not format.
@@ -709,15 +713,15 @@ import { init } from "../lib/init.js";
 import { copyTemplate, TEMPLATE_DIR, TemplateError } from "../lib/template.js";
 
 const IDENTITY = {
-    owner: "example",
-    name: "derived-repo",
-    description:
-        'Tests "init": a description with quotes, a colon, a link to https://example.com/docs, and enough words to wrap past eighty columns.',
-    topics: ["alpha", "beta"],
-    scopes: [
-        { name: "api", fullName: "Api" },
-        { name: "cli", fullName: "Command Line" },
-    ],
+  owner: "example",
+  name: "derived-repo",
+  description:
+    'Tests "init": a description with quotes, a colon, a link to https://example.com/docs, and enough words to wrap past eighty columns.',
+  topics: ["alpha", "beta"],
+  scopes: [
+    { name: "api", fullName: "Api" },
+    { name: "cli", fullName: "Command Line" },
+  ],
 };
 
 /**
@@ -734,103 +738,100 @@ const read = (dir, file) => readFileSync(join(dir, file), "utf8");
  * @param {(dir: string) => void} [before]
  */
 function initialised(body, changes = {}, before = () => {}) {
-    const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
-    try {
-        const dir = join(root, "derived");
-        const files = copyTemplate(dir);
-        before(dir);
-        init(dir, { ...IDENTITY, ...changes }, files, { today: "2026-10-01" });
-        body(dir, files);
-    } finally {
-        rmSync(root, { recursive: true, force: true });
-    }
+  const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
+  try {
+    const dir = join(root, "derived");
+    const files = copyTemplate(dir);
+    before(dir);
+    init(dir, { ...IDENTITY, ...changes }, files, { today: "2026-10-01" });
+    body(dir, files);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 }
 
 test("no template identity remains", () =>
-    initialised((dir, files) => {
-        assert.deepEqual(
-            files.filter((file) =>
-                /repo-tmpl|is_template|Using this template/.test(
-                    read(dir, file),
-                ),
-            ),
-            [],
-        );
-    }));
+  initialised((dir, files) => {
+    assert.deepEqual(
+      files.filter((file) =>
+        /repo-tmpl|is_template|Using this template/.test(read(dir, file)),
+      ),
+      [],
+    );
+  }));
 
 // CI's header sync cannot push changes to workflow files.
 test("headers name the new repository, workflows included", () =>
-    initialised((dir) => {
-        assert.match(
-            read(dir, ".github/workflows/ci.yaml"),
-            /~example\/derived-repo\.git/,
-        );
-    }));
+  initialised((dir) => {
+    assert.match(
+      read(dir, ".github/workflows/ci.yaml"),
+      /~example\/derived-repo\.git/,
+    );
+  }));
 
 test("metadata, package and lockfile carry the identity", () =>
-    initialised((dir) => {
-        const metadata = parse(read(dir, ".repo-metadata.jsonc"));
-        assert.equal(metadata.slug, "example/derived-repo");
-        assert.deepEqual(metadata.topics, ["alpha", "beta"]);
-        assert.ok(!("is_template" in metadata));
-        const pkg = JSON.parse(read(dir, "package.json"));
-        assert.equal(pkg.name, "derived-repo");
-        assert.equal(pkg.repository, "github:example/derived-repo");
-        assert.equal(pkg.homepage, "https://github.com/example/derived-repo");
-        assert.deepEqual(pkg.keywords, ["alpha", "beta"]);
-        const lock = JSON.parse(read(dir, "package-lock.json"));
-        assert.equal(lock.name, "derived-repo");
-        assert.equal(lock.packages[""].name, "derived-repo");
-    }));
+  initialised((dir) => {
+    const metadata = parse(read(dir, ".repo-metadata.jsonc"));
+    assert.equal(metadata.slug, "example/derived-repo");
+    assert.deepEqual(metadata.topics, ["alpha", "beta"]);
+    assert.ok(!("is_template" in metadata));
+    const pkg = JSON.parse(read(dir, "package.json"));
+    assert.equal(pkg.name, "derived-repo");
+    assert.equal(pkg.repository, "github:example/derived-repo");
+    assert.equal(pkg.homepage, "https://github.com/example/derived-repo");
+    assert.deepEqual(pkg.keywords, ["alpha", "beta"]);
+    const lock = JSON.parse(read(dir, "package-lock.json"));
+    assert.equal(lock.name, "derived-repo");
+    assert.equal(lock.packages[""].name, "derived-repo");
+  }));
 
 test("README frontmatter, heading and body", () =>
-    initialised((dir) => {
-        const readme = read(dir, "README.md");
-        assert.match(readme, /^ctime: 2026-10-01$/m);
-        assert.match(readme, /^description: >-$/m);
-        assert.match(readme, /^tags:\n {2}- alpha\n {2}- beta\n/m);
-        assert.match(readme, /^# derived-repo$/m);
-        assert.match(readme, /<https:\/\/example\.com\/docs>/);
-    }));
+  initialised((dir) => {
+    const readme = read(dir, "README.md");
+    assert.match(readme, /^ctime: 2026-10-01$/m);
+    assert.match(readme, /^description: >-$/m);
+    assert.match(readme, /^tags:\n {2}- alpha\n {2}- beta\n/m);
+    assert.match(readme, /^# derived-repo$/m);
+    assert.match(readme, /<https:\/\/example\.com\/docs>/);
+  }));
 
 test("scopes are added after the template's own", () =>
-    initialised((dir) => {
-        const config = read(dir, ".commitlintrc.mts");
-        assert.match(config, /name: "claude"/);
-        assert.match(config, /fullName: "Command Line"/);
-    }));
+  initialised((dir) => {
+    const config = read(dir, ".commitlintrc.mts");
+    assert.match(config, /name: "claude"/);
+    assert.match(config, /fullName: "Command Line"/);
+  }));
 
 test("no topics leaves empty tags; no scopes leaves commitlint alone", () =>
-    initialised(
-        (dir) => {
-            assert.match(read(dir, "README.md"), /^tags: \[\]$/m);
-            assert.equal(
-                read(dir, ".commitlintrc.mts"),
-                read(TEMPLATE_DIR, ".commitlintrc.mts").replaceAll(
-                    "~chewygumxx/repo-tmpl.git",
-                    "~example/derived-repo.git",
-                ),
-            );
-        },
-        { topics: [], scopes: [] },
-    ));
+  initialised(
+    (dir) => {
+      assert.match(read(dir, "README.md"), /^tags: \[\]$/m);
+      assert.equal(
+        read(dir, ".commitlintrc.mts"),
+        read(TEMPLATE_DIR, ".commitlintrc.mts").replaceAll(
+          "~chewygumxx/repo-tmpl.git",
+          "~example/derived-repo.git",
+        ),
+      );
+    },
+    { topics: [], scopes: [] },
+  ));
 
 test("a template change init does not know about fails", () => {
-    assert.throws(
-        () =>
-            initialised(
-                () => {},
-                {},
-                (dir) =>
-                    writeFileSync(
-                        join(dir, "README.md"),
-                        read(dir, "README.md").replace(/^ctime: .*\n/m, ""),
-                    ),
-            ),
-        (error) =>
-            error instanceof TemplateError &&
-            /ctime not found/.test(error.message),
-    );
+  assert.throws(
+    () =>
+      initialised(
+        () => {},
+        {},
+        (dir) =>
+          writeFileSync(
+            join(dir, "README.md"),
+            read(dir, "README.md").replace(/^ctime: .*\n/m, ""),
+          ),
+      ),
+    (error) =>
+      error instanceof TemplateError && /ctime not found/.test(error.message),
+  );
 });
 ```
 
@@ -886,7 +887,7 @@ import { TemplateError } from "./template.js";
  * @returns {never}
  */
 function fail(message) {
-    throw new TemplateError(`init: ${message}`);
+  throw new TemplateError(`init: ${message}`);
 }
 
 /**
@@ -897,8 +898,8 @@ function fail(message) {
  * @param {string} what names the target in the error
  */
 function replace(text, pattern, replacement, what) {
-    if (!pattern.test(text)) fail(`${what} not found`);
-    return text.replace(pattern, replacement);
+  if (!pattern.test(text)) fail(`${what} not found`);
+  return text.replace(pattern, replacement);
 }
 
 /**
@@ -906,7 +907,7 @@ function replace(text, pattern, replacement, what) {
  * @param {(text: string) => string} change
  */
 function editText(path, change) {
-    writeFileSync(path, change(readFileSync(path, "utf8")));
+  writeFileSync(path, change(readFileSync(path, "utf8")));
 }
 
 /**
@@ -915,11 +916,11 @@ function editText(path, change) {
  * @param {(data: any) => void} change
  */
 function editJson(path, change) {
-    const text = readFileSync(path, "utf8");
-    const indent = /^[ \t]+/m.exec(text)?.[0] ?? "    ";
-    const data = JSON.parse(text);
-    change(data);
-    writeFileSync(path, `${JSON.stringify(data, null, indent)}\n`);
+  const text = readFileSync(path, "utf8");
+  const indent = /^[ \t]+/m.exec(text)?.[0] ?? "    ";
+  const data = JSON.parse(text);
+  change(data);
+  writeFileSync(path, `${JSON.stringify(data, null, indent)}\n`);
 }
 
 /**
@@ -930,23 +931,23 @@ function editJson(path, change) {
  * @param {[string, unknown][]} changes
  */
 function editJsonc(path, name, changes) {
-    let text = readFileSync(path, "utf8");
-    /** @type {import("jsonc-parser").ParseError[]} */
-    const errors = [];
-    const data = parse(text, errors);
-    if (errors.length) {
-        fail(
-            `${name}: ${errors.map((e) => printParseErrorCode(e.error)).join(", ")}`,
-        );
-    }
-    for (const [key, value] of changes) {
-        if (!(key in data)) fail(`"${key}" in ${name} not found`);
-        const edits = modify(text, [key], value, {
-            formattingOptions: { insertSpaces: true, tabSize: 4 },
-        });
-        text = applyEdits(text, edits);
-    }
-    writeFileSync(path, text);
+  let text = readFileSync(path, "utf8");
+  /** @type {import("jsonc-parser").ParseError[]} */
+  const errors = [];
+  const data = parse(text, errors);
+  if (errors.length) {
+    fail(
+      `${name}: ${errors.map((e) => printParseErrorCode(e.error)).join(", ")}`,
+    );
+  }
+  for (const [key, value] of changes) {
+    if (!(key in data)) fail(`"${key}" in ${name} not found`);
+    const edits = modify(text, [key], value, {
+      formattingOptions: { insertSpaces: true, tabSize: 4 },
+    });
+    text = applyEdits(text, edits);
+  }
+  writeFileSync(path, text);
 }
 
 /**
@@ -956,9 +957,9 @@ function editJsonc(path, name, changes) {
  * @param {string} name
  */
 function requireKeys(data, keys, name) {
-    for (const key of keys) {
-        if (!(key in data)) fail(`"${key}" in ${name} not found`);
-    }
+  for (const key of keys) {
+    if (!(key in data)) fail(`"${key}" in ${name} not found`);
+  }
 }
 
 /**
@@ -967,18 +968,18 @@ function requireKeys(data, keys, name) {
  * @param {number} [width]
  */
 function wrap(text, width = 80) {
-    const lines = [];
-    let line = "";
-    for (const word of text.split(/\s+/).filter(Boolean)) {
-        if (line && line.length + 1 + word.length > width) {
-            lines.push(line);
-            line = word;
-        } else {
-            line = line ? `${line} ${word}` : word;
-        }
+  const lines = [];
+  let line = "";
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    if (line && line.length + 1 + word.length > width) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
     }
-    if (line) lines.push(line);
-    return lines.join("\n");
+  }
+  if (line) lines.push(line);
+  return lines.join("\n");
 }
 
 /**
@@ -988,11 +989,11 @@ function wrap(text, width = 80) {
  * @param {string} text
  */
 function linkUrls(text) {
-    return text.replace(
-        /\b(https?:\/\/|www\.)[^\s<>]*[^\s<>.,;:!?'")\]]/g,
-        (url, start) =>
-            start === "www." ? `[${url}](https://${url})` : `<${url}>`,
-    );
+  return text.replace(
+    /\b(https?:\/\/|www\.)[^\s<>]*[^\s<>.,;:!?'")\]]/g,
+    (url, start) =>
+      start === "www." ? `[${url}](https://${url})` : `<${url}>`,
+  );
 }
 
 /**
@@ -1002,9 +1003,9 @@ function linkUrls(text) {
  * @param {string} value
  */
 function yamlEntry(key, value) {
-    const line = `${key}: ${JSON.stringify(value)}`;
-    if (line.length <= 80) return line;
-    return `${key}: >-\n${wrap(value, 78).replace(/^/gm, "  ")}`;
+  const line = `${key}: ${JSON.stringify(value)}`;
+  if (line.length <= 80) return line;
+  return `${key}: >-\n${wrap(value, 78).replace(/^/gm, "  ")}`;
 }
 
 /**
@@ -1014,114 +1015,114 @@ function yamlEntry(key, value) {
  * @param {{ today?: string }} [options] `today` as YYYY-MM-DD
  */
 export function init(
-    dir,
-    { owner, name, description, topics, scopes },
-    files,
-    { today = new Date().toISOString().slice(0, 10) } = {},
+  dir,
+  { owner, name, description, topics, scopes },
+  files,
+  { today = new Date().toISOString().slice(0, 10) } = {},
 ) {
-    const slug = `${owner}/${name}`;
-    const at = (/** @type {string} */ file) => join(dir, file);
+  const slug = `${owner}/${name}`;
+  const at = (/** @type {string} */ file) => join(dir, file);
 
-    // File headers name the repository as `~owner/name.git`. CI's header
-    // sync would correct them, but its token may not push changes to
-    // workflow files, so they are rewritten here.
-    const template = parse(
-        readFileSync(at(".repo-metadata.jsonc"), "utf8"),
-    )?.slug;
-    if (typeof template !== "string") {
-        fail(`"slug" in .repo-metadata.jsonc not found`);
-    }
-    let headers = 0;
-    for (const file of files) {
-        const text = readFileSync(at(file), "utf8");
-        if (!text.includes(`~${template}.git`)) continue;
-        writeFileSync(
-            at(file),
-            text.replaceAll(`~${template}.git`, `~${slug}.git`),
-        );
-        headers += 1;
-    }
-    if (headers === 0) fail(`no file header naming ~${template}.git found`);
+  // File headers name the repository as `~owner/name.git`. CI's header
+  // sync would correct them, but its token may not push changes to
+  // workflow files, so they are rewritten here.
+  const template = parse(
+    readFileSync(at(".repo-metadata.jsonc"), "utf8"),
+  )?.slug;
+  if (typeof template !== "string") {
+    fail(`"slug" in .repo-metadata.jsonc not found`);
+  }
+  let headers = 0;
+  for (const file of files) {
+    const text = readFileSync(at(file), "utf8");
+    if (!text.includes(`~${template}.git`)) continue;
+    writeFileSync(
+      at(file),
+      text.replaceAll(`~${template}.git`, `~${slug}.git`),
+    );
+    headers += 1;
+  }
+  if (headers === 0) fail(`no file header naming ~${template}.git found`);
 
-    editJsonc(at(".repo-metadata.jsonc"), ".repo-metadata.jsonc", [
-        ["name", name],
-        ["owner", owner],
-        ["slug", slug],
-        ["description", description],
-        ["topics", topics],
-        ["is_template", undefined],
-    ]);
+  editJsonc(at(".repo-metadata.jsonc"), ".repo-metadata.jsonc", [
+    ["name", name],
+    ["owner", owner],
+    ["slug", slug],
+    ["description", description],
+    ["topics", topics],
+    ["is_template", undefined],
+  ]);
 
-    editJson(at("package.json"), (data) => {
-        requireKeys(
-            data,
-            ["name", "description", "keywords", "homepage", "repository"],
-            "package.json",
-        );
-        data.name = name;
-        data.description = description;
-        data.keywords = topics;
-        data.homepage = `https://github.com/${slug}`;
-        data.repository = `github:${slug}`;
-    });
+  editJson(at("package.json"), (data) => {
+    requireKeys(
+      data,
+      ["name", "description", "keywords", "homepage", "repository"],
+      "package.json",
+    );
+    data.name = name;
+    data.description = description;
+    data.keywords = topics;
+    data.homepage = `https://github.com/${slug}`;
+    data.repository = `github:${slug}`;
+  });
 
-    editJson(at("package-lock.json"), (data) => {
-        requireKeys(data, ["name", "packages"], "package-lock.json");
-        requireKeys(data.packages, [""], "package-lock.json packages");
-        data.name = name;
-        data.packages[""].name = name;
-    });
+  editJson(at("package-lock.json"), (data) => {
+    requireKeys(data, ["name", "packages"], "package-lock.json");
+    requireKeys(data.packages, [""], "package-lock.json packages");
+    data.name = name;
+    data.packages[""].name = name;
+  });
 
-    editText(at("README.md"), (text) => {
-        const tags = topics.length
-            ? `tags:\n${topics.map((topic) => `  - ${topic}\n`).join("")}`
-            : "tags: []\n";
-        // An entry is its key line plus any more-indented continuation
-        // lines, so a folded scalar is replaced whole.
-        const entry = (/** @type {string} */ key) =>
-            new RegExp(`^${key}:.*(?:\\n {2}.*)*$`, "m");
-        text = replace(text, /^ctime: .*$/m, () => `ctime: ${today}`, "ctime");
-        text = replace(
-            text,
-            entry("title"),
-            () => yamlEntry("title", name),
-            "title",
-        );
-        text = replace(
-            text,
-            entry("description"),
-            () => yamlEntry("description", description),
-            "description",
-        );
-        text = replace(text, /^tags:\n(?: {2}- .*\n)+/m, () => tags, "tags");
-        return replace(
-            text,
-            /^# repo-tmpl\n\n[\s\S]*?\n## Using this template\n[\s\S]*?\n(?=## )/m,
-            () => `# ${name}\n\n${wrap(linkUrls(description))}\n\n`,
-            'the heading, intro and "Using this template" in README.md',
-        );
-    });
+  editText(at("README.md"), (text) => {
+    const tags = topics.length
+      ? `tags:\n${topics.map((topic) => `  - ${topic}\n`).join("")}`
+      : "tags: []\n";
+    // An entry is its key line plus any more-indented continuation
+    // lines, so a folded scalar is replaced whole.
+    const entry = (/** @type {string} */ key) =>
+      new RegExp(`^${key}:.*(?:\\n {2}.*)*$`, "m");
+    text = replace(text, /^ctime: .*$/m, () => `ctime: ${today}`, "ctime");
+    text = replace(
+      text,
+      entry("title"),
+      () => yamlEntry("title", name),
+      "title",
+    );
+    text = replace(
+      text,
+      entry("description"),
+      () => yamlEntry("description", description),
+      "description",
+    );
+    text = replace(text, /^tags:\n(?: {2}- .*\n)+/m, () => tags, "tags");
+    return replace(
+      text,
+      /^# repo-tmpl\n\n[\s\S]*?\n## Using this template\n[\s\S]*?\n(?=## )/m,
+      () => `# ${name}\n\n${wrap(linkUrls(description))}\n\n`,
+      'the heading, intro and "Using this template" in README.md',
+    );
+  });
 
-    if (scopes.length) {
-        editText(at(".commitlintrc.mts"), (text) =>
-            replace(
-                text,
-                /\n {4}\],\n\}\);\n$/,
-                () =>
-                    `${scopes
-                        .map(
-                            (scope) =>
-                                `\n        {\n` +
-                                `            name: ${JSON.stringify(scope.name)},\n` +
-                                `            fullName: ${JSON.stringify(scope.fullName)},\n` +
-                                `            description: ${JSON.stringify(scope.fullName)},\n` +
-                                `        },`,
-                        )
-                        .join("")}\n    ],\n});\n`,
-                "the end of the scopes in .commitlintrc.mts",
-            ),
-        );
-    }
+  if (scopes.length) {
+    editText(at(".commitlintrc.mts"), (text) =>
+      replace(
+        text,
+        /\n {4}\],\n\}\);\n$/,
+        () =>
+          `${scopes
+            .map(
+              (scope) =>
+                `\n        {\n` +
+                `            name: ${JSON.stringify(scope.name)},\n` +
+                `            fullName: ${JSON.stringify(scope.fullName)},\n` +
+                `            description: ${JSON.stringify(scope.fullName)},\n` +
+                `        },`,
+            )
+            .join("")}\n    ],\n});\n`,
+        "the end of the scopes in .commitlintrc.mts",
+      ),
+    );
+  }
 }
 ```
 
@@ -1224,7 +1225,7 @@ from the expected object in `reads the name and every flag`; remove
 
 ```js
 test("--template is no longer accepted", () => {
-    assert.throws(() => parseOptions(["--template", "a/b"]), UsageError);
+  assert.throws(() => parseOptions(["--template", "a/b"]), UsageError);
 });
 ```
 
@@ -1238,7 +1239,7 @@ rename `the client ID comes from the template's variable` to
 `the client ID comes from create-repo's variable` and add, inside it:
 
 ```js
-    assert.equal(METADATA_REPO, "chewygumxx/create-repo");
+assert.equal(METADATA_REPO, "chewygumxx/create-repo");
 ```
 
 `test/bin.test.js`: in `standIn`, delete the `"git clone")` case (three
@@ -1246,13 +1247,13 @@ lines) and the sentence `` `git clone` creates its target, `` from its doc
 comment. Make `dryRun` return what the copy became before it is removed:
 
 ```js
-        assert.equal(result.status, 0, result.stderr);
-        const dir = join(root, "x");
-        return {
-            lines: readFileSync(log, "utf8").trim().split("\n"),
-            pkg: JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
-            gitignore: existsSync(join(dir, ".gitignore")),
-        };
+assert.equal(result.status, 0, result.stderr);
+const dir = join(root, "x");
+return {
+  lines: readFileSync(log, "utf8").trim().split("\n"),
+  pkg: JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
+  gitignore: existsSync(join(dir, ".gitignore")),
+};
 ```
 
 add `existsSync` to its `node:fs` import, change both existing tests to
@@ -1260,11 +1261,11 @@ add `existsSync` to its `node:fs` import, change both existing tests to
 
 ```js
 test("the copy is the bundled template, initialised", () => {
-    const { lines, pkg, gitignore } = dryRun();
-    assert.ok(!lines.some((line) => line.startsWith("git clone")));
-    assert.equal(pkg.name, "x");
-    assert.equal(pkg.repository, "github:example/x");
-    assert.ok(gitignore);
+  const { lines, pkg, gitignore } = dryRun();
+  assert.ok(!lines.some((line) => line.startsWith("git clone")));
+  assert.equal(pkg.name, "x");
+  assert.equal(pkg.repository, "github:example/x");
+  assert.ok(gitignore);
 });
 ```
 
@@ -1312,37 +1313,33 @@ import { copyTemplate, TemplateError, VERSION } from "../lib/template.js";
 
 (replacing the existing `preflight.js` import). Change the top comment's
 first line to
-`` // `npm create @chewygumxx/repo`: copies the bundled template, rewrites its ``
-`` // identity, checks and commits locally, and only then creates the GitHub ``,
+``// `npm create @chewygumxx/repo`: copies the bundled template, rewrites its``
+`// identity, checks and commits locally, and only then creates the GitHub`,
 remove the `--template` line from `USAGE`, and change
 `const { dir, template } = answers;` to `const { dir } = answers;`.
 
 Replace the `try` block's body up to `step("Installing …")` with:
 
 ```js
-        step("Copying the template");
-        const files = copyTemplate(dir);
-        await run(
-            "git",
-            ["init", "--quiet", "--initial-branch", "main"],
-            local,
-        );
+step("Copying the template");
+const files = copyTemplate(dir);
+await run("git", ["init", "--quiet", "--initial-branch", "main"], local);
 ```
 
 replace the `step("Initialising")` call through the end of its `run(...)`
 with:
 
 ```js
-        step("Initialising");
-        init(dir, answers, files);
-        await run("npm", ["run", "--silent", "format"], local);
+step("Initialising");
+init(dir, answers, files);
+await run("npm", ["run", "--silent", "format"], local);
 ```
 
 and change the commit's second message to
 `` `Generated by @chewygumxx/create-repo ${VERSION}.` ``.
 
 Change the client ID fallback to
-`` const id = clientId ?? `<METADATA_APP_CLIENT_ID of ${METADATA_REPO}>`; ``
+``const id = clientId ?? `<METADATA_APP_CLIENT_ID of ${METADATA_REPO}>`;``
 and in the final error handler change
 `} else if (error instanceof CommandError) {` to
 `} else if (error instanceof CommandError || error instanceof TemplateError) {`.
@@ -1392,19 +1389,19 @@ In `.github/workflows/create-repo.yaml`, replace the leading comment with:
 After `Setup mise`, add:
 
 ```yaml
-            - name: NPM Clean Install
-              run: npm ci
+- name: NPM Clean Install
+  run: npm ci
 ```
 
 In `Dry Run`, change `node packages/create-repo/bin/create-repo.js` to
 `node bin/create-repo.js` and append:
 
 ```yaml
-                  if git -C "$RUNNER_TEMP/dry-run" grep -n \
-                      -e repo-tmpl -e is_template -e 'Using this template'; then
-                      echo "::error::template identity remains"
-                      exit 1
-                  fi
+if git -C "$RUNNER_TEMP/dry-run" grep -n \
+-e repo-tmpl -e is_template -e 'Using this template'; then
+echo "::error::template identity remains"
+exit 1
+fi
 ```
 
 - [ ] **Step 2: Publish on `v*` tags**
@@ -1435,50 +1432,50 @@ In `Dry Run`, change `node packages/create-repo/bin/create-repo.js` to
 name: Publish
 
 on:
-    push:
-        tags:
-            - "v*"
+  push:
+    tags:
+      - "v*"
 
 permissions:
-    contents: read
+  contents: read
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-    check:
-        uses: chewygumxx/.github/.github/workflows/lint.yaml@v1
+  check:
+    uses: chewygumxx/.github/.github/workflows/lint.yaml@v1
 
-    publish:
-        needs: check
-        runs-on: ubuntu-latest
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
 
-        permissions:
-            contents: read
-            id-token: write
+    permissions:
+      contents: read
+      id-token: write
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v7
-              with:
-                  persist-credentials: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-            - name: Setup Node and NPM
-              uses: jdx/mise-action@v4
+      - name: Setup Node and NPM
+        uses: jdx/mise-action@v4
 
-            - name: NPM Clean Install
-              run: npm ci
+      - name: NPM Clean Install
+        run: npm ci
 
-            - name: Check Version
-              env:
-                  TAG: ${{ github.ref_name }}
-              run: |
-                  actual=$(node -p "require('./package.json').version")
-                  test "v$actual" = "$TAG" || { echo "::error::package.json is $actual, tag says $TAG"; exit 1; }
+      - name: Check Version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          actual=$(node -p "require('./package.json').version")
+          test "v$actual" = "$TAG" || { echo "::error::package.json is $actual, tag says $TAG"; exit 1; }
 
-            - name: Publish
-              run: npm stage publish
+      - name: Publish
+        run: npm stage publish
 ```
 
 - [ ] **Step 3: Run the dry run locally, as CI does**
@@ -1514,7 +1511,8 @@ from the template bundled in this package, whose first CI run passes,
 including the repository metadata sync."; the second paragraph's "copies
 the template, ... runs the template's `scripts/init.mjs`, and commits"
 becomes "copies the template, installs its toolchain with mise and its
-dependencies with npm, rewrites its identity, and commits"; in "The
+dependencies with npm, rewrites its identity, and commits"; "It needs Node
+22 or later" becomes "It needs Node 24 or later"; in "The
 metadata App private key", "read from the template repository's variable"
 becomes "read from the `chewygumxx/create-repo` repository's variable".
 Add before `## Flags`:
