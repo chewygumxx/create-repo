@@ -37,6 +37,8 @@ import {
 } from "../lib/template.js";
 import {
     checkFeatures,
+    checkKnownFeatures,
+    DEFAULT_TEMPLATE,
     FAMILIES,
     getTemplate,
     label,
@@ -93,11 +95,23 @@ async function main(argv) {
         console.log(usage());
         return 0;
     }
+    const ask = options.metadataKeyFile === "-" ? undefined : terminalAsk();
     // Needs neither gh nor the network, so it comes before the preflight.
     if (options.template !== undefined) {
         const template = getTemplate(options.template);
         if (options.features !== undefined) {
             checkFeatures(options.template, template, options.features);
+        }
+    } else if (options.features !== undefined) {
+        // Without a terminal the template is the default; with one it is
+        // chosen later, so only a feature no template has can be refused now.
+        if (ask) checkKnownFeatures(options.features);
+        else {
+            checkFeatures(
+                DEFAULT_TEMPLATE,
+                getTemplate(DEFAULT_TEMPLATE),
+                options.features,
+            );
         }
     }
 
@@ -126,7 +140,6 @@ async function main(argv) {
           })
         : undefined;
 
-    const ask = options.metadataKeyFile === "-" ? undefined : terminalAsk();
     const owner = options.owner ?? login;
     if (!owner) {
         throw new UsageError(
