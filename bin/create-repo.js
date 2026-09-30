@@ -11,7 +11,7 @@
 
 // @ts-check
 
-// `npm create @chewygumxx/repo`: copies the bundled template, rewrites its
+// `npm create @chewygumxx/repo`: copies the chosen template, rewrites its
 // identity, checks and commits locally, and only then creates the GitHub
 // repository, sets the metadata App variable and secret, and pushes. See the
 // README.

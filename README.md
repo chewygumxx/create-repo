@@ -25,20 +25,30 @@ safe to ignore.
 
 ## The templates
 
-| Template   | For                                                  |
-| ---------- | ---------------------------------------------------- |
-| `standard` | Any repository: commit rules, lint and format checks |
-|            | CI and Claude Code settings                          |
+| Template     | For                                                       |
+| ------------ | --------------------------------------------------------- |
+| `standard`   | Any repository: commit rules, lint and format checks, CI  |
+|              | and Claude Code settings                                  |
+| `typescript` | A Node library or CLI in TypeScript, run without a build; |
+|              | `--with publish` compiles it and publishes it to npm as   |
+|              | `@owner/name` by trusted publishing                       |
 
 `--template` chooses one, `standard` by default, and `--with` turns on its
 optional features; `--help` lists both. A package version always creates
 the same repository, and the first commit names the version and template
 that made it.
 
+At the prompt, `typescript` takes `publish` unless the reply chooses other
+features or `none`. `--with`, and a run without a terminal, choose only what
+they name.
+
 Each template is an ordered list of layers under `templates/`, declared in
 `lib/templates.js`: a later layer's file replaces the same file from an
-earlier one. `common` holds what every repository carries, and `npm` the
-npm-based checks.
+earlier one. `common` holds what every repository carries, `npm` the
+npm-based checks, `typescript` its sources, and `typescript-publish` what
+`--with publish` replaces and adds. A layer that holds a `package.json` holds
+its lock; regenerate it with `npm install --package-lock-only` in the layer's
+directory.
 
 The templates' identity stays `chewygumxx/repo-tmpl`:
 `~chewygumxx/repo-tmpl.git` in every file header and the slug in
@@ -61,9 +71,7 @@ it also catches a template drifting from `lib/init.js` or failing its own
 `npm run check`.
 
 `node scripts/materialize.js <template> [--with <features>] <dir>` writes
-a template as it is before init. To update an npm layer's lock after
-changing its `package.json`, run `npm install --package-lock-only` in the
-layer's directory.
+a template as it is before init.
 
 To release, bump `version` in `package.json` and `package-lock.json`, commit,
 and push a matching `v*` tag. The Publish workflow runs the check and the dry
