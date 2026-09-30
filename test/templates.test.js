@@ -233,6 +233,18 @@ test("rust offers lib and takes nothing by default", () => {
     assert.equal(TEMPLATES.rust.defaultFeatures, undefined);
 });
 
+// Deprecation notices for commitizen's and remark's dependencies, which the
+// latest of both still use, say nothing the person creating a repository can
+// act on. npm still prints an install's errors.
+test("the npm family installs without npm's warnings", () => {
+    assert.deepEqual(FAMILIES.npm.setup, [
+        {
+            file: "npm",
+            args: ["ci", "--no-fund", "--no-audit", "--loglevel=error"],
+        },
+    ]);
+});
+
 test("the native family runs its checks through mise, not npm", () => {
     assert.equal(TEMPLATES.rust.family, "native");
     assert.deepEqual(FAMILIES.native.setup, []);
