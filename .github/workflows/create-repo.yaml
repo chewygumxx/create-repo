@@ -10,7 +10,9 @@
 
 # Runs `create-repo --dry-run` on the bundled template: copy, install, init,
 # check and commit for real, with nothing created on GitHub. Catches the
-# template drifting from lib/init.js and from its own checks. gh is not
+# template drifting from lib/init.js and from its own checks, though not
+# from its Biome formatting, which the run applies before checking; the root
+# `npm run lint:template` catches that. gh is not
 # logged in here, so the dry run reads nothing from GitHub. Publish calls it
 # too, so no version is staged whose template fails its own checks.
 
