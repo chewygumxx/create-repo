@@ -11,7 +11,13 @@
 // @ts-check
 
 import assert from "node:assert/strict";
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import {
+    existsSync,
+    mkdtempSync,
+    readdirSync,
+    readFileSync,
+    rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -71,6 +77,49 @@ test("every layer belongs to a template", () => {
         readdirSync(TEMPLATES_DIR).filter((layer) => !used.has(layer)),
         [],
     );
+});
+
+test("typescript adds sources, tests and its own package over npm", () => {
+    const sources = compose(TEMPLATES.typescript.layers(new Set()));
+    for (const file of [
+        "src/index.ts",
+        "src/index.test.ts",
+        "tsconfig.json",
+        "package.json",
+        "package-lock.json",
+        "README.md",
+    ]) {
+        assert.ok(sources.has(file), file);
+        assert.match(sources.get(file) ?? "", /templates\/typescript\//, file);
+    }
+    const pkg = JSON.parse(
+        readFileSync(sources.get("package.json") ?? "", "utf8"),
+    );
+    assert.equal(pkg.type, "module");
+    assert.equal(pkg.private, true);
+    assert.equal(pkg.engines.node, ">=24");
+    assert.equal(pkg.scripts.test, "node --test 'src/**/*.test.ts'");
+    assert.match(pkg.scripts.check, /npm run test/);
+});
+
+// `npm ci` fails when they differ, which only the CI matrix would notice.
+test("each layer's lockfile matches its package.json", () => {
+    for (const layer of readdirSync(TEMPLATES_DIR)) {
+        const dir = join(TEMPLATES_DIR, layer);
+        if (!existsSync(join(dir, "package.json"))) continue;
+        const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+        const lock = JSON.parse(
+            readFileSync(join(dir, "package-lock.json"), "utf8"),
+        );
+        assert.equal(lock.name, pkg.name, layer);
+        assert.equal(lock.version, pkg.version, layer);
+        assert.equal(lock.packages[""].name, pkg.name, layer);
+        assert.deepEqual(
+            lock.packages[""].devDependencies,
+            pkg.devDependencies,
+            layer,
+        );
+    }
 });
 
 // The header sync would rewrite these to name create-repo and templates/,

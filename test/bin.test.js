@@ -165,6 +165,14 @@ test("the first commit names the template", () => {
     assert.match(dryRun(["--template", "standard"]).commit, /\(standard\)\./);
 });
 
+test("typescript is copied, initialised and named in the commit", () => {
+    const { commit, pkg } = dryRun(["--template", "typescript"]);
+    assert.match(commit, /\(typescript\)\./);
+    assert.equal(pkg.name, "x");
+    assert.equal(pkg.type, "module");
+    assert.equal(pkg.private, true);
+});
+
 test("an unknown template stops before any tool runs", () => {
     const { result, copied, lines } = runBin((root) => [
         "x",
@@ -215,5 +223,6 @@ test("--help lists the templates", () => {
     const { result } = runBin(() => ["--help"]);
     assert.equal(result.status, 0);
     assert.match(result.stdout, /--template <name>/);
-    assert.match(result.stdout, /\nTemplates:\n {2}standard {2}Any repository/);
+    assert.match(result.stdout, /\nTemplates:\n {2}standard {4}Any repository/);
+    assert.match(result.stdout, /\n {2}typescript {2}A Node library or CLI/);
 });

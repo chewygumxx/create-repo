@@ -32,6 +32,20 @@ function asker(replies) {
     };
 }
 
+/**
+ * One template, so the tests of the other prompts are not asked to choose.
+ * @type {Record<string, import("../lib/templates.js").Template>}
+ */
+const ONLY_STANDARD = {
+    standard: {
+        description: "S",
+        family: "npm",
+        features: {},
+        layers: () => [],
+        edits: [],
+    },
+};
+
 test("prompts for every missing value", async () => {
     const { ask } = asker([
         "my-thing",
@@ -42,6 +56,7 @@ test("prompts for every missing value", async () => {
     const answers = await completeAnswers(parseOptions([]), {
         owner: "someone",
         ask,
+        templates: ONLY_STANDARD,
     });
     assert.deepEqual(answers, {
         name: "my-thing",
@@ -67,6 +82,7 @@ test("asks again after an invalid reply", async () => {
         owner: "o",
         ask,
         warn: (message) => warnings.push(message),
+        templates: ONLY_STANDARD,
     });
     assert.equal(answers.name, "good");
     assert.equal(answers.description, "D");
@@ -91,6 +107,7 @@ test("flags are never prompted for", async () => {
     const answers = await completeAnswers(options, {
         owner: "gh-login",
         ask: asker([]).ask,
+        templates: ONLY_STANDARD,
     });
     assert.equal(answers.owner, "mine");
     assert.equal(answers.dir, "/tmp/x");
