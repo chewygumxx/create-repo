@@ -17,7 +17,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { parseOptions, UsageError } from "../lib/args.js";
+import {
+    checkDescription,
+    checkName,
+    parseOptions,
+    parseScopes,
+    parseTopics,
+    UsageError,
+} from "../lib/args.js";
 import { completeAnswers } from "../lib/prompt.js";
 import { checkKnownFeatures } from "../lib/templates.js";
 
@@ -94,4 +101,22 @@ test("None at the features prompt means no feature, in any case", async () => {
         },
     );
     assert.deepEqual(answers.features, []);
+});
+
+test("a word that is the template's own is refused, a longer one is not", () => {
+    for (const word of [
+        "repo-tmpl",
+        "repo_tmpl",
+        "is_template",
+        "Using this template",
+    ]) {
+        assert.throws(() => checkName(word), UsageError, word);
+        assert.throws(() => checkDescription(word), UsageError, word);
+        assert.throws(() => parseTopics(word), UsageError, word);
+        assert.throws(() => parseScopes(word), UsageError, word);
+        assert.throws(() => parseScopes(`x:${word}`), UsageError, word);
+    }
+    assert.throws(() => parseOptions(["--owner", "repo-tmpl"]), UsageError);
+    assert.equal(checkName("my-repo-tmpl"), "my-repo-tmpl");
+    assert.equal(checkDescription("A repo_tmpl fork"), "A repo_tmpl fork");
 });
