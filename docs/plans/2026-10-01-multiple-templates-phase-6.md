@@ -1494,7 +1494,7 @@ done
 cd "$repo" || exit 1
 echo "== this repository: templates/zsh"
 mapfile -d "" zsh < <("$tools/lib/filetype.sh" zsh)
-printf "%s\n" "${zsh[@]}" | grep -c "^templates/zsh/" 
+printf "%s\n" "${zsh[@]}" | grep -c "^templates/zsh/"
 config=(--config "per-file-shell = { \"**\" = \"zsh\" }")
 shuck "${config[@]}" check --output-format concise -- "${zsh[@]}" && echo "shuck check ok"
 shuck "${config[@]}" format --diff -- "${zsh[@]}" && echo "shuck format ok"
