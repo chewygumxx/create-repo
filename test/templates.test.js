@@ -17,10 +17,13 @@ import {
     readdirSync,
     readFileSync,
     rmSync,
+    statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { types } from "@chewygumxx/commitlint-config";
 import { parse } from "jsonc-parser";
 import { UsageError } from "../lib/args.js";
 import { init } from "../lib/init.js";
@@ -187,6 +190,189 @@ test("a Worker's name must be a lowercase label of 1 to 63 characters", () => {
         );
     }
 });
+test("rust is the native layer, Cargo and a binary", () => {
+    const sources = compose(TEMPLATES.rust.layers(new Set()));
+    for (const [file, layer] of [
+        ["mise.toml", "native"],
+        ["committed.toml", "native"],
+        [".githooks/pre-commit", "native"],
+        [".github/workflows/ci.yaml", "native"],
+        ["Cargo.toml", "rust"],
+        ["Cargo.lock", "rust"],
+        ["rustfmt.toml", "rust"],
+        [".config/mise/conf.d/rust.toml", "rust"],
+        ["_gitignore", "rust"],
+        [".github/dependabot.yml", "rust"],
+        ["README.md", "rust"],
+        ["src/main.rs", "rust-bin"],
+    ]) {
+        assert.ok(sources.has(file), file);
+        assert.match(
+            sources.get(file) ?? "",
+            new RegExp(`templates/${layer}/`),
+            file,
+        );
+    }
+    for (const file of ["package.json", ".husky/pre-commit", "src/lib.rs"]) {
+        assert.ok(!sources.has(file), file);
+    }
+    assert.match(
+        readFileSync(sources.get("_gitignore") ?? "", "utf8"),
+        /^\/target\/$/m,
+    );
+});
+
+test("rust with lib swaps the binary for a library", () => {
+    const sources = compose(TEMPLATES.rust.layers(new Set(["lib"])));
+    assert.match(sources.get("src/lib.rs") ?? "", /templates\/rust-lib\//);
+    assert.ok(!sources.has("src/main.rs"));
+});
+
+test("rust offers lib and takes nothing by default", () => {
+    assert.deepEqual(Object.keys(TEMPLATES.rust.features), ["lib"]);
+    assert.equal(TEMPLATES.rust.defaultFeatures, undefined);
+});
+
+test("the native family runs its checks through mise, not npm", () => {
+    assert.equal(TEMPLATES.rust.family, "native");
+    assert.deepEqual(FAMILIES.native.setup, []);
+    assert.deepEqual(FAMILIES.native.format, {
+        file: "mise",
+        args: ["run", "format"],
+    });
+    assert.deepEqual(FAMILIES.native.check, {
+        file: "mise",
+        args: ["run", "check"],
+    });
+});
+
+// A hook or task that is not executable fails every commit that meets it.
+test("the native hooks and the commitlint task are executable once copied", () => {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-templates-"));
+    try {
+        const dir = join(root, "x");
+        copyTemplate(dir, layersOf({ template: "rust", features: [] }));
+        for (const file of [
+            ".githooks/pre-commit",
+            ".githooks/commit-msg",
+            ".config/mise/tasks/commitlint",
+        ]) {
+            assert.ok(statSync(join(dir, file)).mode & 0o100, file);
+        }
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
+// There is no npm to install the shared configurations from, so the native
+// layer holds copies, and a change to the packages would otherwise go
+// unnoticed.
+test("the native Biome configuration is the shared one", () => {
+    const shared = JSON.parse(
+        readFileSync(
+            fileURLToPath(import.meta.resolve("@chewygumxx/biome-config")),
+            "utf8",
+        ),
+    );
+    const own = JSON.parse(
+        readFileSync(join(TEMPLATES_DIR, "native", ".biome.json"), "utf8"),
+    );
+    assert.deepEqual(own, shared);
+});
+
+test("the native commit types are the shared ones", () => {
+    const toml = readFileSync(
+        join(TEMPLATES_DIR, "native", "committed.toml"),
+        "utf8",
+    );
+    const listed = /^allowed_types\s*=\s*\[([^\]]*)\]/m.exec(toml)?.[1] ?? "";
+    assert.deepEqual(
+        [...listed.matchAll(/"([^"]+)"/g)].map((match) => match[1]),
+        types.map((type) => type.name),
+    );
+});
+
+// `cargo test --locked` fails when they differ, which only the CI matrix
+// would notice.
+test("the rust layer's Cargo.lock names the crate its Cargo.toml does", () => {
+    const dir = join(TEMPLATES_DIR, "rust");
+    const toml = readFileSync(join(dir, "Cargo.toml"), "utf8");
+    const name = /^name\s*=\s*"([^"]+)"/m.exec(toml)?.[1];
+    const version = /^version\s*=\s*"([^"]+)"/m.exec(toml)?.[1];
+    assert.ok(
+        readFileSync(join(dir, "Cargo.lock"), "utf8").includes(
+            `[[package]]\nname = "${name}"\nversion = "${version}"\n`,
+        ),
+    );
+});
+
+test("a crate's name is 1 to 64 letters, digits, - and _, a library's lowercase", () => {
+    const { checkName } = TEMPLATES.rust;
+    assert.ok(checkName);
+    /**
+     * @param {string} name
+     * @param {string[]} features
+     */
+    const check = (name, ...features) =>
+        checkName({ owner: "example", name }, new Set(features));
+    for (const name of ["a", "my-tool", "My_Tool2", "a".repeat(64)]) {
+        assert.doesNotThrow(() => check(name), name);
+    }
+    for (const name of [
+        "my.tool",
+        "-tool",
+        "_tool",
+        "1tool",
+        "my tool",
+        "a".repeat(65),
+    ]) {
+        assert.throws(
+            () => check(name),
+            (error) =>
+                error instanceof UsageError && /crate name/.test(error.message),
+            name,
+        );
+    }
+    assert.doesNotThrow(() => check("my-lib", "lib"));
+    for (const name of ["My-Lib", "myLib"]) {
+        assert.doesNotThrow(() => check(name), name);
+        assert.throws(
+            () => check(name, "lib"),
+            (error) =>
+                error instanceof UsageError && /snake case/.test(error.message),
+            name,
+        );
+    }
+});
+
+test("rust is initialised with the crate's name, scopes and module", () => {
+    for (const features of [[], ["lib"]]) {
+        const root = mkdtempSync(join(tmpdir(), "create-repo-templates-"));
+        try {
+            const dir = join(root, "x");
+            const files = copyTemplate(
+                dir,
+                layersOf({ template: "rust", features }),
+            );
+            init(dir, IDENTITY, files, {
+                edits: TEMPLATES.rust.edits,
+                features,
+                today: "2026-10-01",
+            });
+            /** @param {string} file */
+            const at = (file) => readFileSync(join(dir, file), "utf8");
+            assert.match(at("Cargo.toml"), /^name\s*= "derived-repo"$/m);
+            assert.match(at("Cargo.lock"), /^name = "derived-repo"$/m);
+            assert.match(at("committed.toml"), /^ {4}"api",$/m);
+            if (features.includes("lib")) {
+                assert.match(at("src/lib.rs"), /derived_repo::greeting/);
+            }
+        } finally {
+            rmSync(root, { recursive: true, force: true });
+        }
+    }
+});
+
 test("typescript takes publish by default at the prompt", () => {
     assert.deepEqual(TEMPLATES.typescript.defaultFeatures, ["publish"]);
 });
