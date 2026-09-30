@@ -28,6 +28,26 @@ safe to ignore.
 `template/` is the whole template. A package version always creates the
 same repository, and the first commit names the version that made it.
 
+Its identity stays `chewygumxx/repo-tmpl`: `~chewygumxx/repo-tmpl.git` in every
+file header and the slug in `.repo-metadata.jsonc` are what `lib/init.js`
+finds and rewrites for each new repository. They look stale but are not, so
+`.gitattributes` keeps the header sync out of `template/`.
+
+Its `.gitignore` is stored as `_gitignore`, since npm drops nested `.gitignore`
+files from the package, and is renamed back on copy.
+
+## Development
+
+`npm run check` runs the typecheck, the lint checks, `npm run lint:template`
+(the template's own Biome rules) and the tests. The Create Repo workflow runs
+`--dry-run` on the template, so it also catches the template drifting from
+`lib/init.js` or failing its own `npm run check`.
+
+To release, bump `version` in `package.json` and `package-lock.json`, commit,
+and push a matching `v*` tag. The Publish workflow runs the check and the dry
+run, then stages the version with `npm stage publish`; approve it on
+npmjs.com to publish it.
+
 ## Flags
 
 ```sh
