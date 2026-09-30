@@ -34,6 +34,8 @@ safe to ignore.
 |              | `@owner/name` by trusted publishing                       |
 | `cloudflare` | A Cloudflare Worker in TypeScript, tested in the Workers  |
 |              | runtime, with a workflow that deploys it                  |
+| `rust`       | A Rust crate without npm, checked with mise: a binary, or |
+|              | with `--with lib` a library                               |
 
 `--template` chooses one, `standard` by default, and `--with` turns on its
 optional features; `--help` lists both. A package version always creates
@@ -48,16 +50,24 @@ Each template is an ordered list of layers under `templates/`, declared in
 `lib/templates.js`: a later layer's file replaces the same file from an
 earlier one. `common` holds what every repository carries, `npm` the
 npm-based checks, `typescript` its sources, `typescript-publish` what
-`--with publish` replaces and adds, and `cloudflare` the Worker. A layer that
-holds a `package.json` holds its lock; regenerate it with
-`npm install --package-lock-only` in the layer's directory.
+`--with publish` replaces and adds, and `cloudflare` the Worker. `native` is
+the hygiene layer without npm: mise pins the tools and aggregates the tasks,
+`committed` lints commit messages, and Biome, rumdl, yamlfmt and yamllint
+carry copies of the shared configurations. `rust` adds Cargo and its mise
+tasks, and `rust-bin` or `rust-lib` the source. A layer that holds a
+`package.json` holds its lock; regenerate it with
+`npm install --package-lock-only` in the layer's directory. `rust` holds
+its `Cargo.lock`: materialise the template, run `cargo generate-lockfile`
+there, and copy the file back.
 
 The templates' identity stays `chewygumxx/repo-tmpl`:
 `~chewygumxx/repo-tmpl.git` in every file header and the slug in
 `.repo-metadata.jsonc` are what `lib/init.js` finds and rewrites for each
 new repository. They look stale but are not, so `.gitattributes` keeps the
 header sync out of `templates/`. After its edits, init fails if
-`repo-tmpl`, or the identifier form `repo_tmpl`, remains anywhere.
+`repo-tmpl`, or the identifier form `repo_tmpl`, remains anywhere. `rust`
+with `lib` names its crate in a doc test as `repo_tmpl`, which the
+`moduleName` edit rewrites.
 
 A layer stores `.gitignore` as `_gitignore`, since npm drops nested
 `.gitignore` files from the package, and it is renamed back on copy. The

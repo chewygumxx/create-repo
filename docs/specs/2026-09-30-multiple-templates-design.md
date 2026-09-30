@@ -119,9 +119,8 @@ the commands:
 | npm    | `npm ci --no-fund --no-audit`   | `npm run --silent format` | `npm run check`     |
 | native | none beyond `mise install`      | `mise run format`         | `mise run check`    |
 
-Whether `mise trust` must name `.config/mise/conf.d/*.toml` as well as the
-directory is verified during implementation; the command trusts whatever
-`mise run check` then reads.
+`mise trust` trusts the whole directory, `.config/mise/conf.d/*.toml`
+included, so the family runs no other trust command.
 
 ## The command line
 
@@ -168,8 +167,8 @@ today.
 |                    | comments                                               |            |
 | `cargoToml`        | `name`, `description`, `repository` in `[package]`     | rust       |
 | `cargoLock`        | The crate's own `[[package]]` name                     | rust       |
-| `module`           | The `repo_tmpl` token in declared files and paths      | rust with  |
-|                    |                                                        | `lib`,     |
+| `module`           | The `repo_tmpl` token, from `moduleName(rename)`, in   | rust with  |
+|                    | the contents of every file holding it                  | `lib`,     |
 |                    |                                                        | nvim, zsh  |
 
 The TOML edits are anchored regular expressions, adding no dependency.
@@ -186,6 +185,9 @@ value per template:
 | nvim       | The name without a `.nvim` suffix or `nvim-` prefix           |
 | zsh        | The name                                                      |
 
+`moduleName` is built from a function of the repository's name, asks nothing of
+a repository with no token, and renames contents only; phase 5 adds paths.
+
 After every edit, `init` fails if any path or content of the copy still
 holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 `init`.
@@ -196,7 +198,9 @@ holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 | -------------------- | ------------------------ | ---------------------------------------- |
 | `typescript publish` | npm package `@owner/name` | Owner and name lowercase                |
 | `cloudflare`         | Worker name              | `^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$` |
-| `rust`               | Crate name               | `^[A-Za-z][A-Za-z0-9_-]{0,63}$`          |
+| `rust`               | Crate name               | `^[A-Za-z][A-Za-z0-9_-]{0,63}$`, and     |
+| `rust` with `lib`    |                          | `^[a-z][a-z0-9_-]{0,63}$`: a library's   |
+|                      |                          | name must be snake case for Clippy       |
 | `nvim`               | Lua module               | `^[A-Za-z_][A-Za-z0-9_-]*$` once affixes |
 |                      |                          | are removed                              |
 | `zsh`                | Plugin and function      | `^[A-Za-z0-9_-]+$`                       |
@@ -283,9 +287,13 @@ Its tasks are aggregates that language layers extend by adding
 | `format`     | `format:*`     | `format:biome`, `format:yaml`                         |
 | `pre-commit` | `pre-commit:*` | The same checks on staged files                       |
 
-`commitlint` runs committed over a range and skips a commit whose header is
-`build|ci: bump` and which carries Dependabot's `Signed-off-by` trailer, as
-the shared commitlint configuration's `ignores` does.
+`commitlint` is a file task, `.config/mise/tasks/commitlint`, that runs
+committed over each commit `git rev-list <arguments>` names (`mise run
+commitlint -- origin/main..HEAD`, or `-1 HEAD`) and skips a commit whose
+header is `build|ci: bump` and which carries Dependabot's `Signed-off-by`
+trailer, as the shared commitlint configuration's `ignores` does. mise runs
+a task's `run` with `errexit`, so `lint:emdash` is `git grep ... && exit 1
+|| test $? -eq 1`.
 
 `.githooks/pre-commit` runs `mise run pre-commit`; `.githooks/commit-msg`
 runs `mise exec -- committed --commit-file "$1"`. Both use mise's pinned
@@ -293,8 +301,10 @@ tools, not the contributor's `PATH`.
 
 Configurations, inlined:
 
-- `committed.toml`: `style = "conventional"`, `subject_length = 50`,
-  `line_length = 72`, the shared configuration's twelve types,
+- `committed.toml`: `style = "conventional"`, `hard_line_length = 72`
+  (`subject_length` has no effect in committed 1.1, so a header may be 72
+  characters, not 50), `line_length = 72`, the shared configuration's
+  twelve types,
   `allowed_scopes = ["claude"]`, `subject_not_punctuated = true`;
   `imperative_subject`, `subject_capitalized`, `no_fixup` and `no_wip` off,
   as commitlint does not reject what they would.
@@ -302,7 +312,13 @@ Configurations, inlined:
 - `.yamllint.yaml`: `@chewygumxx/yamllint-config`, copied.
 - `.rumdl.toml`: `@chewygumxx/remark-preset` as nearly as rumdl allows: 80
   columns, `-` bullets, frontmatter, GitHub alert references allowed.
-- `.yamlfmt.yaml`: prettier's YAML output as nearly as yamlfmt allows.
+  MD025 does not count a front matter `title`, MD041 is off, and MD052
+  has `shortcut-syntax` on so an undefined `[text]` is reported.
+- `.yamlfmt.yaml`: prettier's YAML output as nearly as yamlfmt allows,
+  with two spaces, not four: inside a sequence item yamlfmt indents by two
+  whatever it is told, and yamllint's `indentation: consistent` rejects a
+  file that mixes both. `.editorconfig` is replaced to say
+  `indent_size = 2` for YAML.
 
 Also: `_gitignore` without `node_modules/`; `install-deps.sh` running `mise
 install` in remote sessions; Dependabot for `github-actions`; a README for
@@ -325,8 +341,10 @@ when that file exists.
   --locked`), `format:rust` (`cargo fmt`), `pre-commit:rust` (`cargo fmt
   --check`).
 - `Cargo.toml`: `edition = "2024"`, `license = "GPL-3.0-only"`,
-  `publish = false`, `[lints.clippy]` `pedantic = "warn"`. `Cargo.lock` is
-  committed. `rustfmt.toml` names edition 2024.
+  `publish = false`. `Cargo.lock` is committed. `rustfmt.toml` names
+  edition 2024. Clippy's pedantic group is `#![warn(clippy::pedantic)]` in
+  the source, not `[lints.clippy]`, which tombi cannot resolve a schema for
+  and `--error-on-warnings` then fails.
 - `_gitignore` adds `/target/`; Dependabot adds `cargo`.
 - `rust-bin`: `src/main.rs`, a small function and its unit test.
 - `rust-lib`: `src/lib.rs`, a unit test and a doc test naming `repo_tmpl`.
@@ -393,13 +411,14 @@ and `--with`, and the sentinel grep. Publish needs the whole matrix.
 ## Development
 
 - `scripts/materialize.js <template> [--with <features>] <dir>` serves CI and
-  `npm run templates:lock`, which regenerates each layer's `package-lock.json`
-  or `Cargo.lock` in a materialised copy and writes it back to its layer.
+  regenerating a lock by hand: `npm install --package-lock-only` in an npm
+  layer, or `cargo generate-lockfile` in a materialised `rust`, copied back.
 - `.gitattributes` excludes `/templates/**` from the header sync; the root
   `.biome.json` excludes `templates/`.
-- Dependabot watches each layer holding a lock, `npm` for the npm layers and
-  `cargo` for `/templates/rust`, with the `build(template)` and
-  `ci(template)` prefixes.
+- Dependabot watches each layer holding a lock, `npm` for the npm layers, with
+  the `build(template)` and `ci(template)` prefixes, and `github-actions` for
+  each layer holding a workflow. `templates/rust` has no `cargo` entry: its
+  lock holds only the crate, and the layer is not a buildable crate alone.
 - `.claude/CLAUDE.md` and the README move to `templates/`, name both
   sentinels, and the README tabulates the templates and their features.
 
@@ -422,7 +441,8 @@ they would close:
 
 1. Commit linting: `a/b` multiple scopes, a subject case warning (committed
    only errors, so it is off), and the interactive prompt `npm run commit`
-   gives.
+   gives, and a header held to 50 characters, not 72: committed's
+   `subject_length` has no effect.
 2. Distributing the Biome, yamllint and remark (rumdl) configurations
    without npm, so native templates stop carrying copies that can drift.
 3. Reusable `mise` check and committed workflows in `chewygumxx/.github`,
