@@ -203,8 +203,11 @@ that is exactly `repo-tmpl`, `repo_tmpl`, `is_template` or
 `Using this template` is refused as a name, description, topic, owner (the
 account gh reports included) or scope, since the guard could not tell it from
 a leftover, and so is a control character in a description or a scope's full
-name: C0 and C1 controls (including a tab) and the line and paragraph
-separators U+2028 and U+2029.
+name: C0 and C1 controls (including a tab), the line and paragraph
+separators U+2028 and U+2029, the text direction overrides and isolates
+(U+202A to U+202E, U+2066 to U+2069) and the byte order mark U+FEFF. The
+message names the code point. Zero width joiners and the direction marks
+(U+200B to U+200F) stay legal: emoji and right to left text use them.
 
 ## Name rules
 

@@ -134,20 +134,46 @@ test("a control character in a description or scope name is refused", () => {
         "\u009f",
         "\u2028",
         "\u2029",
+        // Text direction overrides and isolates reorder what is displayed, and
+        // a byte order mark is invisible.
+        "\u202a",
+        "\u202e",
+        "\u2066",
+        "\u2069",
+        "\ufeff",
     ]) {
+        const code = `U+${control.codePointAt(0)?.toString(16).toUpperCase().padStart(4, "0")}`;
         assert.throws(
             () => checkDescription(`a${control}b`),
             (error) =>
                 error instanceof UsageError &&
-                /control character \(a tab included\)/.test(error.message) &&
+                error.message.includes(`(${code})`) &&
+                /invisible or control character/.test(error.message) &&
                 !/TOML/.test(error.message),
             JSON.stringify(control),
         );
-        assert.throws(() => parseScopes(`a:b${control}c`), UsageError);
+        assert.throws(
+            () => parseScopes(`a:b${control}c`),
+            (error) =>
+                error instanceof UsageError && error.message.includes(code),
+            JSON.stringify(control),
+        );
     }
     assert.equal(
         checkDescription("plain, with punctuation: ok"),
         "plain, with punctuation: ok",
+    );
+});
+
+// Zero width joiners make emoji and Persian words, and the direction marks
+// belong in right to left text, so they stay legal.
+test("a zero width or direction mark in a description is accepted", () => {
+    for (const mark of ["\u200b", "\u200c", "\u200d", "\u200e", "\u200f"]) {
+        assert.equal(checkDescription(`a${mark}b`), `a${mark}b`);
+    }
+    assert.equal(
+        checkDescription("family \u{1f468}\u200d\u{1f469}\u200d\u{1f467}"),
+        "family \u{1f468}\u200d\u{1f469}\u200d\u{1f467}",
     );
 });
 
