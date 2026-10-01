@@ -1,4 +1,4 @@
-# Address the remaining deferred minors (follow-up to the merge)
+# Address the aforementioned deferred minors (follow-up to the merge)
 
 ## Context
 
@@ -22,8 +22,9 @@ committed with the behaviour it describes.
 
 1. **Minor 2: owner message from a gh login.** `notTemplate(value, what, fix =
    "choose another")` in `lib/args.js` takes the remedy; `bin/create-repo.js`
-   passes `pass --owner` for a login (the flag path keeps "choose another").
-   Test in `test/bin.test.js`: login `repo-tmpl` stops with `/pass --owner/`.
+   passes `pass another with --owner` for a login (the flag path keeps
+   "choose another"). Test in `test/bin.test.js`: login `repo-tmpl` stops with
+   `/pass another with --owner/`.
 2. **Minor 3 and the invisible characters: the control message.** The message
    shows the offender, `contains an invisible or control character (U+2028),
    which is not allowed.`, built from the matched code point (replaces
@@ -47,9 +48,9 @@ committed with the behaviour it describes.
    in a temp directory and run init to prove the claim; ledger the result.
    Spec updated in the same commit.
 4. **Minor 5: zsh `test` message.** A branch before the generic one for
-   `ZSH_RUNNER` names and `test_*`: `is a name the template's test runner
-   defines or runs`. Test in `test/templates.test.js`: `test`, `test_x`,
-   `assert_equal`, `on_fpath` give that message.
+   `ZSH_RUNNER` names and `test_*`: `is one the template's test runner runs
+   or defines (...): choose another`. Test in `test/templates.test.js`:
+   `test`, `test_x`, `assert_equal`, `on_fpath` give that message.
 5. **Minor 6: owner ordering and summary.** `test/bin.test.js`: a dry run with
    no `--owner` and no gh login, plus a key command, stops with `Cannot tell
    the owner` and the key command does not run; the "a gh login is the owner"
