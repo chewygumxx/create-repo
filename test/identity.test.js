@@ -125,6 +125,7 @@ test("only a tag after a gap of two or more is realigned", () => {
         const text = [
             "SETUP                          *repo_tmpl-setup*",
             "See the tag |repo_tmpl-setup|",
+            "Prose with a wide gap          |repo_tmpl-setup|",
             "",
         ].join("\n");
         writeFileSync(join(root, "doc/repo_tmpl.txt"), text);
@@ -144,7 +145,7 @@ test("only a tag after a gap of two or more is realigned", () => {
                 scopes: [],
             },
         });
-        const [tag, prose] = readFileSync(
+        const [tag, prose, wide] = readFileSync(
             join(root, "doc/repo_tmpl.txt"),
             "utf8",
         ).split("\n");
@@ -152,6 +153,9 @@ test("only a tag after a gap of two or more is realigned", () => {
         // that `moduleName` then takes out.
         assert.equal(tag.length, text.split("\n")[0].length + 7);
         assert.equal(prose, "See the tag |repo_tmpl-setup|");
+        // The shape is all there is to go by, so prose written like a tag
+        // line is realigned as one.
+        assert.equal(wide.length, text.split("\n")[2].length + 7);
     } finally {
         rmSync(root, { recursive: true, force: true });
     }
