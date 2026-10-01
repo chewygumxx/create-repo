@@ -890,11 +890,18 @@ test("each layer's lockfile matches its package.json", () => {
         assert.equal(lock.name, pkg.name, layer);
         assert.equal(lock.version, pkg.version, layer);
         assert.equal(lock.packages[""].name, pkg.name, layer);
-        assert.deepEqual(
-            lock.packages[""].devDependencies,
-            pkg.devDependencies,
-            layer,
-        );
+        for (const field of [
+            "dependencies",
+            "devDependencies",
+            "optionalDependencies",
+            "peerDependencies",
+        ]) {
+            assert.deepEqual(
+                lock.packages[""][field],
+                pkg[field],
+                `${layer} ${field}`,
+            );
+        }
     }
 });
 
