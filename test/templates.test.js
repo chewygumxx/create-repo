@@ -787,6 +787,23 @@ test("a zsh plugin's name is a function's: no leading -, no reserved word", () =
     }
 });
 
+// `test` is not a word zsh reads as syntax: the generic message, which lists
+// those, would not say why it is refused.
+test("a zsh plugin named for the test runner's functions says so", () => {
+    const { checkName } = TEMPLATES.zsh;
+    assert.ok(checkName);
+    for (const name of ["test", "test_x", "assert_equal", "on_fpath"]) {
+        assert.throws(
+            () => checkName({ owner: "example", name }, new Set()),
+            (error) =>
+                error instanceof UsageError &&
+                /test runner/.test(error.message) &&
+                error.message.includes(`"${name}"`),
+            name,
+        );
+    }
+});
+
 test("zsh is initialised with the plugin's name in every path", () => {
     const root = mkdtempSync(join(tmpdir(), "create-repo-templates-"));
     try {
