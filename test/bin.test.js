@@ -63,7 +63,7 @@ function runBin(argv) {
         mkdirSync(bin);
         writeFileSync(log, "");
         writeFileSync(`${log}.commit`, "");
-        for (const tool of ["gh", "git", "mise", "npm", "node"]) {
+        for (const tool of ["gh", "git", "mise", "npm", "node", "zsh"]) {
             writeFileSync(join(bin, tool), standIn(log));
             chmodSync(join(bin, tool), 0o755);
         }
@@ -511,4 +511,13 @@ test("--help lists the templates", () => {
     assert.match(result.stdout, /\n {2}rust {8}A Rust crate/);
     assert.match(result.stdout, /\n {2}nvim {8}A Neovim plugin/);
     assert.match(result.stdout, /\n {2}zsh {9}A zsh plugin/);
+});
+
+test("zsh is checked for the zsh template only", () => {
+    const checked = (/** @type {string} */ template) =>
+        dryRun(["--template", template]).lines.some((line) =>
+            line.startsWith("zsh --version"),
+        );
+    assert.equal(checked("zsh"), true);
+    assert.equal(checked("rust"), false);
 });
