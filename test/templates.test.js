@@ -377,6 +377,20 @@ test("a crate's name is 1 to 64 letters, digits, - and _, a library's lowercase"
         assert.doesNotThrow(() => check(name, "lib"), name);
         assert.throws(() => check(name), UsageError, name);
     }
+    // Cargo warns that a Windows reserved filename "will not work on Windows
+    // platforms", in any case, for every crate.
+    for (const name of ["con", "PRN", "Aux", "nul", "com1", "COM9", "lpt1"]) {
+        assert.throws(
+            () => check(name),
+            (error) =>
+                error instanceof UsageError && /Windows/.test(error.message),
+            name,
+        );
+        assert.throws(() => check(name, "lib"), UsageError, name);
+    }
+    for (const name of ["com", "com0", "com10", "lpt", "console", "nuls"]) {
+        assert.doesNotThrow(() => check(name), name);
+    }
     assert.doesNotThrow(() => check("my-lib", "lib"));
     for (const name of ["My-Lib", "myLib", "my--lib", "my__lib", "a_-b"]) {
         assert.doesNotThrow(() => check(name), name);

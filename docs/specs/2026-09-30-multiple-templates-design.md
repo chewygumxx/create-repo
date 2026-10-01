@@ -224,7 +224,10 @@ character in a description or a scope's full name: C0 and C1 controls
 
 A crate name is also refused where Cargo refuses it (a Rust keyword, or
 `test`) or the generated repository would fail: a binary named `build`, `deps`,
-`examples` or `incremental`, and a library named `std` or `gen`. A zsh plugin
+`examples` or `incremental`, a library named `std` or `gen`, and any crate
+named for a Windows reserved filename (`con`, `prn`, `aux`, `nul`, `com1` to
+`com9`, `lpt1` to `lpt9`, in any case), which Cargo only warns of off Windows.
+A zsh plugin
 is also refused as `test`, `test_*`, `assert_equal` or `on_fpath`, which the
 test runner runs or defines (the unload function of `test` is a `test_*`). An
 nvim module or a zsh plugin name that is `repo-tmpl` or `repo_tmpl` in any
