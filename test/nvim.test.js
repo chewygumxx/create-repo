@@ -96,3 +96,9 @@ test("a run without the summary line fails though the server exits 0", () => {
     const { result } = typeCheck({ nvim: "printf /rt", output: "1 problem" });
     assert.equal(result.status, 1, result.stdout);
 });
+
+test("the check removes the log directory it made", () => {
+    const { result, logLeft } = typeCheck({ nvim: "printf /rt" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(logLeft, false);
+});

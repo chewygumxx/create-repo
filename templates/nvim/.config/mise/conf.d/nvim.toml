@@ -55,16 +55,18 @@ depends     = [ "deps" ]
 # `$VIMRUNTIME` and mini.test, which `deps` clones, are `.luarc.json`'s
 # `workspace.library`, so the tests' types are known: a failed `nvim`, or one
 # that prints no runtime directory, fails the check rather than running it
-# without them. Some releases report problems and still exit 0, so the
-# summary line is what is asserted on.
+# without them; the log directory is removed on exit. Some releases report
+# problems and still exit 0, so the summary line is what is asserted on.
 run         = """
+log=$(mktemp -d)
+trap 'rm -rf "$log"' EXIT
 VIMRUNTIME=$(nvim --headless --clean --cmd 'lua io.stdout:write(vim.env.VIMRUNTIME)' --cmd quit) || exit
 if [ -z "$VIMRUNTIME" ]; then
     echo "nvim printed no runtime directory" >&2
     exit 1
 fi
 export VIMRUNTIME
-out=$(lua-language-server --check=. --checklevel=Warning --logpath="$(mktemp -d)" 2>&1) || status=$?
+out=$(lua-language-server --check=. --checklevel=Warning --logpath="$log" 2>&1) || status=$?
 printf '%s\\n' "$out"
 case $out in
 *"no problems found"*) exit "${status:-0}" ;;
