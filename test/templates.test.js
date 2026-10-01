@@ -692,7 +692,6 @@ test("a zsh plugin's name is a function's: no leading -, no reserved word", () =
         "0",
         "1a",
         "a--b",
-        "test",
         "echo",
         "a".repeat(100),
     ]) {
@@ -731,6 +730,8 @@ test("a zsh plugin's name is a function's: no leading -, no reserved word", () =
         // others are functions its helpers define.
         "test_x",
         "test_greets",
+        // Its unload function, `test_plugin_unload`, would run as a test.
+        "test",
         "assert_equal",
         "on_fpath",
         // The template's own name in any case, which init cannot tell from a
