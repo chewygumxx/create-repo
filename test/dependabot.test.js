@@ -96,6 +96,9 @@ test("every directory holds what its ecosystem reads", () => {
                     ),
                 );
             assert.ok(used, `${directory} has no workflow that uses an action`);
+        } else {
+            // A new ecosystem needs its own rule of what it reads.
+            assert.fail(`no content rule for ecosystem ${ecosystem}`);
         }
     }
 });
