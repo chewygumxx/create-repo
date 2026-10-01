@@ -565,6 +565,27 @@ test("a gh login is the owner when --owner is not given", () => {
         { GH_LOGIN: "example" },
     );
     assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /example\/x/);
+});
+
+// Neither a flag nor a login names an owner, which nothing after can make up,
+// so the key command (which may prompt for a secret) has no cause to run.
+test("no owner at all stops before the key command", () => {
+    const { result, ran, copied } = runBin((root) => [
+        "x",
+        "--description",
+        "D",
+        "--dir",
+        join(root, "x"),
+        "--dry-run",
+        "--yes",
+        "--metadata-key-command",
+        `touch ${join(root, "ran")}; echo k`,
+    ]);
+    assert.equal(result.status, 2, result.stderr);
+    assert.match(result.stderr, /Cannot tell the owner/);
+    assert.equal(ran, false);
+    assert.equal(copied, false);
 });
 
 // The owner is settled once gh has said who is logged in, which is before the
