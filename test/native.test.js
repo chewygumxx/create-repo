@@ -17,7 +17,13 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+    chmodSync,
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -123,3 +129,15 @@ test("the commitlint task skips merge commits and reverts, not the rest", () =>
         // A range holds the merge and its side; the merge itself is not linted.
         assert.equal(task(`${feat}..${merge}`), 1, "the side's commits are");
     }));
+
+test("the commitlint job installs only committed and skips the tools", () => {
+    const text = readFileSync(
+        join(NATIVE, ".github/workflows/ci.yaml"),
+        "utf8",
+    );
+    const job = text.split(/^ {2}check:$/m)[0].split(/^ {2}commitlint:$/m)[1];
+    assert.match(job, /install_args: aqua:crate-ci\/committed/);
+    const runs = job.match(/run: mise run .*/g) ?? [];
+    assert.equal(runs.length, 3);
+    for (const run of runs) assert.match(run, /--skip-tools commitlint/);
+});
