@@ -13,6 +13,7 @@
 import assert from "node:assert/strict";
 import {
     linkSync,
+    mkdirSync,
     mkdtempSync,
     readFileSync,
     rmSync,
@@ -22,7 +23,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { collides, init } from "../lib/init.js";
+import { collides, init, vimdocTags } from "../lib/init.js";
 import { copyTemplate } from "../lib/template.js";
 import { TEMPLATES } from "../lib/templates.js";
 
@@ -111,6 +112,48 @@ test("the vimdoc's right-aligned lines keep their width for any module", () => {
                 );
             });
         });
+    }
+});
+
+// A tag line is told from prose by the two or more spaces (or dots) before its
+// tag, so prose that ends in a tag after a single space is left alone, and
+// prose with a wide gap before one is not.
+test("only a tag after a gap of two or more is realigned", () => {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-identity-"));
+    try {
+        mkdirSync(join(root, "doc"));
+        const text = [
+            "SETUP                          *repo_tmpl-setup*",
+            "See the tag |repo_tmpl-setup|",
+            "",
+        ].join("\n");
+        writeFileSync(join(root, "doc/repo_tmpl.txt"), text);
+        vimdocTags(() => "ab")({
+            dir: root,
+            files: ["doc/repo_tmpl.txt"],
+            features: new Set(),
+            slug: "o/ab",
+            template: "nvim",
+            today: "2026-10-01",
+            own: [],
+            identity: {
+                owner: "o",
+                name: "ab",
+                description: "d",
+                topics: [],
+                scopes: [],
+            },
+        });
+        const [tag, prose] = readFileSync(
+            join(root, "doc/repo_tmpl.txt"),
+            "utf8",
+        ).split("\n");
+        // The token is still `repo_tmpl`: the gap takes up the 7 characters
+        // that `moduleName` then takes out.
+        assert.equal(tag.length, text.split("\n")[0].length + 7);
+        assert.equal(prose, "See the tag |repo_tmpl-setup|");
+    } finally {
+        rmSync(root, { recursive: true, force: true });
     }
 });
 
