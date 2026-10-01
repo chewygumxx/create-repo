@@ -548,14 +548,14 @@ test("a plugin's module is the name without .nvim or nvim-, and a Lua name", () 
         "nvim-1plugin",
         "-plugin",
         "my plugin",
-        // The template's own module in any case, however it is affixed: init
-        // cannot tell it from a leftover, and a case-insensitive filesystem
+        // The template's own module, however it is affixed: `repo-tmpl` is
+        // what init's guard looks for, and a case-insensitive filesystem
         // would keep the directory `lua/repo_tmpl/` for `Repo_Tmpl`.
         "nvim-repo-tmpl",
         "repo-tmpl.nvim",
         "nvim-repo_tmpl.nvim",
         "Repo_Tmpl.nvim",
-        "REPO-TMPL",
+        "REPO_TMPL",
     ]) {
         assert.throws(
             () => check(name),
@@ -563,6 +563,28 @@ test("a plugin's module is the name without .nvim or nvim-, and a Lua name", () 
                 error instanceof UsageError && /module/.test(error.message),
             name,
         );
+    }
+});
+
+// Every path of the template spells the module with an underscore and init's
+// guard is case sensitive, so a hyphenated name in another case clashes with
+// neither: it is renamed like any other, and the guard still reads the rest.
+test("a hyphenated template name in another case is a module like any", () => {
+    for (const [template, names] of /** @type {[string, string[]][]} */ ([
+        [
+            "nvim",
+            ["Repo-Tmpl", "REPO-TMPL", "nvim-Repo-TMPL", "Repo-Tmpl.nvim"],
+        ],
+        ["zsh", ["Repo-Tmpl", "REPO-TMPL"]],
+    ])) {
+        const { checkName } = TEMPLATES[template];
+        assert.ok(checkName);
+        for (const name of names) {
+            assert.doesNotThrow(
+                () => checkName({ owner: "example", name }, new Set()),
+                name,
+            );
+        }
     }
 });
 
@@ -748,11 +770,12 @@ test("a zsh plugin's name is a function's: no leading -, no reserved word", () =
         "test",
         "assert_equal",
         "on_fpath",
-        // The template's own name in any case, which init cannot tell from a
-        // leftover, and which a case-insensitive filesystem would keep as
-        // `repo_tmpl.plugin.zsh`.
+        // The template's own name, which init cannot tell from a leftover, and
+        // which a case-insensitive filesystem would keep as
+        // `repo_tmpl.plugin.zsh` in another case.
         "Repo_Tmpl",
-        "REPO-TMPL",
+        "REPO_TMPL",
+        "repo-tmpl",
     ]) {
         assert.throws(
             () => check(name),

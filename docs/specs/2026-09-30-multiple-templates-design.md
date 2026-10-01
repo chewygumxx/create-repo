@@ -231,13 +231,15 @@ A crate name is also refused where Cargo refuses it (a Rust keyword, or
 `examples` or `incremental`, a library named `std` or `gen`, and any crate
 named for a Windows reserved filename (`con`, `prn`, `aux`, `nul`, `com1` to
 `com9`, `lpt1` to `lpt9`, in any case), which Cargo only warns of off Windows.
-A zsh plugin
-is also refused as `test`, `test_*`, `assert_equal` or `on_fpath`, which the
-test runner runs or defines (the unload function of `test` is a `test_*`). An
-nvim module or a zsh plugin name that is `repo-tmpl` or `repo_tmpl` in any
-case (`nvim-repo-tmpl`, `repo-tmpl.nvim`, `Repo_Tmpl`) is refused too: the
-guard is case sensitive, and a case-insensitive filesystem would keep the
-template's `repo_tmpl` directory.
+A zsh plugin is also refused as `test`, `test_*`, `assert_equal` or `on_fpath`,
+which the test runner runs or defines (the unload function of `test` is a
+`test_*`). An nvim module or a zsh plugin name is refused too when it is
+`repo-tmpl`, which the guard looks for and would stop seeing, or `repo_tmpl` in
+any case (`nvim-repo-tmpl`, `repo-tmpl.nvim`, `Repo_Tmpl`): the guard is case
+sensitive, and a case-insensitive filesystem would keep the template's name for
+the nvim `lua/repo_tmpl` directory, or the zsh `repo_tmpl.plugin.zsh` and
+`functions/repo_tmpl` files. The hyphenated name in another case (`Repo-Tmpl`)
+clashes with no path and is accepted.
 
 ## npm family
 
