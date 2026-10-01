@@ -27,10 +27,11 @@ description = "zsh's syntax check, then shuck's lint and format check"
 # The files are named, since shuck finds a file by its extension or shebang,
 # and an autoloaded function has neither. `.shuck.toml` maps them to the zsh
 # dialect, which shuck would otherwise read as sh, and sets the format.
+# A new file counts before it is added, as the test runner's glob does.
 run         = """
-git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r -n 1 zsh -n --
-git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r shuck check --
-git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r shuck format --diff --
+git ls-files -z --cached --others --exclude-standard -- '*.zsh' 'functions/*' | xargs -0 -r -n 1 zsh -n --
+git ls-files -z --cached --others --exclude-standard -- '*.zsh' 'functions/*' | xargs -0 -r shuck check --
+git ls-files -z --cached --others --exclude-standard -- '*.zsh' 'functions/*' | xargs -0 -r shuck format --diff --
 """
 
 [tasks."test:zsh"]
@@ -39,7 +40,7 @@ run         = "zsh -f tests/run.zsh"
 
 [tasks."format:zsh"]
 description = "Apply shuck's formatting"
-run         = "git ls-files -z '*.zsh' 'functions/*' | xargs -0 -r shuck format --"
+run         = "git ls-files -z --cached --others --exclude-standard -- '*.zsh' 'functions/*' | xargs -0 -r shuck format --"
 
 [tasks."pre-commit:zsh"]
 description = "zsh's syntax check, shuck's lint and format check on staged files"

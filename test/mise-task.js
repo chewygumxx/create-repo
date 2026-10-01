@@ -13,8 +13,8 @@
 import { readFileSync } from "node:fs";
 
 /**
- * The script of a mise task: the multi-line `run` string of
- * `[tasks."<name>"]`, with TOML's `\\` undone, so a test can run it.
+ * The script of a mise task: the `run` string of `[tasks."<name>"]`, one
+ * line or several, with TOML's `\\` undone, so a test can run it.
  * @param {string} file
  * @param {string} name
  */
@@ -24,7 +24,9 @@ export function taskScript(file, name) {
     const start = text.indexOf(header);
     if (start < 0) throw new Error(`${name} is not in ${file}`);
     const section = text.slice(start + header.length).split(/^\[/m)[0];
-    const match = /^run\s*=\s*"""\n([\s\S]*?)"""/m.exec(section);
-    if (!match) throw new Error(`${name} has no multi-line run in ${file}`);
+    const match =
+        /^run\s*=\s*"""\n([\s\S]*?)"""/m.exec(section) ??
+        /^run\s*=\s*"([^"\n]*)"$/m.exec(section);
+    if (!match) throw new Error(`${name} has no run in ${file}`);
     return match[1].replaceAll("\\\\", "\\");
 }

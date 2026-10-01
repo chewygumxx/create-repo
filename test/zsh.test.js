@@ -18,12 +18,21 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+    chmodSync,
+    mkdirSync,
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { copyTemplate } from "../lib/template.js";
 import { TEMPLATES } from "../lib/templates.js";
+import { taskScript } from "./mise-task.js";
 
 const skip =
     spawnSync("zsh", ["--version"]).status === 0
@@ -155,3 +164,51 @@ test("a plugin in a path with pattern characters passes its tests", {
         }, name);
     }
 });
+
+const ZSH_TOML = fileURLToPath(
+    new URL("../templates/zsh/.config/mise/conf.d/zsh.toml", import.meta.url),
+);
+
+// `git ls-files` alone names only what is tracked, so a new file would pass
+// the runner's glob and never be linted or formatted.
+test(
+    "lint:zsh and format:zsh name an untracked file, not an ignored one",
+    { skip },
+    () =>
+        inCopy((dir) => {
+            const bin = join(dir, ".fake");
+            mkdirSync(bin);
+            writeFileSync(
+                join(bin, "shuck"),
+                `#!/bin/sh\nprintf '%s\\n' "$@" >> "${dir}/shuck.log"\n`,
+            );
+            chmodSync(join(bin, "shuck"), 0o755);
+            spawnSync("git", ["init", "--quiet"], { cwd: dir });
+            spawnSync("git", ["add", "--all"], { cwd: dir });
+            mkdirSync(join(dir, "functions"), { recursive: true });
+            writeFileSync(join(dir, "functions", "fresh"), "fresh() { :; }\n");
+            writeFileSync(join(dir, ".gitignore"), "ignored.zsh\n", {
+                flag: "a",
+            });
+            writeFileSync(join(dir, "ignored.zsh"), ": ignored\n");
+            for (const task of ["lint:zsh", "format:zsh"]) {
+                rmSync(join(dir, "shuck.log"), { force: true });
+                const result = spawnSync(
+                    "sh",
+                    ["-e", "-c", taskScript(ZSH_TOML, task)],
+                    {
+                        cwd: dir,
+                        encoding: "utf8",
+                        env: {
+                            ...process.env,
+                            PATH: `${bin}:${process.env.PATH}`,
+                        },
+                    },
+                );
+                assert.equal(result.status, 0, task + result.stderr);
+                const log = readFileSync(join(dir, "shuck.log"), "utf8");
+                assert.match(log, /functions\/fresh/, task);
+                assert.doesNotMatch(log, /ignored\.zsh/, task);
+            }
+        }),
+);
