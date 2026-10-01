@@ -107,6 +107,23 @@ async function main(argv) {
         if (options.features !== undefined) {
             checkFeatures(options.template, template, options.features);
         }
+        // What the template refuses of a name or owner given as flags: the
+        // features are known when given, or when none can be asked for.
+        const features =
+            options.features ??
+            (ask && Object.keys(template.features).length ? undefined : []);
+        if (features) {
+            const chosen = new Set(features);
+            if (options.owner !== undefined) {
+                template.checkOwner?.(options.owner, chosen);
+            }
+            if (options.name !== undefined) {
+                template.checkName?.(
+                    { owner: options.owner ?? "owner", name: options.name },
+                    chosen,
+                );
+            }
+        }
     } else if (options.features !== undefined) {
         // Without a terminal the template is the default; with one it is
         // chosen later, so only a feature no template has can be refused now.
@@ -134,6 +151,9 @@ async function main(argv) {
         exists: existsSync,
     };
 
+    if (options.template !== undefined) {
+        await checkTemplateTools({ template: options.template }, tools);
+    }
     const { login, clientId } = await checkTools(options, tools);
     const key = options.metadata
         ? await resolveKey(options, env, {
