@@ -167,6 +167,7 @@ test("the deploy job needs the account, and a push or a manual run", () => {
         .trim();
     assert.equal(
         condition,
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub expression, not a template
         "${{ vars.CLOUDFLARE_ACCOUNT_ID != '' && ( github.event_name == 'workflow_dispatch' || ( github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success')) }}",
     );
 });
