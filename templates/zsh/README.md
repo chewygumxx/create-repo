@@ -83,6 +83,8 @@ function and the test file.
   `run.zsh` runs, each in a subshell of its own, after sourcing the plugin. It
   runs under `zsh -f`, so the machine's own configuration cannot change the
   result, and fails when it collects no test or cannot source a test file.
-  `assert_equal` and `plugin_root` are available to the tests.
+  `assert_equal` and `plugin_root` are available to the tests. A test passes
+  or fails by the status of its last command, so use `assert_equal`, which
+  ends the test on a mismatch, for a comparison.
 - `.shuck.toml`: maps the scripts to the zsh dialect, which shuck would
   otherwise read as sh, and sets the format.
