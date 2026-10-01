@@ -82,9 +82,11 @@ last layer's applies to all of them.
 
 ## Development
 
-`npm run check` runs the typecheck, the lint checks,
-`npm run lint:templates` (each template's own Biome rules, run on every
-combination materialised under `.templates/`) and the tests. The Create Repo
+`npm run check` runs the typecheck, the lint checks (Biome, remark,
+Prettier, yamllint, the em dash check and `lint:editorconfig` on this
+repository), `npm run lint:templates` (each template's own Biome rules and
+`editorconfig-checker`, run on every combination materialised under
+`.templates/`) and the tests. The Create Repo
 workflow runs `--dry-run` on every template and combination of features, so
 it also catches a template drifting from `lib/init.js` or failing its own
 `npm run check`.
