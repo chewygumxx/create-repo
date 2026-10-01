@@ -125,7 +125,16 @@ test("a word that is the template's own is refused, a longer one is not", () => 
 });
 
 test("a control character in a description or scope name is refused", () => {
-    for (const control of ["\u0000", "\u0007", "\t", "\u007f"]) {
+    for (const control of [
+        "\u0000",
+        "\u0007",
+        "\t",
+        "\u007f",
+        "\u0085",
+        "\u009f",
+        "\u2028",
+        "\u2029",
+    ]) {
         assert.throws(
             () => checkDescription(`a${control}b`),
             (error) =>
