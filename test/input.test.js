@@ -165,6 +165,20 @@ test("a name the template refuses stops before the key command", () => {
     }
 });
 
+test("the template's own module stops before the key command", () => {
+    for (const [name, template] of [
+        ["repo-tmpl.nvim", "nvim"],
+        ["Repo_Tmpl", "zsh"],
+    ]) {
+        const { result, ran } = runWithKeyCommand(["--template", template], {
+            name,
+        });
+        assert.equal(result.status, 2, name + result.stderr);
+        assert.match(result.stderr, /the template's own/, name);
+        assert.equal(ran, false, name);
+    }
+});
+
 test("an owner the template refuses stops before the key command", () => {
     const { result, ran } = runWithKeyCommand(
         ["--template", "typescript", "--with", "publish"],

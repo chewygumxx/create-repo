@@ -534,6 +534,14 @@ test("a plugin's module is the name without .nvim or nvim-, and a Lua name", () 
         "nvim-1plugin",
         "-plugin",
         "my plugin",
+        // The template's own module in any case, however it is affixed: init
+        // cannot tell it from a leftover, and a case-insensitive filesystem
+        // would keep the directory `lua/repo_tmpl/` for `Repo_Tmpl`.
+        "nvim-repo-tmpl",
+        "repo-tmpl.nvim",
+        "nvim-repo_tmpl.nvim",
+        "Repo_Tmpl.nvim",
+        "REPO-TMPL",
     ]) {
         assert.throws(
             () => check(name),
@@ -725,6 +733,11 @@ test("a zsh plugin's name is a function's: no leading -, no reserved word", () =
         "test_greets",
         "assert_equal",
         "on_fpath",
+        // The template's own name in any case, which init cannot tell from a
+        // leftover, and which a case-insensitive filesystem would keep as
+        // `repo_tmpl.plugin.zsh`.
+        "Repo_Tmpl",
+        "REPO-TMPL",
     ]) {
         assert.throws(
             () => check(name),

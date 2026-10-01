@@ -226,7 +226,10 @@ A crate name is also refused where Cargo refuses it (a Rust keyword, or
 `test`) or the generated repository would fail: a binary named `build`, `deps`,
 `examples` or `incremental`, and a library named `std` or `gen`. A zsh plugin
 is also refused as `test_*`, `assert_equal` or `on_fpath`, which the test
-runner runs or defines.
+runner runs or defines. An nvim module or a zsh plugin name that is
+`repo-tmpl` or `repo_tmpl` in any case (`nvim-repo-tmpl`, `repo-tmpl.nvim`,
+`Repo_Tmpl`) is refused too: the guard is case sensitive, and a
+case-insensitive filesystem would keep the template's `repo_tmpl` directory.
 
 ## npm family
 
