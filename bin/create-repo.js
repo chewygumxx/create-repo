@@ -101,6 +101,10 @@ async function main(argv) {
         return 0;
     }
     const ask = options.metadataKeyFile === "-" ? undefined : terminalAsk();
+    // The template and features, once the flags settle them, for what the
+    // template refuses of an owner that only gh can name.
+    /** @type {{ template: import("../lib/templates.js").Template, chosen: Set<string> } | undefined} */
+    let settled;
     // Needs neither gh nor the network, so it comes before the preflight.
     if (options.template !== undefined) {
         const template = getTemplate(options.template);
@@ -114,6 +118,7 @@ async function main(argv) {
             (ask && Object.keys(template.features).length ? undefined : []);
         if (features) {
             const chosen = new Set(features);
+            settled = { template, chosen };
             if (options.owner !== undefined) {
                 template.checkOwner?.(options.owner, chosen);
             }
@@ -162,7 +167,10 @@ async function main(argv) {
         );
     }
     // A flag is checked as parsed; the login is not.
-    notTemplate(owner, "owner");
+    if (options.owner === undefined) {
+        notTemplate(owner, "owner");
+        settled?.template.checkOwner?.(owner, settled.chosen);
+    }
     const key = options.metadata
         ? await resolveKey(options, env, {
               readStdin: () => text(process.stdin),

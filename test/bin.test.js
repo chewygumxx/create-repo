@@ -46,6 +46,7 @@ printf '%s %s key=%s pinned=%s\\n' "$(basename "$0")" "$1" \\
 case "$(basename "$0") $1" in
 "mise env") printf '{"PATH":"%s","MISE_PINNED":"yes"}' "$PATH" ;;
 "gh api") if [ "$2" = user ] && [ -n "$GH_LOGIN" ]; then printf '%s\\n' "$GH_LOGIN"; else echo "HTTP 404" >&2; exit 1; fi ;;
+"gh variable") if [ -n "$GH_LOGIN" ]; then echo client; else exit 1; fi ;;
 "gh "*) exit 1 ;;
 "git commit") printf '%s\\n' "$*" >> '${log}.commit' ;;
 esac
@@ -85,6 +86,7 @@ function runBin(argv, env = {}) {
             lines: readFileSync(log, "utf8").trim().split("\n"),
             commit: readFileSync(`${log}.commit`, "utf8"),
             copied: existsSync(dir),
+            ran: existsSync(join(root, "ran")),
             pkg: existsSync(join(dir, "package.json"))
                 ? JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))
                 : undefined,
@@ -561,4 +563,31 @@ test("a gh login is the owner when --owner is not given", () => {
         { GH_LOGIN: "example" },
     );
     assert.equal(result.status, 0, result.stderr);
+});
+
+// The owner is settled once gh has said who is logged in, which is before the
+// key command, so what the template refuses of it must stop there too.
+test("a gh login the template refuses stops before the key command", () => {
+    const { result, ran, copied } = runBin(
+        (root) => [
+            "x",
+            "--template",
+            "typescript",
+            "--with",
+            "publish",
+            "--description",
+            "D",
+            "--dir",
+            join(root, "x"),
+            "--dry-run",
+            "--yes",
+            "--metadata-key-command",
+            `touch ${join(root, "ran")}; echo k`,
+        ],
+        { GH_LOGIN: "Mixed" },
+    );
+    assert.equal(result.status, 2, result.stderr);
+    assert.match(result.stderr, /lowercase/);
+    assert.equal(ran, false);
+    assert.equal(copied, false);
 });
