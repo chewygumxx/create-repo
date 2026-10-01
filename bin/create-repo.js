@@ -18,7 +18,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { text } from "node:stream/consumers";
-import { parseOptions, UsageError } from "../lib/args.js";
+import { notTemplate, parseOptions, UsageError } from "../lib/args.js";
 import { init } from "../lib/init.js";
 import { childEnv, loadEnvFile, resolveKey } from "../lib/key.js";
 import {
@@ -155,6 +155,14 @@ async function main(argv) {
         await checkTemplateTools({ template: options.template }, tools);
     }
     const { login, clientId } = await checkTools(options, tools);
+    const owner = options.owner ?? login;
+    if (!owner) {
+        throw new UsageError(
+            "Cannot tell the owner: pass --owner or log in with gh auth login.",
+        );
+    }
+    // A flag is checked as parsed; the login is not.
+    notTemplate(owner, "owner");
     const key = options.metadata
         ? await resolveKey(options, env, {
               readStdin: () => text(process.stdin),
@@ -165,12 +173,6 @@ async function main(argv) {
           })
         : undefined;
 
-    const owner = options.owner ?? login;
-    if (!owner) {
-        throw new UsageError(
-            "Cannot tell the owner: pass --owner or log in with gh auth login.",
-        );
-    }
     const answers = await completeAnswers(options, { owner, ask });
     await checkTarget(answers, tools, { remote: login !== undefined });
     await checkTemplateTools(answers, tools);

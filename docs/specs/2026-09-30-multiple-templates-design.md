@@ -200,10 +200,11 @@ holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 `moduleName` is the first edit of a native template, so no later edit writes
 text it would then rewrite: a crate named `x-repo_tmpl` keeps its name. A word
 that is exactly `repo-tmpl`, `repo_tmpl`, `is_template` or
-`Using this template` is refused as a name, description, topic, owner or
-scope, since the guard could not tell it from a leftover, and so is a control
-character in a description or a scope's full name: C0 and C1 controls
-(including a tab) and the line and paragraph separators U+2028 and U+2029.
+`Using this template` is refused as a name, description, topic, owner (the
+account gh reports included) or scope, since the guard could not tell it from
+a leftover, and so is a control character in a description or a scope's full
+name: C0 and C1 controls (including a tab) and the line and paragraph
+separators U+2028 and U+2029.
 
 ## Name rules
 

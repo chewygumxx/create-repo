@@ -36,7 +36,7 @@ const BIN = fileURLToPath(new URL("../bin/create-repo.js", import.meta.url));
 /**
  * Each stand-in logs `<tool> <first argument> key=<PRESENT or empty>
  * pinned=<MISE_PINNED>`. `mise env --json` reports a pinned environment, and
- * gh fails as if not logged in.
+ * gh fails as if not logged in, unless `GH_LOGIN` names the account.
  * @param {string} log
  */
 function standIn(log) {
@@ -45,6 +45,7 @@ printf '%s %s key=%s pinned=%s\\n' "$(basename "$0")" "$1" \\
     "\${METADATA_APP_PRIVATE_KEY:+PRESENT}" "\${MISE_PINNED:-}" >> '${log}'
 case "$(basename "$0") $1" in
 "mise env") printf '{"PATH":"%s","MISE_PINNED":"yes"}' "$PATH" ;;
+"gh api") if [ "$2" = user ] && [ -n "$GH_LOGIN" ]; then printf '%s\\n' "$GH_LOGIN"; else echo "HTTP 404" >&2; exit 1; fi ;;
 "gh "*) exit 1 ;;
 "git commit") printf '%s\\n' "$*" >> '${log}.commit' ;;
 esac
@@ -54,8 +55,9 @@ esac
 /**
  * Runs the entry point with stand-ins first on PATH.
  * @param {(root: string) => string[]} argv given the temporary root
+ * @param {Record<string, string>} [env] more variables for the entry point
  */
-function runBin(argv) {
+function runBin(argv, env = {}) {
     const root = mkdtempSync(join(tmpdir(), "create-repo-bin-"));
     try {
         const bin = join(root, "bin");
@@ -74,6 +76,7 @@ function runBin(argv) {
                 HOME: root,
                 PATH: `${bin}:/usr/bin:/bin`,
                 METADATA_APP_PRIVATE_KEY: "not for children",
+                ...env,
             },
         });
         const dir = join(root, "x");
@@ -520,4 +523,42 @@ test("zsh is checked for the zsh template only", () => {
         );
     assert.equal(checked("zsh"), true);
     assert.equal(checked("rust"), false);
+});
+
+// With no --owner the account gh is logged in as is the owner, which the
+// flag's own refusal never sees.
+test("a gh login that is the template's own is refused as the owner", () => {
+    const { result, copied } = runBin(
+        (root) => [
+            "x",
+            "--description",
+            "D",
+            "--dir",
+            join(root, "x"),
+            "--no-metadata",
+            "--dry-run",
+            "--yes",
+        ],
+        { GH_LOGIN: "repo-tmpl" },
+    );
+    assert.equal(result.status, 2, result.stderr);
+    assert.match(result.stderr, /owner "repo-tmpl" is the template's own/);
+    assert.equal(copied, false);
+});
+
+test("a gh login is the owner when --owner is not given", () => {
+    const { result } = runBin(
+        (root) => [
+            "x",
+            "--description",
+            "D",
+            "--dir",
+            join(root, "x"),
+            "--no-metadata",
+            "--dry-run",
+            "--yes",
+        ],
+        { GH_LOGIN: "example" },
+    );
+    assert.equal(result.status, 0, result.stderr);
 });
