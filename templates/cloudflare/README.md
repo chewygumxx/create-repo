@@ -61,6 +61,8 @@ sync pushed.
   tests, Biome's format and lint checks, Markdown lint, the YAML checks
   (prettier, then yamllint with `@chewygumxx/yamllint-config`) and a check
   that rejects em dashes.
+  A Dependabot pull request that bumps only `wrangler` can fail that check
+  until `npm run types` is run on its branch.
 - `npm run format` applies Biome formatting, and prettier's to YAML, which Biome
   does not read.
 

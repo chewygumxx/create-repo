@@ -54,7 +54,7 @@ The toolchain is pinned in `mise.toml` and `.config/mise/conf.d/rust.toml`, and
 `mise install` installs it, Rust included, and wires the git hooks in
 `.githooks/`.
 
-- `cargo run` runs the crate, and `cargo test` its tests.
+- `cargo test` runs the tests, and for a binary `cargo run` runs it.
 - `mise run check` runs the checks CI runs: rustfmt's check, Clippy with every
   warning an error, `cargo test --locked`, Biome's format and lint checks,
   Markdown lint (rumdl), the YAML checks (yamlfmt, then yamllint) and a check
