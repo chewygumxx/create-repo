@@ -129,7 +129,9 @@ test("a control character in a description or scope name is refused", () => {
         assert.throws(
             () => checkDescription(`a${control}b`),
             (error) =>
-                error instanceof UsageError && /control/.test(error.message),
+                error instanceof UsageError &&
+                /control character \(a tab included\)/.test(error.message) &&
+                !/TOML/.test(error.message),
             JSON.stringify(control),
         );
         assert.throws(() => parseScopes(`a:b${control}c`), UsageError);
