@@ -168,7 +168,7 @@ async function main(argv) {
     }
     // A flag is checked as parsed; the login is not.
     if (options.owner === undefined) {
-        notTemplate(owner, "owner");
+        notTemplate(owner, "owner", "pass another with --owner");
         settled?.template.checkOwner?.(owner, settled.chosen);
     }
     const key = options.metadata

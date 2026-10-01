@@ -545,6 +545,8 @@ test("a gh login that is the template's own is refused as the owner", () => {
     );
     assert.equal(result.status, 2, result.stderr);
     assert.match(result.stderr, /owner "repo-tmpl" is the template's own/);
+    // A login cannot be changed from here, so the remedy is the flag.
+    assert.match(result.stderr, /pass another with --owner/);
     assert.equal(copied, false);
 });
 
