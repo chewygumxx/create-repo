@@ -1007,3 +1007,15 @@ test("a label names the template and its features", () => {
     assert.equal(label("standard", []), "standard");
     assert.equal(label("rust", ["lib"]), "rust, with lib");
 });
+
+test("every npm template ignores the tarballs npm pack leaves", () => {
+    for (const { template, features } of combinations()) {
+        if (TEMPLATES[template].family !== "npm") continue;
+        const sources = compose(layersOf({ template, features }));
+        assert.match(
+            readFileSync(sources.get("_gitignore") ?? "", "utf8"),
+            /^\*\.tgz$/m,
+            label(template, features),
+        );
+    }
+});
