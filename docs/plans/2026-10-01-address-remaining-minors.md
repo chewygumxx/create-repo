@@ -87,7 +87,9 @@ commit as any behaviour it describes.
 - Triplicated `package.json`/README text (the layer design requires it).
 - `commitizen` and `remark-cli` deprecation notices (already latest).
 - 50-character header enforcement (`committed` 1.1.11 cannot).
-- No Dependabot mise/cargo entries (unsupported ecosystems).
+- No Dependabot entry for `templates/rust` (an approved ruling: Dependabot
+  does support `cargo`, so this is a choice, not a limit) and none for mise
+  (support not verified).
 - Shared commitlint ignore regex upstream: belongs to
   `chewygumxx/shared-config`; I will not touch another repository.
 - Native commitlint job and mise 2026.9.0 to 2026.9.16 unverified on GitHub:
