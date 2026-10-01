@@ -1026,3 +1026,19 @@ test("every npm template ignores the tarballs npm pack leaves", () => {
         );
     }
 });
+
+test("a created Worker's Dependabot ignores Vitest majors, others do not", () => {
+    const dependabot = (/** @type {string} */ template) =>
+        compose(TEMPLATES[template].layers(new Set())).get(
+            ".github/dependabot.yml",
+        ) ?? "";
+    assert.match(dependabot("cloudflare"), /templates\/cloudflare\//);
+    assert.match(
+        readFileSync(dependabot("cloudflare"), "utf8"),
+        /dependency-name: "vitest"/,
+    );
+    assert.doesNotMatch(
+        readFileSync(dependabot("standard"), "utf8"),
+        /dependency-name: "vitest"/,
+    );
+});
