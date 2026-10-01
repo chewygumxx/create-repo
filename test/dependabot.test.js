@@ -76,6 +76,30 @@ test("every directory Dependabot is given exists", () => {
     }
 });
 
+// A directory that exists but holds nothing for its ecosystem is read without
+// error too: github-actions reads the `uses:` lines of the YAML directly in
+// it, and npm the `package.json` there.
+test("every directory holds what its ecosystem reads", () => {
+    for (const { ecosystem, directory } of entries()) {
+        const dir = join(ROOT, directory);
+        if (ecosystem === "npm") {
+            assert.ok(existsSync(join(dir, "package.json")), directory);
+        } else if (ecosystem === "github-actions") {
+            // `/` is the one directory whose workflows are in `.github/`.
+            const workflows =
+                directory === "/" ? join(dir, ".github/workflows") : dir;
+            const used = readdirSync(workflows)
+                .filter((file) => /\.ya?ml$/.test(file))
+                .some((file) =>
+                    /^\s*(?:- )?uses: /m.test(
+                        readFileSync(join(workflows, file), "utf8"),
+                    ),
+                );
+            assert.ok(used, `${directory} has no workflow that uses an action`);
+        }
+    }
+});
+
 // A scoped header is not ignored, so a long bump title fails the 50
 // character limit. Dependabot's own sign-off trailer is what the ignore
 // requires as well.
