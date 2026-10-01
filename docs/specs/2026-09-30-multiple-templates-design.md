@@ -197,6 +197,14 @@ After every edit, `init` fails if any path or content of the copy still
 holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 `init`.
 
+`moduleName` is the first edit of a native template, so no later edit writes
+text it would then rewrite: a crate named `x-repo_tmpl` keeps its name. A word
+that is exactly `repo-tmpl`, `repo_tmpl`, `is_template` or
+`Using this template` is refused as a name, description, topic, owner or
+scope, since the guard could not tell it from a leftover, and so is a control
+character in a description or a scope's full name, which a TOML string cannot
+hold.
+
 ## Name rules
 
 | Template             | Name used as             | Rule                                     |
@@ -213,6 +221,12 @@ holds `repo-tmpl` or `repo_tmpl`. This is the dry run's grep, made part of
 |                      |                          | or `local`, or a builtin the layer calls |
 |                      |                          | such as `exit` or `print`, which a       |
 |                      |                          | function cannot be named or would shadow |
+
+A crate name is also refused where Cargo refuses it (a Rust keyword, or
+`test`) or the generated repository would fail: a binary named `build`, `deps`,
+`examples` or `incremental`, and a library named `std` or `gen`. A zsh plugin
+is also refused as `test_*`, `assert_equal` or `on_fpath`, which the test
+runner runs or defines.
 
 ## npm family
 
@@ -418,15 +432,17 @@ does.
   Shuck's own walk skips an extensionless file with no shebang, such as an
   autoloaded function, so the shared `lint-zsh` names the detected zsh scripts
   too (chewygumxx/.github, `actions/lib/shuck.sh`).
-- Tasks: `lint:zsh` (`zsh -n` on each tracked zsh file, then `shuck check` and
-  `shuck format --diff`), `test:zsh` (`zsh -f tests/run.zsh`, so the machine's
-  startup files cannot change the result), `format:zsh` (`shuck format`) and
-  `pre-commit:zsh` (the same checks on staged files). The tasks name the files,
-  `*.zsh` and `functions/*`: shuck finds a file by its extension or shebang,
-  and an autoloaded function has neither.
-- zsh is a system prerequisite, named in the README;
-  `.github/apt-packages.txt` lists `zsh` for CI, and the Create Repo workflow
-  installs it for the `zsh` entry.
+- Tasks: `lint:zsh` (`zsh -n` on each zsh file, tracked or new but not
+  ignored, then `shuck check` and `shuck format --diff`), `test:zsh`
+  (`zsh -f tests/run.zsh`, so the machine's startup files cannot change the
+  result), `format:zsh` (`shuck format`) and `pre-commit:zsh` (the same checks
+  on staged files). The tasks name the files, `*.zsh` and `functions/*`: shuck
+  finds a file by its extension or shebang, and an autoloaded function has
+  neither.
+- zsh is a system prerequisite, named in the README; the preflight checks for
+  it once the template is chosen, after the prompt, so a missing zsh stops
+  `create-repo` before anything is created. `.github/apt-packages.txt` lists
+  `zsh` for CI, and the Create Repo workflow installs it for the `zsh` entry.
 
 ## Testing
 
@@ -442,6 +458,11 @@ does.
 - `init.test.js`: split by edit.
 - `pack.test.js`: the package holds `templates/**` and every layer's
   `_gitignore`.
+- `nvim.test.js` and the lint test in `zsh.test.js` run a mise task's script
+  (`test/mise-task.js` extracts it) against stand-ins for its tools;
+  `dependabot.test.js` and `yamllint.test.js` guard the configuration. The
+  repository's `lint:editorconfig` runs on it and, through `lint:templates`,
+  on every materialised template.
 
 The Create Repo workflow runs a matrix: `standard`, `typescript`,
 `typescript` with `publish`, `cloudflare`, `rust`, `rust` with `lib`,
@@ -461,8 +482,11 @@ zsh first, which mise does not provide. Publish needs the whole matrix.
 - `.gitattributes` excludes `/templates/**` from the header sync; the root
   `.biome.json` excludes `templates/`.
 - Dependabot watches each layer holding a lock, `npm` for the npm layers, with
-  the `build(template)` and `ci(template)` prefixes, and `github-actions` for
-  each layer holding a workflow. `templates/rust` has no `cargo` entry: its
+  the `build` prefix, and `github-actions` for each layer holding a workflow,
+  with `ci`, at the layer's `.github/workflows`: for a directory other than
+  `/` it reads that directory itself. The prefixes carry no scope because
+  commitlint ignores a Dependabot commit only when its header is an unscoped
+  `build: bump` or `ci: bump`. `templates/rust` has no `cargo` entry: its
   lock holds only the crate, and the layer is not a buildable crate alone.
 - `.claude/CLAUDE.md` and the README move to `templates/`, name both
   sentinels, and the README tabulates the templates and their features.
@@ -494,9 +518,6 @@ they would close:
    replacing the native `ci.yaml`'s own jobs.
 4. Bumping the native templates' mise pins and the tag `deps` clones:
    Dependabot has no mise ecosystem, so they are bumped by hand.
-5. zsh on the machine that runs `create-repo`: the `zsh` template's first
-   check needs it, and the README names it. No preflight asks for it, since
-   the template may be chosen at the prompt, after the preflight.
 
 ## Further templates
 
