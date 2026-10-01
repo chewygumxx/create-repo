@@ -40,6 +40,14 @@ node = "24"
 "aqua:jqlang/jq" = "1"
 
 #
+# Lint
+#
+# CI runs the same check, so the repository and each template that
+# `lint:templates` materialises are held to their `.editorconfig`s here too.
+#
+"aqua:editorconfig-checker/editorconfig-checker" = "4.0.2"
+
+#
 # YAML
 #
 # yamllint is a Python tool, installed with the uv pinned beside it. Its
