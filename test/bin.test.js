@@ -221,6 +221,7 @@ test("a name a Worker cannot use stops before anything is copied", () => {
     assert.match(result.stderr, /Worker name/);
     assert.ok(!copied);
 });
+
 test("rust is copied, initialised and run through mise, not npm", () => {
     const { commit, cargo, lines } = dryRun(["--template", "rust"]);
     assert.match(commit, /\(rust\)\./);

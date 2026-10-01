@@ -129,8 +129,6 @@ test("no template file holds an em dash", () => {
     }
 });
 
-// The job must stay skipped until the account is configured, and must not
-// deploy a pull request's run.
 // CI's editorconfig-checker refuses tabs where the .editorconfig says spaces,
 // and Wrangler writes worker-configuration.d.ts with tabs.
 test("a template file indented with tabs is allowed by its .editorconfig", () => {
@@ -154,6 +152,8 @@ test("a template file indented with tabs is allowed by its .editorconfig", () =>
     }
 });
 
+// The job must stay skipped until the account is configured, and must not
+// deploy a pull request's run.
 test("the deploy job needs the account, and a push or a manual run", () => {
     const text = readFileSync(
         compose(TEMPLATES.cloudflare.layers(new Set())).get(
@@ -161,10 +161,14 @@ test("the deploy job needs the account, and a push or a manual run", () => {
         ) ?? "",
         "utf8",
     );
-    assert.match(text, /vars\.CLOUDFLARE_ACCOUNT_ID != ''/);
-    assert.match(text, /github\.event_name == 'workflow_dispatch'/);
-    assert.match(text, /github\.event\.workflow_run\.event == 'push'/);
-    assert.match(text, /github\.event\.workflow_run\.conclusion == 'success'/);
+    const condition = /^ {8}if: >-\n((?: {12}.*\n)+)/m
+        .exec(text)?.[1]
+        .replace(/\s+/g, " ")
+        .trim();
+    assert.equal(
+        condition,
+        "${{ vars.CLOUDFLARE_ACCOUNT_ID != '' && ( github.event_name == 'workflow_dispatch' || ( github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success')) }}",
+    );
 });
 
 test("a Worker's name must be a lowercase label of 1 to 63 characters", () => {
@@ -190,6 +194,7 @@ test("a Worker's name must be a lowercase label of 1 to 63 characters", () => {
         );
     }
 });
+
 test("rust is the native layer, Cargo and a binary", () => {
     const sources = compose(TEMPLATES.rust.layers(new Set()));
     for (const [file, layer] of [

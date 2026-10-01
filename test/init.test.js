@@ -194,6 +194,7 @@ test("wranglerName fails when wrangler.jsonc has no name", () => {
             /"name" in wrangler\.jsonc not found/.test(error.message),
     );
 });
+
 test("README frontmatter, heading and body", () =>
     initialised((dir) => {
         const readme = read(dir, "README.md");
