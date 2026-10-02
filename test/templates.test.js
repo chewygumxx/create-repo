@@ -129,6 +129,71 @@ test("no template file holds an em dash", () => {
     }
 });
 
+const MISE_SCHEMA = "https://mise.jdx.dev/schema/mise.json";
+
+/** Each TOML file's published schema, by name. */
+const SCHEMAS = new Map([
+    [".rumdl.toml", "https://www.schemastore.org/rumdl.json"],
+    [".tombi.toml", "https://www.schemastore.org/tombi.json"],
+    ["bunfig.toml", "https://www.schemastore.org/bunfig.json"],
+    ["Cargo.toml", "https://www.schemastore.org/cargo.json"],
+    [
+        "committed.toml",
+        "https://raw.githubusercontent.com/crate-ci/committed/master/config.schema.json",
+    ],
+    ["mise.toml", MISE_SCHEMA],
+    ["rustfmt.toml", "https://www.schemastore.org/rustfmt.json"],
+]);
+
+/** The TOML files whose tools publish no schema. */
+const SCHEMALESS = new Set([".luafmt.toml", ".shuck.toml", "selene.toml"]);
+
+/**
+ * The schema a TOML file declares on its third line, after its SPDX line,
+ * as `#:schema <url>` for tombi; a new TOML file must be added to SCHEMAS or
+ * SCHEMALESS.
+ * @param {string} file the path, relative to the repository
+ * @param {string} source
+ * @returns {string | undefined} what is wrong, if anything
+ */
+function schemaProblem(file, source) {
+    const name = file.split("/").at(-1) ?? file;
+    const schema = /^\.config\/mise\/conf\.d\/[^/]+\.toml$/.test(file)
+        ? MISE_SCHEMA
+        : SCHEMAS.get(name);
+    if (schema === undefined) {
+        return SCHEMALESS.has(name) ? undefined : `${file}: no known schema`;
+    }
+    const line = readFileSync(source, "utf8").split("\n")[2];
+    return line === `#:schema ${schema}` ? undefined : `${file}: ${line}`;
+}
+
+// tombi cannot extend a shared configuration, so each repository carries
+// its own, and each file names its schema rather than leaving tombi to look
+// it up by name.
+test("every template has a .tombi.toml, and each TOML file names its schema", () => {
+    for (const combination of combinations()) {
+        const name = label(combination.template, combination.features);
+        const sources = compose(layersOf(combination));
+        assert.ok(sources.has(".tombi.toml"), name);
+        const problems = [...sources]
+            .filter(([file]) => file.endsWith(".toml"))
+            .map(([file, source]) => schemaProblem(file, source))
+            .filter(Boolean);
+        assert.deepEqual(problems, [], name);
+    }
+});
+
+test("this repository's TOML files name their schemas", () => {
+    const root = fileURLToPath(new URL("..", import.meta.url));
+    const problems = readdirSync(root)
+        .filter((file) => file.endsWith(".toml"))
+        .map((file) => schemaProblem(file, join(root, file)))
+        .filter(Boolean);
+    assert.ok(existsSync(join(root, ".tombi.toml")));
+    assert.deepEqual(problems, []);
+});
+
 // CI's editorconfig-checker refuses tabs where the .editorconfig says spaces,
 // and Wrangler writes worker-configuration.d.ts with tabs.
 test("a template file indented with tabs is allowed by its .editorconfig", () => {
