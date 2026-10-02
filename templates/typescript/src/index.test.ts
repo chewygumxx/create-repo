@@ -8,14 +8,13 @@
 //
 //
 
-import assert from "node:assert/strict";
-import { test } from "node:test";
+import { expect, test } from "bun:test";
 import { greet } from "./index.ts";
 
 test("greets the world by default", () => {
-    assert.equal(greet(), "Hello, world!");
+    expect(greet()).toBe("Hello, world!");
 });
 
 test("greets a name", () => {
-    assert.equal(greet("Ada"), "Hello, Ada!");
+    expect(greet("Ada")).toBe("Hello, Ada!");
 });

@@ -1155,3 +1155,28 @@ test("a created Worker's Dependabot ignores Vitest majors, others do not", () =>
         /dependency-name: "vitest"/,
     );
 });
+
+test("typescript's example test is Bun's", () => {
+    const text = readFileSync(
+        join(TEMPLATES_DIR, "typescript", "src", "index.test.ts"),
+        "utf8",
+    );
+    assert.match(text, /from "bun:test"/);
+    assert.doesNotMatch(text, /node:test|node:assert/);
+});
+
+// Bun cannot stage a publish, nor publish by trusted publishing; npm comes
+// from Node, fetched for this step alone.
+test("typescript-publish installs with Bun and publishes with npm", () => {
+    const text = readFileSync(
+        join(
+            TEMPLATES_DIR,
+            "typescript-publish",
+            ".github/workflows/publish.yaml",
+        ),
+        "utf8",
+    );
+    assert.match(text, /run: bun install --frozen-lockfile$/m);
+    assert.match(text, /run: mise exec node@24 -- npm stage publish$/m);
+    assert.doesNotMatch(text, /npm ci|node -p/);
+});
