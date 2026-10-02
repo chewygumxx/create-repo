@@ -1,7 +1,7 @@
 # Pending deferred minors
 
 What is known and still open after `d0db902` (`main`, v2.1.1 plus 24 commits,
-unreleased), and on `feat/bun`, the unmerged migration to Bun that 3.0.0
+unreleased), and after the migration to Bun merged from `feat/bun`, which 3.0.0
 would release. Nothing here blocks a release. Each item names where it lives and
 what fixing it would take. Remove an item when it is fixed, in the commit that
 fixes it.
@@ -65,5 +65,5 @@ choice, not a defect, unless the cost below turns out to matter.
 
 ## Not done, by instruction
 
-No version bump, tag or publish has happened since v2.1.1. The 24 commits since
-the tag are on `origin/main` and not on npm.
+No version bump, tag or publish has happened since v2.1.1. Nothing since the
+tag is on npm, the Bun migration included.
