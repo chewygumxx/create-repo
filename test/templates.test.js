@@ -287,7 +287,7 @@ test("the native hooks and the commitlint task are executable once copied", () =
     }
 });
 
-// There is no npm to install the shared configurations from, so the native
+// There is no Bun to install the shared configurations from, so the native
 // layer holds copies, and a change to the packages would otherwise go
 // unnoticed.
 test("the native Biome configuration is the shared one", () => {
