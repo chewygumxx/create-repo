@@ -29,8 +29,8 @@ test("every script runs on Bun, even with Node on PATH", () => {
     assert.match(read("bunfig.toml"), /^\[run\]\nbun = true$/m);
 });
 
-// A bare `bun test` also runs the test files lint:templates materialises
-// under .templates/.
+// A bare `bun test` also runs the templates' own tests under templates/,
+// which need their own dependencies.
 test("the scripts call Bun, and test only test/", () => {
     const pkg = JSON.parse(read("package.json"));
     assert.equal(pkg.scripts.test, "bun test ./test/");
