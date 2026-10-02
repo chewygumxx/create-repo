@@ -92,6 +92,12 @@ it also catches a template drifting from `lib/init.js` or failing its own
 `bun scripts/materialize.js <template> [--with <features>] <dir>` writes
 a template as it is before init.
 
+Dependabot reads a `bun.lock` only up to `lockfileVersion` 1, and Bun 1.4
+writes 2, so its bun updates fail, here and in every repository a bun
+template creates, until
+[dependabot-core#16071](https://github.com/dependabot/dependabot-core/pull/16071)
+ships. Its github-actions updates are unaffected.
+
 To release, bump `version` in `package.json`, commit, and push a matching
 `v*` tag. The Publish workflow runs the check and the dry run, then stages
 the version with `npm stage publish`, the one thing Node is still pinned
