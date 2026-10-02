@@ -13,7 +13,7 @@
 // Runs the zsh layer's own test runner in a copy of the layers, against zsh,
 // with tests added that fail in each way a test can, so that a green
 // `mise run check` in a new repository means something. Skipped where zsh is
-// not installed, since `npm test` needs nothing installed; the Create Repo
+// not installed, since `bun run test` needs nothing installed; the Create Repo
 // workflow installs it and runs the runner for every generated repository.
 
 import assert from "node:assert/strict";

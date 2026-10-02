@@ -11,7 +11,7 @@
 // @ts-check
 
 // The native layer copies `@chewygumxx/yamllint-config` because a repository
-// with no npm cannot install it. Nothing else updates the copy, so this test
+// with no Bun cannot install it. Nothing else updates the copy, so this test
 // is what notices when the package moves on.
 
 import assert from "node:assert/strict";

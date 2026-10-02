@@ -11,7 +11,8 @@
 // @ts-check
 
 // What npm publishes: it drops files named .gitignore or .npmrc and anything
-// an ignore rule matches, and `npm create` runs install scripts.
+// an ignore rule matches, and neither `npm create` nor `bun create` should
+// run install scripts.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
