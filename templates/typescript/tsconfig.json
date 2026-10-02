@@ -11,7 +11,7 @@
         "erasableSyntaxOnly": true,
         "verbatimModuleSyntax": true,
         "allowImportingTsExtensions": true,
-        "types": ["node"],
+        "types": ["bun"],
         "skipLibCheck": true
     },
     "include": ["src", ".commitlintrc.mts"]

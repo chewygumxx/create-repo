@@ -15,7 +15,7 @@
         "url": "git+https://github.com/chewygumxx/repo-tmpl.git"
     },
     "engines": {
-        "node": ">=24"
+        "bun": ">=1.4"
     },
     "devDependencies": {
         "@biomejs/biome": "2.5.14",
@@ -27,7 +27,7 @@
         "@cloudflare/vitest-pool-workers": "^0.22.0",
         "@cloudflare/workers-types": "^5.20260930.2",
         "@commitlint/cli": "^21.2.2",
-        "@types/node": "^24.19.0",
+        "@types/bun": "^1.4.2",
         "commitizen": "^4.3.2",
         "husky": "^9.1.7",
         "prettier": "^3.9.9",
@@ -37,11 +37,11 @@
         "wrangler": "^4.145.0"
     },
     "scripts": {
-        "check": "npm run typecheck && npm run types:check && npm run test && npm run lint:biome && npm run lint:md && npm run lint:yaml && npm run lint:emdash",
+        "check": "bun run typecheck && bun run types:check && bun run test && bun run lint:biome && bun run lint:md && bun run lint:yaml && bun run lint:emdash",
         "commit": "cz",
         "deploy": "wrangler deploy",
         "dev": "wrangler dev",
-        "format": "biome format --write . && npm run format:yaml",
+        "format": "biome format --write . && bun run format:yaml",
         "format:check": "biome format .",
         "format:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --write --log-level warn",
         "lint": "biome lint .",

@@ -13,6 +13,9 @@
         "type": "git",
         "url": "git+https://github.com/chewygumxx/repo-tmpl.git"
     },
+    "engines": {
+        "bun": ">=1.4"
+    },
     "devDependencies": {
         "@biomejs/biome": "2.5.14",
         "@chewygumxx/biome-config": "^1.0.0",
@@ -21,7 +24,7 @@
         "@chewygumxx/remark-preset": "^1.0.3",
         "@chewygumxx/yamllint-config": "^1.0.0",
         "@commitlint/cli": "^21.2.2",
-        "@types/node": "^24.19.0",
+        "@types/bun": "^1.4.2",
         "commitizen": "^4.3.2",
         "husky": "^9.1.7",
         "prettier": "^3.9.9",
@@ -29,9 +32,9 @@
         "typescript": "^7.0.2"
     },
     "scripts": {
-        "check": "npm run typecheck && npm run lint:biome && npm run lint:md && npm run lint:yaml && npm run lint:emdash",
+        "check": "bun run typecheck && bun run lint:biome && bun run lint:md && bun run lint:yaml && bun run lint:emdash",
         "commit": "cz",
-        "format": "biome format --write . && npm run format:yaml",
+        "format": "biome format --write . && bun run format:yaml",
         "format:check": "biome format .",
         "format:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --write --log-level warn",
         "lint": "biome lint .",

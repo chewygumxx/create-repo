@@ -25,7 +25,7 @@
         "dist"
     ],
     "engines": {
-        "node": ">=24"
+        "bun": ">=1.4"
     },
     "publishConfig": {
         "access": "public",
@@ -39,7 +39,7 @@
         "@chewygumxx/remark-preset": "^1.0.3",
         "@chewygumxx/yamllint-config": "^1.0.0",
         "@commitlint/cli": "^21.2.2",
-        "@types/node": "^24.19.0",
+        "@types/bun": "^1.4.2",
         "commitizen": "^4.3.2",
         "husky": "^9.1.7",
         "prettier": "^3.9.9",
@@ -48,9 +48,9 @@
     },
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "check": "npm run typecheck && npm run build && npm run test && npm run lint:biome && npm run lint:md && npm run lint:yaml && npm run lint:emdash",
+        "check": "bun run typecheck && bun run build && bun run test && bun run lint:biome && bun run lint:md && bun run lint:yaml && bun run lint:emdash",
         "commit": "cz",
-        "format": "biome format --write . && npm run format:yaml",
+        "format": "biome format --write . && bun run format:yaml",
         "format:check": "biome format .",
         "format:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --write --log-level warn",
         "lint": "biome lint .",
@@ -58,9 +58,9 @@
         "lint:emdash": "git grep -nIP --untracked '\\x{2014}'; test $? -eq 1",
         "lint:md": "git ls-files -z '*.md' | xargs -0 remark --frail --quiet --no-stdout",
         "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamllint --strict",
-        "prepack": "npm run build",
+        "prepack": "bun run build",
         "prepare": "test -d node_modules/husky && husky || true",
-        "test": "node --test 'src/**/*.test.ts'",
+        "test": "bun test",
         "typecheck": "tsc"
     },
     "config": {
