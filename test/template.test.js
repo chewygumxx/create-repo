@@ -33,7 +33,7 @@ import {
 } from "../lib/template.js";
 
 /** The standard template's layers. */
-const LAYERS = ["common", "npm"];
+const LAYERS = ["common", "bun"];
 
 /** @param {(root: string) => void} body */
 function inTemp(body) {
@@ -65,7 +65,7 @@ test("copies every file, restoring .gitignore", () =>
         assert.equal(files.length, templateFiles(LAYERS).length);
         assert.equal(
             readFileSync(join(root, "x", ".gitignore"), "utf8"),
-            readFileSync(join(TEMPLATES_DIR, "npm", "_gitignore"), "utf8"),
+            readFileSync(join(TEMPLATES_DIR, "bun", "_gitignore"), "utf8"),
         );
     }));
 
@@ -178,7 +178,7 @@ test("copies no file the composed _gitignore ignores", () =>
 test("an ignore rule it cannot follow fails loudly", () =>
     inTemp((root) => {
         const from = strayTemplates(root);
-        writeFileSync(join(from, "npm", "_gitignore"), "*.log\n!keep.log\n");
+        writeFileSync(join(from, "bun", "_gitignore"), "*.log\n!keep.log\n");
         assert.throws(
             () => templateFiles(LAYERS, from),
             (error) =>
@@ -190,7 +190,7 @@ test("an ignore rule it cannot follow fails loudly", () =>
 test("layers without a _gitignore are a TemplateError naming it", () =>
     inTemp((root) => {
         const from = strayTemplates(root);
-        rmSync(join(from, "npm", "_gitignore"));
+        rmSync(join(from, "bun", "_gitignore"));
         assert.throws(
             () => copyTemplate(join(root, "x"), LAYERS, from),
             (error) =>

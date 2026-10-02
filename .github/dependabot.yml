@@ -33,7 +33,7 @@ updates:
     # The prefixes carry no scope because commitlint ignores a Dependabot
     # commit only when its header is an unscoped `build: bump` or `ci: bump`.
     - package-ecosystem: npm
-      directory: /templates/npm
+      directory: /templates/bun
       schedule:
           interval: weekly
       commit-message:
@@ -44,7 +44,7 @@ updates:
             update-types: ["version-update:semver-major"]
 
     - package-ecosystem: github-actions
-      directory: /templates/npm/.github/workflows
+      directory: /templates/bun/.github/workflows
       schedule:
           interval: weekly
       commit-message:
