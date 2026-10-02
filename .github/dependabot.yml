@@ -10,16 +10,12 @@
 
 version: 2
 updates:
-    - package-ecosystem: npm
+    - package-ecosystem: bun
       directory: /
       schedule:
           interval: weekly
       commit-message:
           prefix: build
-      ignore:
-          # Its majors follow Node's; bumped by hand with the Node floor.
-          - dependency-name: "@types/node"
-            update-types: ["version-update:semver-major"]
 
     - package-ecosystem: github-actions
       directory: /
@@ -32,16 +28,12 @@ updates:
     # scans a directory other than `/` itself, not its `.github/workflows`.
     # The prefixes carry no scope because commitlint ignores a Dependabot
     # commit only when its header is an unscoped `build: bump` or `ci: bump`.
-    - package-ecosystem: npm
+    - package-ecosystem: bun
       directory: /templates/bun
       schedule:
           interval: weekly
       commit-message:
           prefix: build
-      ignore:
-          # Its majors follow Node's; bumped by hand with the Node floor.
-          - dependency-name: "@types/node"
-            update-types: ["version-update:semver-major"]
 
     - package-ecosystem: github-actions
       directory: /templates/bun/.github/workflows
@@ -50,27 +42,19 @@ updates:
       commit-message:
           prefix: ci
 
-    - package-ecosystem: npm
+    - package-ecosystem: bun
       directory: /templates/typescript
       schedule:
           interval: weekly
       commit-message:
           prefix: build
-      ignore:
-          # Its majors follow Node's; bumped by hand with the Node floor.
-          - dependency-name: "@types/node"
-            update-types: ["version-update:semver-major"]
 
-    - package-ecosystem: npm
+    - package-ecosystem: bun
       directory: /templates/typescript-publish
       schedule:
           interval: weekly
       commit-message:
           prefix: build
-      ignore:
-          # Its majors follow Node's; bumped by hand with the Node floor.
-          - dependency-name: "@types/node"
-            update-types: ["version-update:semver-major"]
 
     - package-ecosystem: github-actions
       directory: /templates/typescript-publish/.github/workflows
@@ -79,16 +63,13 @@ updates:
       commit-message:
           prefix: ci
 
-    - package-ecosystem: npm
+    - package-ecosystem: bun
       directory: /templates/cloudflare
       schedule:
           interval: weekly
       commit-message:
           prefix: build
       ignore:
-          # Its majors follow Node's; bumped by hand with the Node floor.
-          - dependency-name: "@types/node"
-            update-types: ["version-update:semver-major"]
           # @cloudflare/vitest-pool-workers peers on Vitest 4.
           - dependency-name: "vitest"
             update-types: ["version-update:semver-major"]

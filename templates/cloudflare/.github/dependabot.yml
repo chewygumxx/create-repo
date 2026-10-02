@@ -10,16 +10,13 @@
 
 version: 2
 updates:
-    - package-ecosystem: npm
+    - package-ecosystem: bun
       directory: /
       schedule:
           interval: weekly
       commit-message:
           prefix: build
       ignore:
-          # Its majors follow Node's; bumped by hand with the Node floor.
-          - dependency-name: "@types/node"
-            update-types: ["version-update:semver-major"]
           # @cloudflare/vitest-pool-workers peers on Vitest 4.
           - dependency-name: "vitest"
             update-types: ["version-update:semver-major"]

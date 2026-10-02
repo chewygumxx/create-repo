@@ -50,12 +50,24 @@ const LAYERS = readdirSync(join(ROOT, "templates"), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 
-test("every layer with a lockfile has an npm entry", () => {
+test("every layer with a bun.lock has a bun entry", () => {
     for (const layer of LAYERS) {
-        if (!existsSync(join(ROOT, "templates", layer, "package-lock.json"))) {
-            continue;
-        }
-        assert.ok(directories("npm").includes(`/templates/${layer}`), layer);
+        if (!existsSync(join(ROOT, "templates", layer, "bun.lock"))) continue;
+        assert.ok(directories("bun").includes(`/templates/${layer}`), layer);
+    }
+    assert.ok(directories("bun").includes("/"));
+    assert.deepEqual(directories("npm"), []);
+});
+
+test("every template's own Dependabot watches Bun, not npm", () => {
+    for (const layer of LAYERS) {
+        const file = join(ROOT, "templates", layer, ".github/dependabot.yml");
+        if (!existsSync(file)) continue;
+        assert.doesNotMatch(
+            readFileSync(file, "utf8"),
+            /package-ecosystem: npm$/m,
+            layer,
+        );
     }
 });
 
@@ -78,12 +90,12 @@ test("every directory Dependabot is given exists", () => {
 
 // A directory that exists but holds nothing for its ecosystem is read without
 // error too: github-actions reads the `uses:` lines of the YAML directly in
-// it, and npm the `package.json` there.
+// it, and bun the `bun.lock` there.
 test("every directory holds what its ecosystem reads", () => {
     for (const { ecosystem, directory } of entries()) {
         const dir = join(ROOT, directory);
-        if (ecosystem === "npm") {
-            assert.ok(existsSync(join(dir, "package.json")), directory);
+        if (ecosystem === "bun") {
+            assert.ok(existsSync(join(dir, "bun.lock")), directory);
         } else if (ecosystem === "github-actions") {
             // `/` is the one directory whose workflows are in `.github/`.
             const workflows =
