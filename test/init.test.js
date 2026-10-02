@@ -31,6 +31,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { parse } from "jsonc-parser";
 import {
+    bunLock,
     cargoLock,
     cargoToml,
     commitlintScopes,
@@ -39,7 +40,6 @@ import {
     init,
     moduleName,
     packageJson,
-    packageLock,
     readme,
     repoMetadata,
     wranglerName,
@@ -63,7 +63,7 @@ const EDITS = [
     headers,
     repoMetadata,
     packageJson,
-    packageLock,
+    bunLock,
     readme,
     commitlintScopes,
 ];
@@ -86,7 +86,7 @@ function initialised(body, changes = {}, before = () => {}, features = []) {
     const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
     try {
         const dir = join(root, "derived");
-        const files = copyTemplate(dir, ["common", "npm"]);
+        const files = copyTemplate(dir, ["common", "bun"]);
         before(dir);
         init(dir, { ...IDENTITY, ...changes }, files, {
             edits: EDITS,
@@ -134,19 +134,47 @@ test("metadata, package and lockfile carry the identity", () =>
         });
         assert.equal(pkg.homepage, "https://github.com/example/derived-repo");
         assert.deepEqual(pkg.keywords, ["alpha", "beta"]);
-        const lock = JSON.parse(read(dir, "package-lock.json"));
-        assert.equal(lock.name, "derived-repo");
-        assert.equal(lock.packages[""].name, "derived-repo");
+        const lock = parse(read(dir, "bun.lock"), [], {
+            allowTrailingComma: true,
+        });
+        assert.equal(lock.workspaces[""].name, "derived-repo");
     }));
+
+// Only its first line changes, and Bun reads the rest as it was written.
+test("bunLock keeps the lock's layout", () =>
+    initialised((dir) => {
+        const lock = read(dir, "bun.lock");
+        assert.match(lock, /^ {6}"name": "derived-repo",$/m);
+        assert.match(lock, /,\n {2}\},\n/);
+    }));
+
+test("bunLock fails when the lock has no root workspace name", () => {
+    assert.throws(
+        () =>
+            initialised(
+                () => {},
+                {},
+                (dir) =>
+                    writeFileSync(
+                        join(dir, "bun.lock"),
+                        '{\n  "lockfileVersion": 1,\n  "workspaces": {},\n}\n',
+                    ),
+            ),
+        (error) =>
+            error instanceof TemplateError &&
+            /"workspaces\.""\.name" in bun\.lock not found/.test(error.message),
+    );
+});
 
 test("a published package is @owner/name, in package and lockfile", () =>
     initialised(
         (dir) => {
             const name = "@example/derived-repo";
             assert.equal(JSON.parse(read(dir, "package.json")).name, name);
-            const lock = JSON.parse(read(dir, "package-lock.json"));
-            assert.equal(lock.name, name);
-            assert.equal(lock.packages[""].name, name);
+            const lock = parse(read(dir, "bun.lock"), [], {
+                allowTrailingComma: true,
+            });
+            assert.equal(lock.workspaces[""].name, name);
         },
         {},
         undefined,
@@ -161,7 +189,7 @@ function withWrangler(text) {
     const root = mkdtempSync(join(tmpdir(), "create-repo-init-"));
     try {
         const dir = join(root, "derived");
-        const files = copyTemplate(dir, ["common", "npm"]);
+        const files = copyTemplate(dir, ["common", "bun"]);
         writeFileSync(join(dir, "wrangler.jsonc"), text);
         init(dir, IDENTITY, [...files, "wrangler.jsonc"], {
             edits: [...EDITS, wranglerName],
@@ -219,7 +247,7 @@ test("no topics leaves empty tags; no scopes leaves commitlint alone", () =>
             assert.equal(
                 read(dir, ".commitlintrc.mts"),
                 read(
-                    join(TEMPLATES_DIR, "npm"),
+                    join(TEMPLATES_DIR, "bun"),
                     ".commitlintrc.mts",
                 ).replaceAll(
                     "~chewygumxx/repo-tmpl.git",
@@ -379,7 +407,7 @@ test("an edit left out leaves identity the guard reports", () =>
         () =>
             inTemp((root) => {
                 const dir = join(root, "derived");
-                const files = copyTemplate(dir, ["common", "npm"]);
+                const files = copyTemplate(dir, ["common", "bun"]);
                 init(dir, IDENTITY, files, {
                     edits: EDITS.filter((edit) => edit !== readme),
                 });
