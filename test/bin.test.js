@@ -10,9 +10,9 @@
 
 // @ts-check
 
-// Runs the real entry point with logging stand-ins for gh, git, mise, npm and
-// node first on PATH, so what every child process sees can be checked without
-// touching GitHub or the network.
+// Runs the real entry point with logging stand-ins for gh, git, mise, bun, npm
+// and node first on PATH, so what every child process sees can be checked
+// without touching GitHub or the network.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -66,7 +66,7 @@ function runBin(argv, env = {}) {
         mkdirSync(bin);
         writeFileSync(log, "");
         writeFileSync(`${log}.commit`, "");
-        for (const tool of ["gh", "git", "mise", "npm", "node", "zsh"]) {
+        for (const tool of ["gh", "git", "mise", "bun", "npm", "node", "zsh"]) {
             writeFileSync(join(bin, tool), standIn(log));
             chmodSync(join(bin, tool), 0o755);
         }
@@ -153,7 +153,7 @@ test("every step after mise install runs with the pinned toolchain", () => {
         lines.join("\n"),
     );
     const after = lines.slice(env + 1);
-    assert.ok(after.some((line) => line.startsWith("npm run")));
+    assert.ok(after.some((line) => line.startsWith("bun run")));
     assert.deepEqual(
         after.filter((line) => !line.endsWith("pinned=yes")),
         [],
@@ -174,9 +174,9 @@ test("the copy is the bundled template, initialised", () => {
 // The template's format:yaml formats only the files git tracks.
 test("the copy is staged before it is formatted", () => {
     const { lines } = dryRun();
-    const installed = lines.findIndex((line) => line.startsWith("npm ci"));
+    const installed = lines.findIndex((line) => line.startsWith("bun install"));
     const format = lines.findIndex(
-        (line, index) => index > installed && line.startsWith("npm run"),
+        (line, index) => index > installed && line.startsWith("bun run"),
     );
     assert.ok(
         lines
@@ -227,7 +227,7 @@ test("a name a Worker cannot use stops before anything is copied", () => {
     assert.ok(!copied);
 });
 
-test("rust is copied, initialised and run through mise, not npm", () => {
+test("rust is copied, initialised and run through mise, not Bun", () => {
     const { commit, cargo, lines } = dryRun(["--template", "rust"]);
     assert.match(commit, /\(rust\)\./);
     assert.match(cargo ?? "", /^name\s*= "x"$/m);
@@ -295,7 +295,7 @@ test("a name a crate cannot use stops before anything is copied", () => {
     }
 });
 
-test("nvim is copied, initialised and run through mise, not npm", () => {
+test("nvim is copied, initialised and run through mise, not Bun", () => {
     const { commit, lua, lines } = dryRun(["--template", "nvim"]);
     assert.match(commit, /\(nvim\)\./);
     assert.deepEqual(lua, ["x"]);
@@ -350,7 +350,7 @@ test("a name a Lua module cannot use stops before anything is copied", () => {
     }
 });
 
-test("zsh is copied, initialised and run through mise, not npm", () => {
+test("zsh is copied, initialised and run through mise, not Bun", () => {
     const { commit, plugin, lines } = dryRun(["--template", "zsh"]);
     assert.match(commit, /\(zsh\)\./);
     assert.deepEqual(plugin, ["x.plugin.zsh"]);
@@ -481,7 +481,7 @@ test("an unknown template stops before any tool runs", () => {
         /Unknown template "nope": choose one of standard/,
     );
     assert.ok(!copied);
-    assert.deepEqual(lines, [""], "no gh, mise or npm was run");
+    assert.deepEqual(lines, [""], "no gh, mise or bun was run");
 });
 
 test("an unknown feature stops before any tool runs", () => {
@@ -503,7 +503,7 @@ test("an unknown feature stops before any tool runs", () => {
     ]);
     assert.equal(result.status, 2);
     assert.match(result.stderr, /has no features/);
-    assert.deepEqual(lines, [""], "no gh, mise or npm was run");
+    assert.deepEqual(lines, [""], "no gh, mise or bun was run");
 });
 
 test("--help lists the templates", () => {
@@ -613,4 +613,15 @@ test("a gh login the template refuses stops before the key command", () => {
     assert.match(result.stderr, /lowercase/);
     assert.equal(ran, false);
     assert.equal(copied, false);
+});
+
+test("no bun template runs npm or node", () => {
+    for (const template of ["standard", "typescript", "cloudflare"]) {
+        const { lines } = dryRun(["--template", template]);
+        assert.deepEqual(
+            lines.filter((line) => /^(?:npm|node) /.test(line)),
+            [],
+            template,
+        );
+    }
 });

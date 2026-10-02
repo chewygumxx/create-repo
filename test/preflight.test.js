@@ -53,7 +53,7 @@ function tools(results, existing = new Set()) {
 const present = {
     "git --version": "git version 2",
     "mise --version": "2026.9.0",
-    "npm --version": "11",
+    "bun --version": "1.4.2",
 };
 const loggedIn = { ...present, "gh api user --jq .login": "someone\n" };
 const clientId = {
@@ -225,4 +225,14 @@ test("a template's system tools must be on PATH", async () => {
     const fake = tools({});
     await checkTemplateTools(other, fake);
     assert.deepEqual(fake.calls, []);
+});
+
+test("bun is required", async () => {
+    const { "bun --version": _, ...rest } = loggedIn;
+    await assert.rejects(
+        checkTools(parseOptions([]), tools(rest)),
+        (error) =>
+            error instanceof UsageError &&
+            /bun is required/.test(error.message),
+    );
 });

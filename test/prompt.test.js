@@ -39,7 +39,7 @@ function asker(replies) {
 const ONLY_STANDARD = {
     standard: {
         description: "S",
-        family: "npm",
+        family: "bun",
         features: {},
         layers: () => [],
         edits: [],
@@ -170,14 +170,14 @@ test("confirm accepts only yes", async () => {
 const CATALOGUE = {
     standard: {
         description: "S",
-        family: "npm",
+        family: "bun",
         features: {},
         layers: () => [],
         edits: [],
     },
     crate: {
         description: "C",
-        family: "npm",
+        family: "bun",
         features: { lib: "L", bin: "B" },
         layers: () => [],
         edits: [],
@@ -287,7 +287,7 @@ test("flags and a missing terminal never take the defaults", async () => {
 const PUBLISHING = {
     pkg: {
         description: "P",
-        family: "npm",
+        family: "bun",
         features: { publish: "Publish it" },
         defaultFeatures: ["publish"],
         layers: () => [],

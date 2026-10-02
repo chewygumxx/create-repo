@@ -239,19 +239,24 @@ test("rust offers lib and takes nothing by default", () => {
     assert.equal(TEMPLATES.rust.defaultFeatures, undefined);
 });
 
-// Deprecation notices for commitizen's and remark's dependencies, which the
-// latest of both still use, say nothing the person creating a repository can
-// act on. npm still prints an install's errors.
-test("the npm family installs without npm's warnings", () => {
-    assert.deepEqual(FAMILIES.npm.setup, [
-        {
-            file: "npm",
-            args: ["ci", "--no-fund", "--no-audit", "--loglevel=error"],
-        },
-    ]);
+// Bun prints no deprecation notices, so the install needs no flags to quiet
+// them; a lock that no longer matches package.json fails it.
+test("the bun family installs from its lock alone", () => {
+    assert.deepEqual(FAMILIES.bun, {
+        setup: [{ file: "bun", args: ["install", "--frozen-lockfile"] }],
+        format: { file: "bun", args: ["run", "--silent", "format"] },
+        check: { file: "bun", args: ["run", "check"] },
+    });
+    assert.equal(FAMILIES.npm, undefined);
 });
 
-test("the native family runs its checks through mise, not npm", () => {
+test("every template's family is bun or native", () => {
+    for (const [name, { family }] of Object.entries(TEMPLATES)) {
+        assert.ok(["bun", "native"].includes(family), name);
+    }
+});
+
+test("the native family runs its checks through mise, not Bun", () => {
     assert.equal(TEMPLATES.rust.family, "native");
     assert.deepEqual(FAMILIES.native.setup, []);
     assert.deepEqual(FAMILIES.native.format, {
@@ -1030,14 +1035,14 @@ test("every combination copies and initialises, leaving no identity", () => {
 const FAKE = {
     plain: {
         description: "P",
-        family: "npm",
+        family: "bun",
         features: {},
         layers: () => ["common"],
         edits: [],
     },
     crate: {
         description: "C",
-        family: "npm",
+        family: "bun",
         features: { lib: "L", bin: "B" },
         layers: () => ["common"],
         edits: [],
@@ -1089,9 +1094,9 @@ test("a label names the template and its features", () => {
     assert.equal(label("rust", ["lib"]), "rust, with lib");
 });
 
-test("every npm template ignores the tarballs npm pack leaves", () => {
+test("every bun template ignores the tarballs a pack leaves", () => {
     for (const { template, features } of combinations()) {
-        if (TEMPLATES[template].family !== "npm") continue;
+        if (TEMPLATES[template].family !== "bun") continue;
         const sources = compose(layersOf({ template, features }));
         assert.match(
             readFileSync(sources.get("_gitignore") ?? "", "utf8"),
