@@ -48,15 +48,16 @@ min_version = "2026.9.0"
 #
 # Formatting and lint
 #
-# Biome reads `.biome.json`, rumdl `.rumdl.toml` and yamlfmt `.yamlfmt.yaml`.
-# yamllint is a Python tool, installed with the uv pinned beside it; its rules
-# come from `.yamllint.yaml`.
+# Biome reads `.biome.json`, rumdl `.rumdl.toml`, tombi `.tombi.toml` and
+# yamlfmt `.yamlfmt.yaml`. yamllint is a Python tool, installed with the uv
+# pinned beside it; its rules come from `.yamllint.yaml`.
 #
-"aqua:astral-sh/uv"   = "0.12.19"
-"aqua:biomejs/biome"  = "2.5.14"
-"aqua:google/yamlfmt" = "0.21.0"
-"aqua:rvben/rumdl"    = "0.2.78"
-"pypi:yamllint"       = "1.38.0"
+"aqua:astral-sh/uv"     = "0.12.19"
+"aqua:biomejs/biome"    = "2.5.14"
+"aqua:google/yamlfmt"   = "0.21.0"
+"aqua:rvben/rumdl"      = "0.2.78"
+"aqua:tombi-toml/tombi" = "1.5.5"
+"pypi:yamllint"         = "1.38.0"
 
 # Wires the git hooks in `.githooks/`, as husky's `prepare` does for a Bun
 # repository, whenever `mise install` runs: by a contributor, or by CI.
@@ -82,6 +83,13 @@ git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamlfmt -lint
 git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamllint --strict
 """
 
+[tasks."lint:toml"]
+description = "TOML format and lint (tombi)"
+run         = """
+git ls-files -z '*.toml' | xargs -0 -r tombi format --check
+git ls-files -z '*.toml' | xargs -0 -r tombi lint --error-on-warnings
+"""
+
 [tasks."lint:emdash"]
 description = "Reject em dashes (U+2014)"
 # mise runs a task with errexit, so a match ends it, and no match (status 1)
@@ -100,6 +108,10 @@ run         = "biome format --write ."
 description = "Apply yamlfmt formatting"
 run         = "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamlfmt"
 
+[tasks."format:toml"]
+description = "Apply tombi formatting"
+run         = "git ls-files -z '*.toml' | xargs -0 -r tombi format"
+
 #
 # Pre-commit: the same checks on staged files
 #
@@ -117,6 +129,13 @@ description = "YAML format and lint on staged files"
 run         = """
 git diff -z --cached --name-only --diff-filter=ACMR -- '*.yaml' '*.yml' | xargs -0 -r yamlfmt -lint
 git diff -z --cached --name-only --diff-filter=ACMR -- '*.yaml' '*.yml' | xargs -0 -r yamllint --strict
+"""
+
+[tasks."pre-commit:toml"]
+description = "TOML format and lint on staged files"
+run         = """
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.toml' | xargs -0 -r tombi format --check
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.toml' | xargs -0 -r tombi lint --error-on-warnings
 """
 
 [tasks."pre-commit:emdash"]
