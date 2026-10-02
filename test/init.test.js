@@ -15,6 +15,7 @@
 // its wrapping are exercised.
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
     existsSync,
     mkdirSync,
@@ -29,6 +30,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { parse } from "jsonc-parser";
 import {
     bunLock,
@@ -45,6 +47,8 @@ import {
     wranglerName,
 } from "../lib/init.js";
 import { copyTemplate, TEMPLATES_DIR, TemplateError } from "../lib/template.js";
+
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 const IDENTITY = {
     owner: "example",
@@ -232,6 +236,85 @@ test("README frontmatter, heading and body", () =>
         assert.match(readme, /^# derived-repo$/m);
         assert.match(readme, /<https:\/\/example\.com\/docs>/);
     }));
+
+// Eighty columns less one, so the next word starts the second line.
+const FILLER = "word ".repeat(16).trim();
+
+/** Descriptions whose text Markdown would read as syntax. */
+const MARKDOWN = [
+    [
+        "[Cloudflare Worker] File upload bin",
+        "\\[Cloudflare Worker\\] File upload bin",
+    ],
+    [
+        "Uses *stars*, _under_, `ticks`, <tags> and a\\b; see https://example.com/a_b*c.",
+        "Uses \\*stars\\*, \\_under\\_, \\`ticks\\`, \\<tags> and a\\\\b; see\n<https://example.com/a_b*c>.",
+    ],
+    ["- starts a list", "\\- starts a list"],
+    [
+        "Mail me_1@example.com, or see www.example.com/a_b.",
+        "Mail <me_1@example.com>, or see\n[www.example.com/a_b](https://www.example.com/a_b).",
+    ],
+    [
+        "Mid-line - # 1. > + = | ~~~ stay as typed",
+        "Mid-line - # 1. > + = | ~~~ stay as typed",
+    ],
+    ...["-", "#", ">", "+", "=", "|", "~~~"].map((marker) => [
+        `${FILLER} ${marker} next`,
+        `${FILLER}\n\\${marker} next`,
+    ]),
+    ...["1.", "12)"].map((marker) => [
+        `${FILLER} ${marker} next`,
+        `${FILLER}\n${marker.slice(0, -1)}\\${marker.slice(-1)} next`,
+    ]),
+];
+
+test("the README body escapes what Markdown would read as syntax", () => {
+    for (const [description, body] of MARKDOWN) {
+        initialised(
+            (dir) =>
+                assert.ok(
+                    read(dir, "README.md").includes(
+                        `# derived-repo\n\n${body}\n\n## `,
+                    ),
+                    description,
+                ),
+            { description },
+        );
+    }
+});
+
+test("the README passes remark whatever the description", () => {
+    const root = mkdtempSync(join(tmpdir(), "create-repo-remark-"));
+    try {
+        for (const [index, [description]] of MARKDOWN.entries()) {
+            initialised(
+                (dir) =>
+                    writeFileSync(
+                        join(root, `${index}.md`),
+                        read(dir, "README.md"),
+                    ),
+                { description },
+            );
+        }
+        const result = spawnSync(
+            join(ROOT, "node_modules", ".bin", "remark"),
+            [
+                "--frail",
+                "--quiet",
+                "--no-stdout",
+                "--no-config",
+                "--use",
+                "@chewygumxx/remark-preset",
+                root,
+            ],
+            { cwd: ROOT, encoding: "utf8" },
+        );
+        assert.equal(result.status, 0, result.stderr);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
 
 test("scopes are added after the template's own", () =>
     initialised((dir) => {
@@ -430,6 +513,8 @@ test("input that contains the template's identity is not a leftover", () => {
                 "Fork of https://github.com/chewygumxx/repo-tmpl, trimmed.",
         },
         { description: "See www.repo-tmpl.dev for more." },
+        // And escapes what Markdown would read as syntax.
+        { description: "[repo-tmpl] fork" },
     ]) {
         initialised(() => {}, changes);
     }
