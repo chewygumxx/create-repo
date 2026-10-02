@@ -59,12 +59,12 @@ sync pushed.
   bindings or vars in `wrangler.jsonc`; `bun run check` fails when it is stale.
 - `bun run check` runs the checks CI runs: the typecheck, the types check, the
   tests, Biome's format and lint checks, Markdown lint, the YAML checks
-  (prettier, then yamllint with `@chewygumxx/yamllint-config`) and a check
-  that rejects em dashes.
-  A Dependabot pull request that bumps only `wrangler` can fail that check
-  until `bun run types` is run on its branch.
-- `bun run format` applies Biome formatting, and prettier's to YAML, which Biome
-  does not read.
+  (prettier, then yamllint with `@chewygumxx/yamllint-config`), tombi's TOML
+  format and lint checks and a check that rejects em dashes. A Dependabot pull
+  request that bumps only `wrangler` can fail that check until `bun run types`
+  is run on its branch.
+- `bun run format` applies Biome formatting, prettier's to YAML and tombi's to
+  TOML, which Biome does not read.
 
 The pre-commit hook runs the same checks on staged files. The commit-msg hook
 runs commitlint.

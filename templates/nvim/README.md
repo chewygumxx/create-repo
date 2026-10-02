@@ -23,8 +23,8 @@ tags:
 
 This repository exists as a template for the creation of other repositories. It
 provides Conventional Commits enforcement (committed), formatting and linting
-(luafmt, selene, lua-language-server, Biome, rumdl, yamlfmt, yamllint), tests
-in headless Neovim (mini.test), GitHub automation (header and repository
+(luafmt, selene, lua-language-server, Biome, rumdl, tombi, yamlfmt, yamllint),
+tests in headless Neovim (mini.test), GitHub automation (header and repository
 metadata sync, Dependabot) and Claude Code settings and hooks, all without Bun.
 
 ## Using this template
@@ -59,9 +59,10 @@ The toolchain is pinned in `mise.toml` and `.config/mise/conf.d/nvim.toml`, and
 - `mise run check` runs the checks CI runs: luafmt's check and selene,
   lua-language-server with every warning a failure, the tests, Biome's format
   and lint checks, Markdown lint (rumdl), the YAML checks (yamlfmt, then
-  yamllint) and a check that rejects em dashes.
-- `mise run format` applies luafmt, Biome's formatting, and yamlfmt's to YAML,
-  which Biome does not read.
+  yamllint), tombi's TOML format and lint checks and a check that rejects em
+  dashes.
+- `mise run format` applies luafmt, Biome's formatting, yamlfmt's to YAML and
+  tombi's to TOML, which Biome does not read.
 - `mise run commitlint -- <revision>...` lints the commit messages the
   revisions name, as CI does: `origin/main..HEAD`, or `-1 HEAD`.
 

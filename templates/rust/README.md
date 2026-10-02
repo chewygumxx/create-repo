@@ -23,9 +23,9 @@ tags:
 
 This repository exists as a template for the creation of other repositories. It
 provides Conventional Commits enforcement (committed), formatting and linting
-(rustfmt, Clippy, Biome, rumdl, yamlfmt, yamllint), GitHub automation (header
-and repository metadata sync, Dependabot) and Claude Code settings and hooks,
-all without Bun.
+(rustfmt, Clippy, Biome, rumdl, tombi, yamlfmt, yamllint), GitHub automation
+(header and repository metadata sync, Dependabot) and Claude Code settings and
+hooks, all without Bun.
 
 ## Using this template
 
@@ -57,10 +57,10 @@ The toolchain is pinned in `mise.toml` and `.config/mise/conf.d/rust.toml`, and
 - `cargo test` runs the tests, and for a binary `cargo run` runs it.
 - `mise run check` runs the checks CI runs: rustfmt's check, Clippy with every
   warning an error, `cargo test --locked`, Biome's format and lint checks,
-  Markdown lint (rumdl), the YAML checks (yamlfmt, then yamllint) and a check
-  that rejects em dashes.
-- `mise run format` applies rustfmt, Biome's formatting, and yamlfmt's to YAML,
-  which Biome does not read.
+  Markdown lint (rumdl), the YAML checks (yamlfmt, then yamllint), tombi's TOML
+  format and lint checks and a check that rejects em dashes.
+- `mise run format` applies rustfmt, Biome's formatting, yamlfmt's to YAML and
+  tombi's to TOML, which Biome does not read.
 - `mise run commitlint -- <revision>...` lints the commit messages the
   revisions name, as CI does: `origin/main..HEAD`, or `-1 HEAD`.
 

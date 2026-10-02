@@ -23,9 +23,9 @@ tags:
 
 This repository exists as a template for the creation of other repositories. It
 provides Conventional Commits enforcement (committed), formatting and linting
-(shuck, Biome, rumdl, yamlfmt, yamllint), a plugin that follows the Zsh Plugin
-Standard with its tests, GitHub automation (header and repository metadata
-sync, Dependabot) and Claude Code settings and hooks, all without Bun.
+(shuck, Biome, rumdl, tombi, yamlfmt, yamllint), a plugin that follows the Zsh
+Plugin Standard with its tests, GitHub automation (header and repository
+metadata sync, Dependabot) and Claude Code settings and hooks, all without Bun.
 
 ## Using this template
 
@@ -57,11 +57,11 @@ and wires the git hooks in `.githooks/`.
 
 - `mise run check` runs the checks CI runs: `zsh -n` on each zsh file, shuck's
   lint and format check, the tests, Biome's format and lint checks, Markdown
-  lint (rumdl), the YAML checks (yamlfmt, then yamllint) and a check that
-  rejects em dashes.
+  lint (rumdl), the YAML checks (yamlfmt, then yamllint), tombi's TOML format
+  and lint checks and a check that rejects em dashes.
 - `mise run test:zsh` runs the tests alone.
-- `mise run format` applies shuck's formatting, Biome's, and yamlfmt's to YAML,
-  which Biome does not read.
+- `mise run format` applies shuck's formatting, Biome's, yamlfmt's to YAML and
+  tombi's to TOML, which Biome does not read.
 - `mise run commitlint -- <revision>...` lints the commit messages the
   revisions name, as CI does: `origin/main..HEAD`, or `-1 HEAD`.
 

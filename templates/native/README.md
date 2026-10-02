@@ -23,8 +23,9 @@ tags:
 
 This repository exists as a template for the creation of other repositories. It
 provides Conventional Commits enforcement (committed), formatting and linting
-(Biome, rumdl, yamlfmt, yamllint), GitHub automation (header and repository
-metadata sync, Dependabot) and Claude Code settings and hooks, all without Bun.
+(Biome, rumdl, tombi, yamlfmt, yamllint), GitHub automation (header and
+repository metadata sync, Dependabot) and Claude Code settings and hooks, all
+without Bun.
 
 ## Using this template
 
@@ -53,10 +54,10 @@ The toolchain is pinned in `mise.toml`, and `mise install` installs it and
 wires the git hooks in `.githooks/`.
 
 - `mise run check` runs the checks CI runs: Biome's format and lint checks,
-  Markdown lint (rumdl), the YAML checks (yamlfmt, then yamllint) and a check
-  that rejects em dashes.
-- `mise run format` applies Biome formatting, and yamlfmt's to YAML, which
-  Biome does not read.
+  Markdown lint (rumdl), the YAML checks (yamlfmt, then yamllint), tombi's TOML
+  format and lint checks and a check that rejects em dashes.
+- `mise run format` applies Biome formatting, yamlfmt's to YAML and tombi's to
+  TOML, which Biome does not read.
 - `mise run commitlint -- <revision>...` lints the commit messages the
   revisions name, as CI does: `origin/main..HEAD`, or `-1 HEAD`.
 

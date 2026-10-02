@@ -50,9 +50,10 @@ sync pushed.
 - `bun run commit` composes a commit interactively.
 - `bun run check` runs the checks CI runs: the typecheck, Biome's format and
   lint checks, Markdown lint, the YAML checks (prettier, then yamllint with
-  `@chewygumxx/yamllint-config`) and a check that rejects em dashes.
-- `bun run format` applies Biome formatting, and prettier's to YAML, which
-  Biome does not read.
+  `@chewygumxx/yamllint-config`), tombi's TOML format and lint checks and a
+  check that rejects em dashes.
+- `bun run format` applies Biome formatting, prettier's to YAML and tombi's to
+  TOML, which Biome does not read.
 
 The pre-commit hook runs the same checks on staged files. The commit-msg hook
 runs commitlint.
