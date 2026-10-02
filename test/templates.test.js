@@ -1180,3 +1180,13 @@ test("typescript-publish installs with Bun and publishes with npm", () => {
     assert.match(text, /run: mise exec node@24 -- npm stage publish$/m);
     assert.doesNotMatch(text, /npm ci|node -p/);
 });
+
+test("cloudflare deploys with Bun", () => {
+    const text = readFileSync(
+        join(TEMPLATES_DIR, "cloudflare", ".github/workflows/deploy.yaml"),
+        "utf8",
+    );
+    assert.match(text, /run: bun install --frozen-lockfile$/m);
+    assert.match(text, /run: bunx --bun wrangler deploy$/m);
+    assert.doesNotMatch(text, /\bnpm\b|\bnpx\b/);
+});

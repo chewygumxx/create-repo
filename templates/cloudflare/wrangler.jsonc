@@ -10,7 +10,7 @@
 
 // https://developers.cloudflare.com/workers/wrangler/configuration/
 //
-// After changing this file's bindings or vars, run `npm run types`.
+// After changing this file's bindings or vars, run `bun run types`.
 {
     "$schema": "node_modules/wrangler/config-schema.json",
     "name": "repo-tmpl",

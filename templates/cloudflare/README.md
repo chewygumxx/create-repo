@@ -37,7 +37,7 @@ This is the template bundled in
 Create a repository from it with:
 
 ```sh
-npm create @chewygumxx/repo my-thing
+bun create @chewygumxx/repo my-thing
 ```
 
 ## CI
@@ -46,24 +46,24 @@ npm create @chewygumxx/repo my-thing
 [standard workflow](https://github.com/chewygumxx/.github#standard-workflow):
 commitlint, the header sync, generic lint and format checks for workflows,
 shell and zsh scripts, TOML, YAML and `.editorconfig`, and the metadata sync.
-This repository's own `npm run check` follows, against the commit the header
+This repository's own `bun run check` follows, against the commit the header
 sync pushed.
 
 ## Development
 
-- `npm run commit` composes a commit interactively.
-- `npm run dev` serves the Worker locally, and `npm run deploy` deploys it.
-- `npm test` runs `test/` in the Workers runtime with Vitest and
+- `bun run commit` composes a commit interactively.
+- `bun run dev` serves the Worker locally, and `bun run deploy` deploys it.
+- `bun run test` runs `test/` in the Workers runtime with Vitest and
   `@cloudflare/vitest-pool-workers`.
-- `npm run types` regenerates `worker-configuration.d.ts` after a change to the
-  bindings or vars in `wrangler.jsonc`; `npm run check` fails when it is stale.
-- `npm run check` runs the checks CI runs: the typecheck, the types check, the
+- `bun run types` regenerates `worker-configuration.d.ts` after a change to the
+  bindings or vars in `wrangler.jsonc`; `bun run check` fails when it is stale.
+- `bun run check` runs the checks CI runs: the typecheck, the types check, the
   tests, Biome's format and lint checks, Markdown lint, the YAML checks
   (prettier, then yamllint with `@chewygumxx/yamllint-config`) and a check
   that rejects em dashes.
   A Dependabot pull request that bumps only `wrangler` can fail that check
-  until `npm run types` is run on its branch.
-- `npm run format` applies Biome formatting, and prettier's to YAML, which Biome
+  until `bun run types` is run on its branch.
+- `bun run format` applies Biome formatting, and prettier's to YAML, which Biome
   does not read.
 
 The pre-commit hook runs the same checks on staged files. The commit-msg hook
