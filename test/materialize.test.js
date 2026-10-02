@@ -76,6 +76,13 @@ test("an unknown template is a usage error", () =>
         assert.match(result.stderr, /Unknown template "nope"/);
     }));
 
+// The script runs on Bun, as everything in this repository does.
+test("the usage names Bun", () => {
+    const result = materialize([]);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /Usage: bun scripts\/materialize\.js /);
+});
+
 test("materialisations in the root are ignored by git", () => {
     const result = spawnSync(
         "git",

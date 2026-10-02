@@ -13,10 +13,10 @@
 // Writes templates as they are before init, for checks of the templates
 // themselves:
 //
-//   node scripts/materialize.js <template> [--with <features>] <dir>
-//   node scripts/materialize.js --all <root>
+//   bun scripts/materialize.js <template> [--with <features>] <dir>
+//   bun scripts/materialize.js --all <root>
 //       every combination, each in <root>/<template>[+<feature>...]
-//   node scripts/materialize.js --list
+//   bun scripts/materialize.js --list
 //       every combination, as a GitHub Actions matrix
 
 import {
@@ -34,7 +34,7 @@ import { copyTemplate, TemplateError } from "../lib/template.js";
 import { checkFeatures, combinations, getTemplate } from "../lib/templates.js";
 
 const USAGE =
-    "Usage: node scripts/materialize.js <template> [--with <features>] <dir> | --all <root> | --list";
+    "Usage: bun scripts/materialize.js <template> [--with <features>] <dir> | --all <root> | --list";
 
 /** Marks a directory as this script's own output, safe to clear. */
 const MARKER = ".materialized";

@@ -222,8 +222,9 @@ async function main(argv) {
         step("Installing the toolchain and dependencies");
         await run("mise", ["trust", "--quiet"], local);
         await run("mise", ["install"], local);
-        // The template's pinned tools, yamllint and node included, for every
-        // later step and its git hooks; the caller's PATH may lack them.
+        // The template's pinned tools, yamllint and a bun template's Bun
+        // included, for every later step and its git hooks; the caller's
+        // PATH may lack them.
         const pinned = await run("mise", ["env", "--json"], {
             ...local,
             capture: true,
