@@ -192,10 +192,17 @@ test("descriptions the first commit would refuse are refused first", () => {
     );
 });
 
-// `bun create` passes a `--` through where `npm create` consumed it, so the
-// form npm needed would otherwise read every flag as a positional.
-test("one leading -- is dropped", () => {
-    const options = parseOptions(["--", "x", "--template", "zsh"]);
-    assert.equal(options.name, "x");
-    assert.equal(options.template, "zsh");
+// npm create consumed the `--` its documented forms needed. bun create
+// drops one before the name, but passes one after it through, so
+// `bun create @chewygumxx/repo x -- --template zsh` would otherwise read every
+// flag as a positional.
+test("one -- is dropped, before the name or after it", () => {
+    for (const argv of [
+        ["--", "x", "--template", "zsh"],
+        ["x", "--", "--template", "zsh"],
+    ]) {
+        const options = parseOptions(argv);
+        assert.equal(options.name, "x", argv.join(" "));
+        assert.equal(options.template, "zsh", argv.join(" "));
+    }
 });
