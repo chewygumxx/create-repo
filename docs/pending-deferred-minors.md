@@ -28,6 +28,17 @@ because minors never enter a fix pass.
 4. **Message style.** The zsh runner message uses backticks where every other
    message uses double quotes. `notTemplate` says "init could not tell" where
    the two reworded module messages say "init cannot tell".
+5. **A wrong premise in a test comment** (from the review of `feat/bun`).
+   `test/bun.test.js` says a bare `bun test` runs the files `lint:templates`
+   materialises under `.templates/`, but Bun's discovery skips dot-directories.
+   It picks up `templates/typescript` and `templates/cloudflare`'s tests
+   instead, so pinning `bun test ./test/` is still right. Fix: reword the
+   comment.
+6. **Stale `node` wording** (from the review of `feat/bun`). The usage text in
+   `scripts/materialize.js` names `node scripts/materialize.js` where the
+   README names `bun`, and a comment in `bin/create-repo.js` says the toolchain
+   has "yamllint and node included", though the bun templates pin no node.
+   Fix: name Bun in both.
 
 ## Declined to judge
 
