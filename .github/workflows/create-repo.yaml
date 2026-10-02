@@ -12,7 +12,7 @@
 # its features: copy, install, init, check and commit for real, with
 # nothing created on GitHub. Catches a template drifting from lib/init.js
 # and from its own checks, though not from its Biome formatting, which the
-# run applies before checking; the root `npm run lint:templates` catches
+# run applies before checking; the root `bun run lint:templates` catches
 # that. gh is not logged in here, so the dry run reads nothing from GitHub.
 # Publish calls it too, so no version is staged whose templates fail their
 # own checks.
@@ -46,12 +46,12 @@ jobs:
             - name: Setup mise
               uses: jdx/mise-action@v4
 
-            - name: NPM Clean Install
-              run: npm ci
+            - name: Bun Install
+              run: bun install --frozen-lockfile
 
             - name: List Templates
               id: list
-              run: echo "matrix=$(node scripts/materialize.js --list)" >> "$GITHUB_OUTPUT"
+              run: echo "matrix=$(bun scripts/materialize.js --list)" >> "$GITHUB_OUTPUT"
 
     dry-run:
         needs: matrix
@@ -71,8 +71,8 @@ jobs:
             - name: Setup mise
               uses: jdx/mise-action@v4
 
-            - name: NPM Clean Install
-              run: npm ci
+            - name: Bun Install
+              run: bun install --frozen-lockfile
 
             # What a template's checks need and mise does not provide.
             - name: Install System Packages
@@ -94,7 +94,7 @@ jobs:
               run: |
                   git config --global user.name "create-repo dry run"
                   git config --global user.email "create-repo@users.noreply.github.com"
-                  node bin/create-repo.js dry-run \
+                  bun bin/create-repo.js dry-run \
                       --template "$TEMPLATE" \
                       --with "$WITH" \
                       --description 'Dry run of "create-repo": a bundled template, initialised and committed.' \
