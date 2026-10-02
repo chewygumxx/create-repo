@@ -511,7 +511,7 @@ test("--help lists the templates", () => {
     assert.equal(result.status, 0);
     assert.match(result.stdout, /--template <name>/);
     assert.match(result.stdout, /\nTemplates:\n {2}standard {4}Any repository/);
-    assert.match(result.stdout, /\n {2}typescript {2}A Node library or CLI/);
+    assert.match(result.stdout, /\n {2}typescript {2}A Bun library or CLI/);
     assert.match(result.stdout, /\n {2}cloudflare {2}A Cloudflare Worker/);
     assert.match(result.stdout, /\n {2}rust {8}A Rust crate/);
     assert.match(result.stdout, /\n {2}nvim {8}A Neovim plugin/);
