@@ -13,7 +13,7 @@
 # latter against the commit the header sync pushed. See chewygumxx/.github
 # for each shared part.
 #
-# The shared commitlint and YAML checks need npm, which this repository does
+# The shared commitlint and YAML checks need Bun, which this repository does
 # not have, so they are off in `standard` and done here with the tools mise
 # pins. The commit ranges are the shared commitlint job's.
 #

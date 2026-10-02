@@ -11,7 +11,7 @@
 # https://yamllint.readthedocs.io/en/stable/configuration.html
 #
 # The house style of `@chewygumxx/yamllint-config`, copied here because this
-# repository has no npm to install it from.
+# repository has no Bun to install it from.
 #
 # yamlfmt owns layout, so only the rules that disagree with its output, or
 # with how these repositories write YAML, are relaxed from the defaults.

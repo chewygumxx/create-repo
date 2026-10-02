@@ -33,7 +33,7 @@ This is the template bundled in
 Create a repository from it with:
 
 ```sh
-npm create @chewygumxx/repo my-thing
+bun create @chewygumxx/repo my-thing
 ```
 
 ## CI
@@ -42,17 +42,17 @@ npm create @chewygumxx/repo my-thing
 [standard workflow](https://github.com/chewygumxx/.github#standard-workflow):
 commitlint, the header sync, generic lint and format checks for workflows,
 shell and zsh scripts, TOML, YAML and `.editorconfig`, and the metadata sync.
-This repository's own `npm run check` follows, against the commit the header
+This repository's own `bun run check` follows, against the commit the header
 sync pushed.
 
 ## Development
 
-- `npm run commit` composes a commit interactively.
-- `npm run check` runs the checks CI runs: the typecheck, Biome's format and
+- `bun run commit` composes a commit interactively.
+- `bun run check` runs the checks CI runs: the typecheck, Biome's format and
   lint checks, Markdown lint, the YAML checks (prettier, then yamllint with
   `@chewygumxx/yamllint-config`) and a check that rejects em dashes.
-- `npm run format` applies Biome formatting, and prettier's to YAML, which Biome
-  does not read.
+- `bun run format` applies Biome formatting, and prettier's to YAML, which
+  Biome does not read.
 
 The pre-commit hook runs the same checks on staged files. The commit-msg hook
 runs commitlint.

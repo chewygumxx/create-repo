@@ -57,7 +57,7 @@ min_version = "2026.9.0"
 "aqua:rvben/rumdl"    = "0.2.78"
 "pypi:yamllint"       = "1.38.0"
 
-# Wires the git hooks in `.githooks/`, as husky's `prepare` does for an npm
+# Wires the git hooks in `.githooks/`, as husky's `prepare` does for a Bun
 # repository, whenever `mise install` runs: by a contributor, or by CI.
 [hooks]
 postinstall = "git config core.hooksPath .githooks"

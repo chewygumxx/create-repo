@@ -24,7 +24,7 @@ tags:
 This repository exists as a template for the creation of other repositories. It
 provides Conventional Commits enforcement (committed), formatting and linting
 (Biome, rumdl, yamlfmt, yamllint), GitHub automation (header and repository
-metadata sync, Dependabot) and Claude Code settings and hooks, all without npm.
+metadata sync, Dependabot) and Claude Code settings and hooks, all without Bun.
 
 ## Using this template
 
@@ -33,7 +33,7 @@ This is the template bundled in
 Create a repository from it with:
 
 ```sh
-npm create @chewygumxx/repo my-thing
+bun create @chewygumxx/repo my-thing
 ```
 
 ## CI

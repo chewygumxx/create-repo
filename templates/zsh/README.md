@@ -25,7 +25,7 @@ This repository exists as a template for the creation of other repositories. It
 provides Conventional Commits enforcement (committed), formatting and linting
 (shuck, Biome, rumdl, yamlfmt, yamllint), a plugin that follows the Zsh Plugin
 Standard with its tests, GitHub automation (header and repository metadata
-sync, Dependabot) and Claude Code settings and hooks, all without npm.
+sync, Dependabot) and Claude Code settings and hooks, all without Bun.
 
 ## Using this template
 
@@ -34,7 +34,7 @@ This is the template bundled in
 Create a repository from it with:
 
 ```sh
-npm create @chewygumxx/repo my-plugin -- --template zsh
+bun create @chewygumxx/repo my-plugin --template zsh
 ```
 
 ## CI
