@@ -4,25 +4,22 @@ Creates a GitHub repository from one of the templates bundled in this
 package, whose first CI run passes, including the repository metadata sync.
 
 ```sh
-npm create @chewygumxx/repo my-thing
+bun create @chewygumxx/repo my-thing
 ```
 
 It asks for anything not given as a flag, shows a summary, and on
 confirmation copies the chosen template, installs its toolchain with mise
-and its dependencies with npm, rewrites its identity, and commits once
-`npm run check` passes. Only then does it create the repository, set the
+and its dependencies with Bun, rewrites its identity, and commits once
+`bun run check` passes. Only then does it create the repository, set the
 metadata App's `METADATA_APP_CLIENT_ID` variable and
 `METADATA_APP_PRIVATE_KEY` secret, and push. A failure before that leaves
 nothing on GitHub.
 
-It needs Node 24 or later, `git`, `mise`, and `gh` logged in with
+It needs Bun 1.4 or later, `git`, `mise`, and `gh` logged in with
 `gh auth login`. The `zsh` template also needs zsh, which mise does not
 install.
 
-Installed with `npm install` rather than run with `npm create`, npm may
-report the package's `prepare` script as blocked. It only sets up this
-repository's own development tooling and is never needed, so the notice is
-safe to ignore.
+Run with `npm create` instead, it still needs Bun: the CLI runs on it.
 
 ## The templates
 
@@ -30,16 +27,16 @@ safe to ignore.
 | ------------ | --------------------------------------------------------- |
 | `standard`   | Any repository: commit rules, lint and format checks, CI  |
 |              | and Claude Code settings                                  |
-| `typescript` | A Node library or CLI in TypeScript, run without a build; |
+| `typescript` | A Bun library or CLI in TypeScript, run without a build;  |
 |              | `--with publish` compiles it and publishes it to npm as   |
 |              | `@owner/name` by trusted publishing                       |
 | `cloudflare` | A Cloudflare Worker in TypeScript, tested in the Workers  |
 |              | runtime, with a workflow that deploys it                  |
-| `rust`       | A Rust crate without npm, checked with mise: a binary, or |
+| `rust`       | A Rust crate without Bun, checked with mise: a binary, or |
 |              | with `--with lib` a library                               |
-| `nvim`       | A Neovim plugin in Lua without npm, tested in headless    |
+| `nvim`       | A Neovim plugin in Lua without Bun, tested in headless    |
 |              | Neovim with mini.test, checked with mise                  |
-| `zsh`        | A zsh plugin without npm, following the Zsh Plugin        |
+| `zsh`        | A zsh plugin without Bun, following the Zsh Plugin        |
 |              | Standard, tested with zsh and linted with shuck           |
 
 `--template` chooses one, `standard` by default, and `--with` turns on its
@@ -53,17 +50,18 @@ they name.
 
 Each template is an ordered list of layers under `templates/`, declared in
 `lib/templates.js`: a later layer's file replaces the same file from an
-earlier one. `common` holds what every repository carries, `npm` the
-npm-based checks, `typescript` its sources, `typescript-publish` what
+earlier one. `common` holds what every repository carries, `bun` the
+Bun-based checks, `typescript` its sources, `typescript-publish` what
 `--with publish` replaces and adds, and `cloudflare` the Worker. `native` is
-the hygiene layer without npm: mise pins the tools and aggregates the tasks,
+the hygiene layer without Bun: mise pins the tools and aggregates the tasks,
 `committed` lints commit messages, and Biome, rumdl, yamlfmt and yamllint
 carry copies of the shared configurations. `rust` adds Cargo and its mise
 tasks, and `rust-bin` or `rust-lib` the source. `nvim` adds the plugin, its
 tests and the Lua tools' mise tasks, and `zsh` the plugin, its tests, shuck's
 configuration and its mise tasks. A layer that holds a `package.json` holds
-its lock; regenerate it with `npm install --package-lock-only` in the layer's
-directory. `rust` holds its `Cargo.lock`: materialise the template, run
+its `bun.lock`; regenerate it with `bun install --lockfile-only` in the
+layer's directory, and delete the `node_modules` that leaves, if any.
+`rust` holds its `Cargo.lock`: materialise the template, run
 `cargo generate-lockfile` there, and copy the file back.
 
 The templates' identity stays `chewygumxx/repo-tmpl`:
@@ -82,27 +80,27 @@ last layer's applies to all of them.
 
 ## Development
 
-`npm run check` runs the typecheck, the lint checks (Biome, remark,
+`bun run check` runs the typecheck, the lint checks (Biome, remark,
 Prettier, yamllint, the em dash check and `lint:editorconfig` on this
-repository), `npm run lint:templates` (each template's own Biome rules and
+repository), `bun run lint:templates` (each template's own Biome rules and
 `editorconfig-checker`, run on every combination materialised under
 `.templates/`) and the tests. The Create Repo
 workflow runs `--dry-run` on every template and combination of features, so
 it also catches a template drifting from `lib/init.js` or failing its own
-`npm run check`.
+`bun run check`.
 
-`node scripts/materialize.js <template> [--with <features>] <dir>` writes
+`bun scripts/materialize.js <template> [--with <features>] <dir>` writes
 a template as it is before init.
 
-To release, bump `version` in `package.json` and `package-lock.json`, commit,
-and push a matching `v*` tag. The Publish workflow runs the check and the dry
-run, then stages the version with `npm stage publish`; approve it on
-npmjs.com to publish it.
+To release, bump `version` in `package.json`, commit, and push a matching
+`v*` tag. The Publish workflow runs the check and the dry run, then stages
+the version with `npm stage publish`, the one thing Node is still pinned
+for; approve it on npmjs.com to publish it.
 
 ## Flags
 
 ```sh
-npm create @chewygumxx/repo -- \
+bun create @chewygumxx/repo \
     my-thing \
     --template standard \
     --description "…" \
@@ -137,4 +135,4 @@ CREATE_REPO_METADATA_KEY_COMMAND="pass show github/metadata-app"
 
 The key is only ever written to the standard input of `gh secret set`. It is
 not printed or stored, and the variables above are removed from the
-environment of every other command it runs, including `npm ci`.
+environment of every other command it runs, including `bun install`.
