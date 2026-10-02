@@ -191,3 +191,11 @@ test("descriptions the first commit would refuse are refused first", () => {
         UsageError,
     );
 });
+
+// `bun create` passes a `--` through where `npm create` consumed it, so the
+// form npm needed would otherwise read every flag as a positional.
+test("one leading -- is dropped", () => {
+    const options = parseOptions(["--", "x", "--template", "zsh"]);
+    assert.equal(options.name, "x");
+    assert.equal(options.template, "zsh");
+});
