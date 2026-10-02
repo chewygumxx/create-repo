@@ -1,7 +1,8 @@
 # Pending deferred minors
 
 What is known and still open after `d0db902` (`main`, v2.1.1 plus 24 commits,
-unreleased). Nothing here blocks a release. Each item names where it lives and
+unreleased), and on `feat/bun`, the unmerged migration to Bun that 3.0.0
+would release. Nothing here blocks a release. Each item names where it lives and
 what fixing it would take. Remove an item when it is fixed, in the commit that
 fixes it.
 
