@@ -41,6 +41,7 @@ import {
     label,
     TEMPLATES,
 } from "../lib/templates.js";
+import { taskScript } from "./mise-task.js";
 
 /** @typedef {import("../lib/templates.js").Template} Template */
 
@@ -192,6 +193,74 @@ test("this repository's TOML files name their schemas", () => {
         .filter(Boolean);
     assert.ok(existsSync(join(root, ".tombi.toml")));
     assert.deepEqual(problems, []);
+});
+
+const TOMBI_PIN = /^"aqua:tombi-toml\/tombi"\s*=\s*"\d+\.\d+\.\d+"$/m;
+
+/**
+ * Asserts that a check formats and lints TOML with tombi.
+ * @param {string} script
+ * @param {string} name
+ */
+function assertTombiCheck(script, name) {
+    assert.match(script, /'\*\.toml'/, name);
+    assert.match(script, /tombi format --check/, name);
+    assert.match(script, /tombi lint --error-on-warnings/, name);
+}
+
+/**
+ * Asserts that a Bun repository's scripts and hook run tombi.
+ * @param {string} pkgFile its package.json
+ * @param {string} hookFile its .husky/pre-commit
+ * @param {string} name
+ */
+function assertBunRunsTombi(pkgFile, hookFile, name) {
+    const { scripts } = JSON.parse(readFileSync(pkgFile, "utf8"));
+    assertTombiCheck(scripts["lint:toml"] ?? "", name);
+    assert.match(scripts["format:toml"] ?? "", /tombi format$/, name);
+    assert.match(scripts.check, /bun run lint:toml/, name);
+    assert.match(scripts.format, /bun run format:toml/, name);
+    const hook = readFileSync(hookFile, "utf8");
+    assert.match(hook, /--cached .*'\*\.toml'/, name);
+    assertTombiCheck(hook, name);
+}
+
+// An editor reads .tombi.toml, but nothing enforces it unless the toolchain
+// pins tombi and the checks, formatters and hooks run it.
+test("every template pins tombi, and its checks run it", () => {
+    for (const combination of combinations()) {
+        const name = label(combination.template, combination.features);
+        const sources = compose(layersOf(combination));
+        const mise = sources.get("mise.toml") ?? "";
+        assert.match(readFileSync(mise, "utf8"), TOMBI_PIN, name);
+        if (sources.has("package.json")) {
+            assertBunRunsTombi(
+                sources.get("package.json") ?? "",
+                sources.get(".husky/pre-commit") ?? "",
+                name,
+            );
+        } else {
+            assertTombiCheck(taskScript(mise, "lint:toml"), name);
+            assert.match(
+                taskScript(mise, "format:toml"),
+                /tombi format$/,
+                name,
+            );
+            const staged = taskScript(mise, "pre-commit:toml");
+            assert.match(staged, /--cached /, name);
+            assertTombiCheck(staged, name);
+        }
+    }
+});
+
+test("this repository pins tombi, and its checks run it", () => {
+    const root = fileURLToPath(new URL("..", import.meta.url));
+    assert.match(readFileSync(join(root, "mise.toml"), "utf8"), TOMBI_PIN);
+    assertBunRunsTombi(
+        join(root, "package.json"),
+        join(root, ".husky/pre-commit"),
+        "create-repo",
+    );
 });
 
 // CI's editorconfig-checker refuses tabs where the .editorconfig says spaces,
