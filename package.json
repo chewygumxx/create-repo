@@ -1,7 +1,7 @@
 {
     "name": "@chewygumxx/create-repo",
     "version": "2.1.1",
-    "description": "Creates a GitHub repository from a bundled template: npm create @chewygumxx/repo",
+    "description": "Creates a GitHub repository from a bundled template: bun create @chewygumxx/repo",
     "keywords": [
         "create",
         "template",

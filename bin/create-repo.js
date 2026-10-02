@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // vim:set expandtab shiftwidth=4 filetype=javascript:
 // SPDX-License-Identifier: GPL-3.0-only
 
@@ -11,7 +11,7 @@
 
 // @ts-check
 
-// `npm create @chewygumxx/repo`: copies the chosen template, rewrites its
+// `bun create @chewygumxx/repo`: copies the chosen template, rewrites its
 // identity, checks and commits locally, and only then creates the GitHub
 // repository, sets the metadata App variable and secret, and pushes. See the
 // README.
@@ -50,7 +50,7 @@ import {
     TEMPLATES,
 } from "../lib/templates.js";
 
-const USAGE = `Usage: npm create @chewygumxx/repo -- [name] [flags]
+const USAGE = `Usage: bun create @chewygumxx/repo [name] [flags]
 
   --description <text>           Repository description
   --topics <a,b>                 GitHub topics
