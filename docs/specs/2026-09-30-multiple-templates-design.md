@@ -1,21 +1,24 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/specs/2026-09-30-multiple-templates-design.md
-  #
-  #
-
 ctime: 2026-09-30
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Specification: multiple templates
-description: ""
-tags: []
+description: >-
+  Design for bundling six templates, chosen with --template, each guaranteeing a
+  passing check and first CI run.
+tags:
+  - create-repo
+  - spec
+  - templates
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/specs/2026-09-30-multiple-templates-design.md
+   -
+   -->
 
 # Specification: multiple templates
 
@@ -551,3 +554,5 @@ Conjectured, most fitting first:
 | `schema`           | npm              | JSON Schema with ajv fixtures              |
 | `site`             | npm              | Astro or Vite, to Pages                    |
 | `dotfiles`         | standard         | chezmoi source state and its checks        |
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

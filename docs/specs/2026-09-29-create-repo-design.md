@@ -1,21 +1,23 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/specs/2026-09-29-create-repo-design.md
-  #
-  #
-
 ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Preliminary Specification: create-repo
-description: ""
-tags: []
+description: >-
+  Design of npm create @chewygumxx/repo, which creates a GitHub repository from
+  one template whose first CI run passes.
+tags:
+  - create-repo
+  - spec
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/specs/2026-09-29-create-repo-design.md
+   -
+   -->
 
 # Preliminary Specification: create-repo
 
@@ -259,3 +261,5 @@ then moves to the new commit.
    scope and the README row.
 4. Publish 1.0.0 by hand and add its trusted publisher.
 5. Smoke test, then delete the scratch repository.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

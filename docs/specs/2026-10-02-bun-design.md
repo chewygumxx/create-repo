@@ -1,21 +1,24 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/specs/2026-10-02-bun-design.md
-  #
-  #
-
 ctime: 2026-10-02
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Specification: Bun
-description: ""
-tags: []
+description: >-
+  Design for Bun replacing npm and Node in create-repo, its templates and the
+  shared workflows, released as 3.0.0.
+tags:
+  - create-repo
+  - spec
+  - bun
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/specs/2026-10-02-bun-design.md
+   -
+   -->
 
 # Specification: Bun
 
@@ -137,3 +140,5 @@ Node on `PATH` beyond Bun's, and the dry run of every template combination.
   sync-header-metadata).
 - The release itself: the version bump to 3.0.0 and npm staging happen
   when the maintainer asks.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->
