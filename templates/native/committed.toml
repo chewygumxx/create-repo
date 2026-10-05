@@ -28,6 +28,7 @@ allowed_types = [
     "chore",
     "style",
     "docs",
+    "ai",
     "ci",
     "refactor",
     "perf",
