@@ -71,3 +71,17 @@ node = "24"
 # against the schema its `#:schema` line names.
 #
 "aqua:tombi-toml/tombi" = "1.5.5"
+
+[settings]
+#
+# Refetch remote tasks each time one runs, so `act` follows `v1` as it
+# moves; mise otherwise keeps its first copy for good.
+#
+task.remote_no_cache = true
+
+[tasks.act]
+#
+# Runs CI locally in Docker; see the `chewygumxx/.github` README.
+#
+description = "Run CI locally with act"
+file        = "git::https://github.com/chewygumxx/.github.git//tasks/act?ref=v1"
