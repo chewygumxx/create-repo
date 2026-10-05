@@ -56,14 +56,14 @@ sync pushed.
   only checks the types, with `bun run typecheck`.
 - `bun run check` runs the checks CI runs: the typecheck, the build, the tests,
   Biome's format and lint checks, Markdown lint (remark, then markdownlint), the
-  YAML checks (prettier, then yamllint with `@chewygumxx/yamllint-config`),
-  tombi's TOML format and lint checks, ShellCheck and shfmt on the shell
-  scripts, editorconfig-checker, actionlint on the workflows, the package checks
-  (sort-package-json's key order, then publint and attw on the packed package),
-  knip's check for unused dependencies and files, CSpell, secretlint and a check
-  that rejects em dashes. Each tool runs by its shared `@chewygumxx`
-  configuration; a word of this repository's own goes in `cspell.words` in
-  `package.json`.
+  YAML checks (prettier with `@chewygumxx/prettier-config`, then yamllint with
+  `@chewygumxx/yamllint-config`), tombi's TOML format and lint checks,
+  ShellCheck and shfmt on the shell scripts, editorconfig-checker, actionlint on
+  the workflows, the package checks (sort-package-json's key order, then publint
+  and attw on the packed package), knip's check for unused dependencies and
+  files, CSpell, secretlint and a check that rejects em dashes. Each tool runs
+  by its shared `@chewygumxx` configuration; a word of this repository's own
+  goes in `cspell.words` in `package.json`.
 - `bun run format` applies Biome formatting, prettier's to YAML, tombi's to
   TOML, which Biome does not read, and shfmt's to the shell scripts.
 

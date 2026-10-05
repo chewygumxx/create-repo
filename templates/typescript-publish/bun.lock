@@ -14,6 +14,7 @@
         "@chewygumxx/cz-commitlint": "^1.0.2",
         "@chewygumxx/editorconfig-checker-config": "^1.0.1",
         "@chewygumxx/markdownlint-cli2-config": "^1.1.0",
+        "@chewygumxx/prettier-config": "^1.0.1",
         "@chewygumxx/remark-preset": "^1.1.0",
         "@chewygumxx/secretlint-rule-preset": "^1.0.1",
         "@chewygumxx/shellcheck-config": "^1.0.1",
@@ -83,6 +84,8 @@
     "@chewygumxx/editorconfig-checker-config": ["@chewygumxx/editorconfig-checker-config@1.0.1", "", {}, "sha512-Rxlvxza6hPdeU2WEOSbo7iASqGL2G4S5GhBcyA0KgeftAz1K7SULShm041qiSFMaLSi2eMa0yAxKO1QKFBPAJg=="],
 
     "@chewygumxx/markdownlint-cli2-config": ["@chewygumxx/markdownlint-cli2-config@1.1.0", "", { "peerDependencies": { "markdownlint-cli2": "^0.23.3" } }, "sha512-kkHjZ6IeCumPU0J3xECzdA6sGrq8eJTlLtMgTq+uiZTdolWFbwK6j1NCd3VC+W1JefC+2YGYpvmC7Vm9rioTFg=="],
+
+    "@chewygumxx/prettier-config": ["@chewygumxx/prettier-config@1.0.1", "", { "peerDependencies": { "prettier": "^3.9.9" } }, "sha512-d+5fJ8suSkAvKuPFEz0cbcnVRao0udOnRGKdkWZU2MofYjrn+NQ3FJdVS5bA2tt0JUgvs5IDK+RBbE6/X7umQw=="],
 
     "@chewygumxx/remark-preset": ["@chewygumxx/remark-preset@1.1.0", "", { "dependencies": { "remark-frontmatter": "^5.0.0", "remark-gfm": "^4.0.1", "remark-lint-maximum-line-length": "^4.1.1", "remark-lint-no-undefined-references": "^5.0.2", "remark-preset-lint-consistent": "^6.0.1", "remark-preset-lint-recommended": "^7.0.1", "unified-lint-rule": "^3.0.1", "vfile-location": "^5.0.3" }, "peerDependencies": { "remark-cli": "^12.0.1" } }, "sha512-3yigXswTNj9qrZ9UZcA32CdP5maFB8IwFg5i4/VY+AKu8xJF8KlZz6Mfb3io1iAw4UBjxgJxnyvAgQJ12fI5ww=="],
 

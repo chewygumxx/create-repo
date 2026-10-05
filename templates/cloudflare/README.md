@@ -59,15 +59,15 @@ sync pushed.
   bindings or vars in `wrangler.jsonc`; `bun run check` fails when it is stale.
 - `bun run check` runs the checks CI runs: the typecheck, the types check, the
   tests, Biome's format and lint checks, Markdown lint (remark, then
-  markdownlint), the YAML checks (prettier, then yamllint with
-  `@chewygumxx/yamllint-config`), tombi's TOML format and lint checks,
-  ShellCheck and shfmt on the shell scripts, editorconfig-checker, actionlint on
-  the workflows, sort-package-json's key order check, knip's check for unused
-  dependencies and files, CSpell, secretlint and a check that rejects em dashes.
-  Each tool runs by its shared `@chewygumxx` configuration; a word of this
-  repository's own goes in `cspell.words` in `package.json`. A Dependabot pull
-  request that bumps only `wrangler` can fail that check until `bun run types`
-  is run on its branch.
+  markdownlint), the YAML checks (prettier with `@chewygumxx/prettier-config`,
+  then yamllint with `@chewygumxx/yamllint-config`), tombi's TOML format and
+  lint checks, ShellCheck and shfmt on the shell scripts, editorconfig-checker,
+  actionlint on the workflows, sort-package-json's key order check, knip's check
+  for unused dependencies and files, CSpell, secretlint and a check that rejects
+  em dashes. Each tool runs by its shared `@chewygumxx` configuration; a word of
+  this repository's own goes in `cspell.words` in `package.json`. A Dependabot
+  pull request that bumps only `wrangler` can fail that check until `bun run
+  types` is run on its branch.
 - `bun run format` applies Biome formatting, prettier's to YAML, tombi's to
   TOML, which Biome does not read, and shfmt's to the shell scripts.
 

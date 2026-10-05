@@ -48,6 +48,7 @@
             "path": "@chewygumxx/cz-commitlint"
         }
     },
+    "prettier": "@chewygumxx/prettier-config",
     "remarkConfig": {
         "plugins": [
             "@chewygumxx/remark-preset"
@@ -62,6 +63,7 @@
         "@chewygumxx/cz-commitlint": "^1.0.2",
         "@chewygumxx/editorconfig-checker-config": "^1.0.1",
         "@chewygumxx/markdownlint-cli2-config": "^1.1.0",
+        "@chewygumxx/prettier-config": "^1.0.1",
         "@chewygumxx/remark-preset": "^1.1.0",
         "@chewygumxx/secretlint-rule-preset": "^1.0.1",
         "@chewygumxx/shellcheck-config": "^1.0.1",
