@@ -231,6 +231,7 @@ test("README frontmatter, heading and body", () =>
     initialised((dir) => {
         const readme = read(dir, "README.md");
         assert.match(readme, /^ctime: 2026-10-01$/m);
+        assert.match(readme, /^mtime: 2026-10-01$/m);
         assert.match(readme, /^description: >-$/m);
         assert.match(readme, /^tags:\n {2}- alpha\n {2}- beta\n/m);
         assert.match(readme, /^# derived-repo$/m);
