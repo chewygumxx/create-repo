@@ -1,3 +1,25 @@
+---
+ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
+title: "@chewygumxx/create-repo"
+description: >-
+  Creates a GitHub repository from one of the templates bundled in this package,
+  whose first CI run passes, including the repository metadata sync.
+tags:
+  - bun
+  - create
+  - template
+  - github
+---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/README.md
+   -
+   -->
+
 # @chewygumxx/create-repo
 
 Creates a GitHub repository from one of the templates bundled in this
@@ -141,3 +163,5 @@ CREATE_REPO_METADATA_KEY_COMMAND="pass show github/metadata-app"
 The key is only ever written to the standard input of `gh secret set`. It is
 not printed or stored, and the variables above are removed from the
 environment of every other command it runs, including `bun install`.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->
