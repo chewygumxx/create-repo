@@ -1,0 +1,22 @@
+// vim:set expandtab shiftwidth=4 filetype=jsonc:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/repo-tmpl.git
+// ::: :/.markdownlint-cli2.jsonc
+//
+//
+
+// https://github.com/DavidAnson/markdownlint-cli2#configuration
+//
+// The house style from `@chewygumxx/markdownlint-cli2-config`, which agrees
+// with the remark preset that `lint:md` runs first.
+{
+    "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json",
+    "config": {
+        "extends": "@chewygumxx/markdownlint-cli2-config"
+    },
+    "noBanner": true,
+    "noProgress": true
+}

@@ -1,0 +1,19 @@
+// vim:set expandtab shiftwidth=4 filetype=jsonc:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/repo-tmpl.git
+// ::: :/.github/.markdownlint-cli2.jsonc
+//
+//
+
+// A pull request template becomes the body beneath the pull request's title,
+// so it opens with a second-level heading rather than a first.
+{
+    "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json",
+    "config": {
+        "extends": "@chewygumxx/markdownlint-cli2-config",
+        "MD041": false
+    }
+}

@@ -16,6 +16,8 @@ bunx --bun --no-install biome check --staged --no-errors-on-unmatched
 
 git diff -z --cached --name-only --diff-filter=ACMR -- '*.md' |
     xargs -0 -r bunx --bun --no-install remark --frail --quiet --no-stdout
+git diff -z --cached --name-only --diff-filter=ACMR -- '*.md' |
+    xargs -0 -r bunx --bun --no-install markdownlint-cli2
 
 yaml=$(git diff --cached --name-only --diff-filter=ACMR -- '*.yaml' '*.yml')
 if [ -n "$yaml" ]; then
@@ -32,6 +34,29 @@ if [ -n "$toml" ]; then
     git diff -z --cached --name-only --diff-filter=ACMR -- '*.toml' |
         xargs -0 tombi lint --error-on-warnings
 fi
+
+sh=$(git diff -z --cached --name-only --diff-filter=ACMR | xargs -0 -r shfmt -f)
+if [ -n "$sh" ]; then
+    printf '%s\n' "$sh" | tr '\n' '\0' | xargs -0 shfmt -d
+    printf '%s\n' "$sh" | tr '\n' '\0' |
+        xargs -0 shellcheck --rcfile \
+            node_modules/@chewygumxx/shellcheck-config/config.shellcheckrc
+fi
+
+git diff -z --cached --name-only --diff-filter=ACMR -- \
+    '.github/workflows/*.yaml' '.github/workflows/*.yml' |
+    xargs -0 -r actionlint -config-file \
+        node_modules/@chewygumxx/actionlint-config/config.yaml
+
+git diff -z --cached --name-only --diff-filter=ACMR |
+    xargs -0 -r editorconfig-checker -config \
+        node_modules/@chewygumxx/editorconfig-checker-config/config.json
+
+git diff -z --cached --name-only --diff-filter=ACMR |
+    xargs -0 -r bunx --bun --no-install cspell \
+        --no-progress --no-summary --no-must-find-files
+git diff -z --cached --name-only --diff-filter=ACMR |
+    xargs -0 -r bunx --bun --no-install secretlint
 
 # U+2014 as UTF-8 bytes, so this file does not trip its own check.
 emdash=$(printf '\342\200\224')

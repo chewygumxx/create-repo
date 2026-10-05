@@ -1,0 +1,40 @@
+// vim:set expandtab shiftwidth=4 filetype=jsonc:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/repo-tmpl.git
+// ::: :/.knip.jsonc
+//
+//
+
+// https://knip.dev/reference/configuration
+//
+// knip finds the entry files by itself; this file lists only what it cannot
+// see. Each pattern is a regular expression.
+{
+    "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+    "ignoreDependencies": [
+        // The shared configurations, named by path in the package scripts,
+        // by `extends` or `import`, or from `.secretlintrc.json`.
+        "@chewygumxx/.+",
+        // Run by the package scripts through `xargs`, which knip does not
+        // follow.
+        "cspell",
+        "prettier",
+        "secretlint",
+        // Extended by @chewygumxx/commitlint-config, which depends on them.
+        "@commitlint/config-conventional",
+        "conventional-changelog-conventionalcommits",
+        // The Workers runtime's `cloudflare:` modules, which no package
+        // provides.
+        "cloudflare"
+    ],
+    // Vitest's own default, which knip does not see when a Vitest plugin,
+    // such as the Workers pool, runs the tests.
+    "vitest": {
+        "entry": ["**/*.{test,spec}.?(c|m)[jt]s?(x)"]
+    },
+    // Pinned in `mise.toml` rather than installed as packages.
+    "ignoreBinaries": ["actionlint", "editorconfig-checker"]
+}

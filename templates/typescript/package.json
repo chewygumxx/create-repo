@@ -1,48 +1,38 @@
 {
     "name": "repo-tmpl",
-    "description": "Repository Template",
     "private": true,
-    "type": "module",
+    "description": "Repository Template",
     "keywords": [
         "repo",
         "template",
         "repository"
     ],
-    "license": "GPL-3.0-only",
     "homepage": "https://github.com/chewygumxx/repo-tmpl",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/chewygumxx/repo-tmpl.git"
     },
-    "engines": {
-        "bun": ">=1.4"
-    },
-    "devDependencies": {
-        "@biomejs/biome": "2.5.14",
-        "@chewygumxx/biome-config": "^1.0.0",
-        "@chewygumxx/commitlint-config": "^1.0.0",
-        "@chewygumxx/cz-commitlint": "^1.0.2",
-        "@chewygumxx/remark-preset": "^1.0.3",
-        "@chewygumxx/yamllint-config": "^1.0.0",
-        "@commitlint/cli": "^21.2.2",
-        "@types/bun": "^1.4.2",
-        "commitizen": "^4.3.2",
-        "husky": "^9.1.7",
-        "prettier": "^3.9.9",
-        "remark-cli": "^12.0.1",
-        "typescript": "^7.0.2"
-    },
+    "license": "GPL-3.0-only",
+    "type": "module",
     "scripts": {
-        "check": "bun run typecheck && bun run test && bun run lint:biome && bun run lint:md && bun run lint:yaml && bun run lint:toml && bun run lint:emdash",
+        "check": "bun run typecheck && bun run test && bun run lint:biome && bun run lint:md && bun run lint:yaml && bun run lint:toml && bun run lint:emdash && bun run lint:sh && bun run lint:editorconfig && bun run lint:actions && bun run lint:package && bun run lint:deps && bun run lint:spell && bun run lint:secrets",
         "commit": "cz",
-        "format": "biome format --write . && bun run format:yaml && bun run format:toml",
+        "format": "biome format --write . && bun run format:yaml && bun run format:toml && bun run format:sh",
         "format:check": "biome format .",
+        "format:sh": "git ls-files -z | xargs -0 -r shfmt -f | tr '\\n' '\\0' | xargs -0 -r shfmt -w",
         "format:toml": "git ls-files -z '*.toml' | xargs -0 -r tombi format",
         "format:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --write --log-level warn",
         "lint": "biome lint .",
+        "lint:actions": "actionlint -config-file node_modules/@chewygumxx/actionlint-config/config.yaml",
         "lint:biome": "biome ci .",
+        "lint:deps": "knip",
+        "lint:editorconfig": "editorconfig-checker -config node_modules/@chewygumxx/editorconfig-checker-config/config.json",
         "lint:emdash": "git grep -nIP --untracked '\\x{2014}'; test $? -eq 1",
-        "lint:md": "git ls-files -z '*.md' | xargs -0 remark --frail --quiet --no-stdout",
+        "lint:md": "git ls-files -z '*.md' | xargs -0 -r remark --frail --quiet --no-stdout && git ls-files -z '*.md' | xargs -0 -r markdownlint-cli2",
+        "lint:package": "sort-package-json --check package.json",
+        "lint:secrets": "git ls-files -z | xargs -0 -r secretlint",
+        "lint:sh": "git ls-files -z | xargs -0 -r shfmt -f | tr '\\n' '\\0' | xargs -0 -r shfmt -d && git ls-files -z | xargs -0 -r shfmt -f | tr '\\n' '\\0' | xargs -0 -r shellcheck --rcfile node_modules/@chewygumxx/shellcheck-config/config.shellcheckrc",
+        "lint:spell": "git ls-files -z | xargs -0 -r cspell --no-progress --no-summary --no-must-find-files",
         "lint:toml": "git ls-files -z '*.toml' | xargs -0 -r tombi format --check && git ls-files -z '*.toml' | xargs -0 -r tombi lint --error-on-warnings",
         "lint:yaml": "git ls-files -z '*.yaml' '*.yml' | xargs -0 -r prettier --check && git ls-files -z '*.yaml' '*.yml' | xargs -0 -r yamllint --strict",
         "prepare": "test -d node_modules/husky && husky || true",
@@ -57,6 +47,41 @@
     "remarkConfig": {
         "plugins": [
             "@chewygumxx/remark-preset"
+        ]
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.5.14",
+        "@chewygumxx/actionlint-config": "^1.0.1",
+        "@chewygumxx/biome-config": "^1.0.0",
+        "@chewygumxx/commitlint-config": "^1.0.0",
+        "@chewygumxx/cspell-config": "^1.0.1",
+        "@chewygumxx/cz-commitlint": "^1.0.2",
+        "@chewygumxx/editorconfig-checker-config": "^1.0.1",
+        "@chewygumxx/markdownlint-cli2-config": "^1.1.0",
+        "@chewygumxx/remark-preset": "^1.1.0",
+        "@chewygumxx/secretlint-rule-preset": "^1.0.1",
+        "@chewygumxx/shellcheck-config": "^1.0.1",
+        "@chewygumxx/tsconfig": "^1.0.1",
+        "@chewygumxx/yamllint-config": "^1.0.0",
+        "@commitlint/cli": "^21.2.2",
+        "@types/bun": "^1.4.2",
+        "commitizen": "^4.3.2",
+        "cspell": "^10.3.6",
+        "husky": "^9.1.7",
+        "knip": "^6.39.0",
+        "markdownlint-cli2": "^0.23.3",
+        "prettier": "^3.9.9",
+        "remark-cli": "^12.0.1",
+        "secretlint": "^13.0.7",
+        "sort-package-json": "^4.0.0",
+        "typescript": "^7.0.2"
+    },
+    "engines": {
+        "bun": ">=1.4"
+    },
+    "cspell": {
+        "import": [
+            "@chewygumxx/cspell-config"
         ]
     }
 }
