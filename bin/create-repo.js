@@ -19,7 +19,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { text } from "node:stream/consumers";
 import { notTemplate, parseOptions, UsageError } from "../lib/args.js";
-import { init } from "../lib/init.js";
+import { init, recordWords } from "../lib/init.js";
 import { childEnv, loadEnvFile, resolveKey } from "../lib/key.js";
 import {
     checkTarget,
@@ -241,6 +241,19 @@ async function main(argv) {
         });
         // Staged first: the template's format:yaml reads `git ls-files`.
         await run("git", ["add", "--all"], local);
+        if (family.words) {
+            // The identity's words, which the spell check would refuse.
+            const tracked = await run("git", ["ls-files"], {
+                ...local,
+                capture: true,
+            });
+            const unknown = await run(family.words.file, family.words.args, {
+                ...local,
+                capture: true,
+                input: tracked.stdout,
+            });
+            recordWords(dir, unknown.stdout);
+        }
         await run(family.format.file, family.format.args, local);
 
         step("Checking and committing");

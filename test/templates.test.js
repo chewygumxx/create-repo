@@ -376,7 +376,9 @@ test("rust offers lib and takes nothing by default", () => {
 // Bun prints no deprecation notices, so the install needs no flags to quiet
 // them; a lock that no longer matches package.json fails it.
 test("the bun family installs from its lock alone", () => {
-    assert.deepEqual(FAMILIES.bun, {
+    // Its words, which the spell check is told, are tested in words.test.js.
+    const { words: _words, ...bun } = FAMILIES.bun;
+    assert.deepEqual(bun, {
         setup: [{ file: "bun", args: ["install", "--frozen-lockfile"] }],
         format: { file: "bun", args: ["run", "--silent", "format"] },
         check: { file: "bun", args: ["run", "check"] },
