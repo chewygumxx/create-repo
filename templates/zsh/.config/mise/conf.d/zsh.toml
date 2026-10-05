@@ -20,8 +20,8 @@
 #
 
 [tools]
-# The release assets are named shuck-cli-*, so the binary is named here.
-"github:ewhauser/shuck" = { version = "0.2.3", exe = "shuck" }
+# Not in the mise registry, so it comes from its GitHub releases.
+"github:ewhauser/shuck" = "0.2.3"
 
 [tasks."lint:zsh"]
 description = "zsh's syntax check, then shuck's lint and format check"
