@@ -11,6 +11,7 @@
 // @ts-check
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
     existsSync,
     mkdtempSync,
@@ -18,6 +19,7 @@ import {
     readFileSync,
     rmSync,
     statSync,
+    writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -261,6 +263,194 @@ test("this repository pins tombi, and its checks run it", () => {
         join(root, ".husky/pre-commit"),
         "create-repo",
     );
+});
+
+/** Pins of the tools CI's lint jobs run, which a bun template runs too. */
+const HYGIENE_PINS = [
+    "aqua:koalaman/shellcheck",
+    "aqua:mvdan/sh",
+    "aqua:editorconfig-checker/editorconfig-checker",
+    "aqua:rhysd/actionlint",
+].map(
+    (tool) =>
+        new RegExp(
+            `^"${tool.replaceAll("/", "\\/")}"\\s*=\\s*"\\d+\\.\\d+\\.\\d+"$`,
+            "m",
+        ),
+);
+
+/** Each shared configuration, and the package that runs by it. */
+const SHARED = {
+    "@chewygumxx/tsconfig": "typescript",
+    "@chewygumxx/cspell-config": "cspell",
+    "@chewygumxx/secretlint-rule-preset": "secretlint",
+    "@chewygumxx/markdownlint-cli2-config": "markdownlint-cli2",
+    "@chewygumxx/shellcheck-config": undefined,
+    "@chewygumxx/editorconfig-checker-config": undefined,
+    "@chewygumxx/actionlint-config": undefined,
+};
+
+// A shared configuration is enforced only where the template depends on it,
+// and its check and its pre-commit hook run the tool by it.
+test("every bun template checks by the shared configurations", () => {
+    for (const combination of combinations()) {
+        if (TEMPLATES[combination.template].family !== "bun") continue;
+        const name = label(combination.template, combination.features);
+        const sources = compose(layersOf(combination));
+        /** @param {string} file */
+        const read = (file) =>
+            readFileSync(
+                sources.get(file) ?? assert.fail(`${name}: no ${file}`),
+                "utf8",
+            );
+        const mise = read("mise.toml");
+        for (const pin of HYGIENE_PINS) assert.match(mise, pin, name);
+        const pkg = JSON.parse(read("package.json"));
+        const deps = pkg.devDependencies;
+        for (const [config, tool] of Object.entries(SHARED)) {
+            assert.ok(config in deps, `${name} ${config}`);
+            if (tool) assert.ok(tool in deps, `${name} ${tool}`);
+        }
+        assert.ok("sort-package-json" in deps, name);
+        assert.ok("knip" in deps, name);
+        const { scripts } = pkg;
+        for (const script of [
+            "lint:sh",
+            "lint:editorconfig",
+            "lint:actions",
+            "lint:package",
+            "lint:deps",
+            "lint:spell",
+            "lint:secrets",
+        ]) {
+            assert.match(
+                scripts.check,
+                new RegExp(`bun run ${script}( |$)`),
+                `${name} ${script}`,
+            );
+        }
+        assert.match(scripts.format, /bun run format:sh$/, name);
+        assert.match(scripts["format:sh"], /shfmt -w$/, name);
+        assert.match(scripts["lint:sh"], /shfmt -d /, name);
+        assert.match(
+            scripts["lint:sh"],
+            /shellcheck --rcfile node_modules\/@chewygumxx\/shellcheck-config\/config\.shellcheckrc$/,
+            name,
+        );
+        assert.equal(
+            scripts["lint:editorconfig"],
+            "editorconfig-checker -config node_modules/@chewygumxx/editorconfig-checker-config/config.json",
+            name,
+        );
+        assert.equal(
+            scripts["lint:actions"],
+            "actionlint -config-file node_modules/@chewygumxx/actionlint-config/config.yaml",
+            name,
+        );
+        assert.match(
+            scripts["lint:md"],
+            /xargs -0 -r markdownlint-cli2$/,
+            name,
+        );
+        assert.match(
+            scripts["lint:package"],
+            /^sort-package-json --check package\.json/,
+            name,
+        );
+        assert.match(scripts["lint:spell"], /xargs -0 -r cspell /, name);
+        assert.match(scripts["lint:secrets"], /xargs -0 -r secretlint$/, name);
+        assert.deepEqual(
+            pkg.cspell,
+            { import: ["@chewygumxx/cspell-config"] },
+            name,
+        );
+        assert.deepEqual(
+            parse(read(".secretlintrc.json")).rules,
+            [{ id: "@chewygumxx/secretlint-rule-preset" }],
+            name,
+        );
+        assert.equal(
+            parse(read(".markdownlint-cli2.jsonc")).config.extends,
+            "@chewygumxx/markdownlint-cli2-config",
+            name,
+        );
+        assert.equal(
+            parse(read("tsconfig.json")).extends,
+            "@chewygumxx/tsconfig/bun",
+            name,
+        );
+        // Continued lines joined, as the shell reads them.
+        const hook = read(".husky/pre-commit").replace(/\\\n\s*/g, "");
+        for (const tool of [
+            /shellcheck --rcfile node_modules\/@chewygumxx\/shellcheck-config\//,
+            /actionlint -config-file node_modules\/@chewygumxx\/actionlint-config\//,
+            /editorconfig-checker -config node_modules\/@chewygumxx\/editorconfig-checker-config\//,
+            /markdownlint-cli2/,
+            /bunx --bun --no-install cspell/,
+            /bunx --bun --no-install secretlint/,
+        ]) {
+            assert.match(hook, tool, name);
+        }
+    }
+});
+
+test("a published template lints its package with publint and attw", () => {
+    const pkg = JSON.parse(
+        readFileSync(
+            join(TEMPLATES_DIR, "typescript-publish", "package.json"),
+            "utf8",
+        ),
+    );
+    assert.ok("publint" in pkg.devDependencies);
+    assert.ok("@arethetypeswrong/cli" in pkg.devDependencies);
+    assert.match(pkg.scripts["lint:package"], /&& publint --level warning &&/);
+    assert.match(
+        pkg.scripts["lint:package"],
+        /attw package\.tgz --profile esm-only/,
+    );
+});
+
+// A spelling the shared word list lacks would otherwise be recorded as a new
+// repository's own word, and never reported.
+test("every bun template is spelled to the shared word list", () => {
+    const files = new Set();
+    for (const combination of combinations()) {
+        if (TEMPLATES[combination.template].family !== "bun") continue;
+        for (const source of compose(layersOf(combination)).values()) {
+            files.add(source);
+        }
+    }
+    const root = fileURLToPath(new URL("..", import.meta.url));
+    const config = join(
+        mkdtempSync(join(tmpdir(), "create-repo-spell-")),
+        "cspell.json",
+    );
+    writeFileSync(
+        config,
+        JSON.stringify({
+            import: [
+                join(
+                    root,
+                    "node_modules/@chewygumxx/cspell-config/config.yaml",
+                ),
+            ],
+        }),
+    );
+    const result = spawnSync(
+        join(root, "node_modules/.bin/cspell"),
+        [
+            "lint",
+            "--config",
+            config,
+            "--file-list",
+            "stdin",
+            "--no-progress",
+            "--no-summary",
+            "--no-must-find-files",
+        ],
+        { input: [...files].join("\n"), encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
 // CI's editorconfig-checker refuses tabs where the .editorconfig says spaces,
