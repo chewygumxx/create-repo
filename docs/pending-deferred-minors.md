@@ -1,3 +1,23 @@
+---
+ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
+title: Pending deferred minors
+description: >-
+  Known minors still open after the Bun migration, each with where it lives and
+  what fixing it would take.
+tags:
+  - create-repo
+  - todo
+---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/pending-deferred-minors.md
+   -
+   -->
+
 # Pending deferred minors
 
 What is known and still open after `d0db902` (`main`, v2.1.1 plus 24 commits,
@@ -67,3 +87,5 @@ choice, not a defect, unless the cost below turns out to matter.
 
 No version bump, tag or publish has happened since v2.1.1. Nothing since the
 tag is on npm, the Bun migration included.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->
