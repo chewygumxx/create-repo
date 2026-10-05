@@ -1,21 +1,23 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-10-01-multiple-templates-phase-2.md
-  #
-  #
-
 ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: multiple templates, phase 2
-description: ""
-tags: []
+description: Plan for the typescript template and its publish feature
+tags:
+  - create-repo
+  - plan
+  - templates
+  - typescript
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-multiple-templates-phase-2.md
+   -
+   -->
 
 # Implementation Plan: multiple templates, phase 2
 
@@ -1524,3 +1526,5 @@ git commit -m "docs: Describe the typescript template" \
 default is described, the layers sentence names the new layers and the lock note, and the entry point's
 header no longer says the template is singular."
 ```
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

@@ -1,21 +1,25 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-10-01-multiple-templates-phase-4.md
-  #
-  #
-
 ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: multiple templates, phase 4
-description: ""
-tags: []
+description: >-
+  Plan for the native template family and its first template, rust, whose
+  hygiene comes from tools pinned in mise.
+tags:
+  - create-repo
+  - plan
+  - templates
+  - rust
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-multiple-templates-phase-4.md
+   -
+   -->
 
 # Implementation Plan: multiple templates, phase 4
 
@@ -2401,3 +2405,5 @@ and rerun from Step 7.
 Run: `rm -rf /tmp/e2e && git status --short`
 
 Expected: no output; the tree is clean.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

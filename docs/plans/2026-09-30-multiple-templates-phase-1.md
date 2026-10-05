@@ -1,21 +1,24 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-09-30-multiple-templates-phase-1.md
-  #
-  #
-
 ctime: 2026-09-30
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: multiple templates, phase 1
-description: ""
-tags: []
+description: >-
+  Plan for the engine behind several bundled templates: layers, a catalogue,
+  --template and --with, identity edits and a CI matrix.
+tags:
+  - create-repo
+  - plan
+  - templates
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-09-30-multiple-templates-phase-1.md
+   -
+   -->
 
 # Implementation Plan: multiple templates, phase 1
 
@@ -2788,3 +2791,5 @@ git commit -m "docs: Describe the template layers"
 Run: `npm run check`
 
 Expected: every step passes, `# fail 0`.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

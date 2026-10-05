@@ -1,21 +1,23 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-09-30-create-repo-migration.md
-  #
-  #
-
 ctime: 2026-09-30
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: create-repo Migration
-description: ""
-tags: []
+description: >-
+  Plan moving @chewygumxx/create-repo out of shared-config into its own
+  repository, with the template carried inside the package.
+tags:
+  - create-repo
+  - plan
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-09-30-create-repo-migration.md
+   -
+   -->
 
 # Implementation Plan: create-repo Migration
 
@@ -1696,3 +1698,5 @@ npm deprecate @chewygumxx/create-repo@"<2" \
 ```
 
 Expected: the 1.x dry run completes; `{"isArchived":true,"isTemplate":false}`.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

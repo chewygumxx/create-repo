@@ -1,21 +1,25 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-10-01-multiple-templates-phase-5.md
-  #
-  #
-
 ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: multiple templates, phase 5
-description: ""
-tags: []
+description: >-
+  Plan for the nvim template: a Neovim plugin in Lua, tested in headless Neovim
+  by mini.test.
+tags:
+  - create-repo
+  - plan
+  - templates
+  - nvim
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-multiple-templates-phase-5.md
+   -
+   -->
 
 # Implementation Plan: multiple templates, phase 5
 
@@ -1720,3 +1724,5 @@ and rerun from Step 7.
 Run: `rm -rf /tmp/e2e /tmp/held* /tmp/probe.log && git status --short`
 
 Expected: no output; the tree is clean.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

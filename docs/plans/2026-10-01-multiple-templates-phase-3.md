@@ -1,21 +1,25 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-10-01-multiple-templates-phase-3.md
-  #
-  #
-
 ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: multiple templates, phase 3
-description: ""
-tags: []
+description: >-
+  Plan for the cloudflare template: a Worker in TypeScript, tested in the
+  Workers runtime, with a deploy workflow.
+tags:
+  - create-repo
+  - plan
+  - templates
+  - cloudflare
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-multiple-templates-phase-3.md
+   -
+   -->
 
 # Implementation Plan: multiple templates, phase 3
 
@@ -1081,3 +1085,5 @@ matches what building it showed: no typescript layer, trimmed generated
 types, its own .biome.json, and a compatibility date the test runtime
 supports."
 ```
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

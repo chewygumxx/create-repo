@@ -1,21 +1,23 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-10-01-address-deferred-minors.md
-  #
-  #
-
 ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: address the deferred minors
-description: ""
-tags: []
+description: >-
+  Plan fixing the minor findings phases 1 to 6 deferred, and two Dependabot
+  faults found after the 2.1.0 push.
+tags:
+  - create-repo
+  - plan
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-address-deferred-minors.md
+   -
+   -->
 
 # Implementation Plan: address the deferred minors
 
@@ -1496,3 +1498,5 @@ minor left, each with its reason.
 
 Commit any docs change, then stop. Do not bump, tag or push: ask the user
 whether this is `2.1.1`.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

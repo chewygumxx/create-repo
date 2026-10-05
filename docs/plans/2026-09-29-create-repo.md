@@ -1,21 +1,23 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-09-29-create-repo.md
-  #
-  #
-
 ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: create-repo
-description: ""
-tags: []
+description: >-
+  Plan for npm create @chewygumxx/repo, which creates a GitHub repository from
+  chewygumxx/repo-tmpl whose first CI run passes.
+tags:
+  - create-repo
+  - plan
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-09-29-create-repo.md
+   -
+   -->
 
 # Implementation Plan: create-repo
 
@@ -3321,3 +3323,5 @@ gh auth refresh -s delete_repo
 gh repo delete chewygumxx/create-repo-smoke --yes
 rm -rf /tmp/create-repo-smoke
 ```
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

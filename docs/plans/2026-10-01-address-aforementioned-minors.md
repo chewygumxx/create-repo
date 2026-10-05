@@ -1,3 +1,23 @@
+---
+ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
+title: Address the aforementioned deferred minors (follow-up to the merge)
+description: >-
+  Plan addressing the deferred minors the address-remaining-minors review left,
+  without pushing or publishing.
+tags:
+  - create-repo
+  - plan
+---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-address-aforementioned-minors.md
+   -
+   -->
+
 # Address the aforementioned deferred minors (follow-up to the merge)
 
 ## Context
@@ -107,3 +127,5 @@ Per task: the new test RED then GREEN where the task changes behaviour. At the
 end: `npm run check` (currently 230/230, no Biome warnings), then one Opus
 whole-branch review and one fix pass. The final message lists "Rulings I made"
 and "Deferred minors" exhaustively, then the 3-option menu.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

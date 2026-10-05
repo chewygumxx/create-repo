@@ -1,3 +1,23 @@
+---
+ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
+title: Address the deferred minors (v2.1.1 follow-up)
+description: >-
+  Plan addressing the minors deferred by the v2.1.1 review: fix defects, rule on
+  choices, report what cannot be done here.
+tags:
+  - create-repo
+  - plan
+---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-address-remaining-minors.md
+   -
+   -->
+
 # Address the deferred minors (v2.1.1 follow-up)
 
 ## Context
@@ -111,3 +131,5 @@ Biome, remark, Prettier/yamllint, em dash, editorconfig, `lint:templates`,
 full suite; currently 224/224) with zero Biome warnings. Then the one Opus
 whole-branch review, a fix pass for Critical/Important, and the final message
 listing every "Ruling:" and any new "Deferred minors" exhaustively.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

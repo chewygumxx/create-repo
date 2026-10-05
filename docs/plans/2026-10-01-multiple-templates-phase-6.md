@@ -1,21 +1,25 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/create-repo.git
-  # ::: :/docs/plans/2026-10-01-multiple-templates-phase-6.md
-  #
-  #
-
 ctime: 2026-10-01
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: >-
   Implementation Plan: multiple templates, phase 6
-description: ""
-tags: []
+description: >-
+  Plan for the zsh template: a plugin following the Zsh Plugin Standard, tested
+  by zsh and linted by shuck.
+tags:
+  - create-repo
+  - plan
+  - templates
+  - zsh
 ---
+
+<!--
+   -
+   - ~chewygumxx/create-repo.git
+   - ::: :/docs/plans/2026-10-01-multiple-templates-phase-6.md
+   -
+   -->
 
 # Implementation Plan: multiple templates, phase 6
 
@@ -1515,3 +1519,5 @@ Step 1.
 Run: `rm -rf /tmp/e2e /tmp/held.zsh /tmp/held-fn /tmp/probe.log /tmp/mut /tmp/plug.orig && git status --short`
 
 Expected: no output; the tree is clean.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->
