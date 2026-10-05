@@ -1,16 +1,7 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/repo-tmpl.git
-  # ::: :/README.md
-  #
-  #
-
 ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: repo-tmpl
 description: "Repository Template"
 tags:
@@ -18,6 +9,13 @@ tags:
   - template
   - repository
 ---
+
+<!--
+   -
+   - ~chewygumxx/repo-tmpl.git
+   - ::: :/README.md
+   -
+   -->
 
 # repo-tmpl
 
@@ -86,3 +84,5 @@ is the directory under `lua/`, the file in `plugin/` and the help file in
   `minimal_init.lua`, which gives a run a runtimepath and packpath of only this
   plugin, Neovim's runtime and mini.test, and `run.lua`, which fails when it
   collects no test.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

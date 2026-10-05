@@ -1,16 +1,7 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/repo-tmpl.git
-  # ::: :/README.md
-  #
-  #
-
 ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: repo-tmpl
 description: "Repository Template"
 tags:
@@ -18,6 +9,13 @@ tags:
   - template
   - repository
 ---
+
+<!--
+   -
+   - ~chewygumxx/repo-tmpl.git
+   - ::: :/README.md
+   -
+   -->
 
 # repo-tmpl
 
@@ -88,3 +86,5 @@ function and the test file.
   ends the test on a mismatch, for a comparison.
 - `.shuck.toml`: maps the scripts to the zsh dialect, which shuck would
   otherwise read as sh, and sets the format.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

@@ -1,16 +1,7 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/repo-tmpl.git
-  # ::: :/README.md
-  #
-  #
-
 ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: repo-tmpl
 description: "Repository Template"
 tags:
@@ -18,6 +9,13 @@ tags:
   - template
   - repository
 ---
+
+<!--
+   -
+   - ~chewygumxx/repo-tmpl.git
+   - ::: :/README.md
+   -
+   -->
 
 # repo-tmpl
 
@@ -62,3 +60,5 @@ sync pushed.
 
 The pre-commit hook runs the same checks on staged files. The commit-msg hook
 runs commitlint.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

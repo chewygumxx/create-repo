@@ -1,16 +1,7 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/repo-tmpl.git
-  # ::: :/README.md
-  #
-  #
-
 ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: repo-tmpl
 description: "TypeScript Package Template"
 tags:
@@ -20,6 +11,13 @@ tags:
   - typescript
   - npm
 ---
+
+<!--
+   -
+   - ~chewygumxx/repo-tmpl.git
+   - ::: :/README.md
+   -
+   -->
 
 # repo-tmpl
 
@@ -84,3 +82,5 @@ npmjs.com to publish it.
 Before the first release, add a Trusted Publisher in the package's npm
 settings that names this repository and the `publish.yaml` workflow with the
 stage publish permission. No `NPM_TOKEN` secret exists or is needed.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->

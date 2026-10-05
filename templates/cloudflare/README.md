@@ -1,16 +1,7 @@
 ---
-__cgxx: |
-  # vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3:
-  # SPDX-License-Identifier: GPL-3.0-only
-
-  #
-  #
-  # ~chewygumxx/repo-tmpl.git
-  # ::: :/README.md
-  #
-  #
-
 ctime: 2026-09-29
+mtime: 2026-10-05
+spdx: GPL-3.0-only
 title: repo-tmpl
 description: "Cloudflare Worker Template"
 tags:
@@ -20,6 +11,13 @@ tags:
   - cloudflare
   - workers
 ---
+
+<!--
+   -
+   - ~chewygumxx/repo-tmpl.git
+   - ::: :/README.md
+   -
+   -->
 
 # repo-tmpl
 
@@ -84,3 +82,5 @@ as passing, until you set these in the repository's settings:
 - the secret `CLOUDFLARE_API_TOKEN`, an API token that can edit Workers
 
 `create-repo` sets neither.
+
+<!-- vim:set expandtab shiftwidth=2 filetype=markdown foldlevel=3: -->
