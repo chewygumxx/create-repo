@@ -285,6 +285,7 @@ const SHARED = {
     "@chewygumxx/cspell-config": "cspell",
     "@chewygumxx/secretlint-rule-preset": "secretlint",
     "@chewygumxx/markdownlint-cli2-config": "markdownlint-cli2",
+    "@chewygumxx/prettier-config": "prettier",
     "@chewygumxx/shellcheck-config": undefined,
     "@chewygumxx/editorconfig-checker-config": undefined,
     "@chewygumxx/actionlint-config": undefined,
@@ -364,6 +365,7 @@ test("every bun template checks by the shared configurations", () => {
             { import: ["@chewygumxx/cspell-config"] },
             name,
         );
+        assert.equal(pkg.prettier, "@chewygumxx/prettier-config", name);
         assert.deepEqual(
             parse(read(".secretlintrc.json")).rules,
             [{ id: "@chewygumxx/secretlint-rule-preset" }],
