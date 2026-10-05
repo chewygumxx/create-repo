@@ -39,8 +39,8 @@ jobs:
         uses: chewygumxx/.github/.github/workflows/standard.yaml@v1
         with:
             metadata-client-id: ${{ vars.METADATA_APP_CLIENT_ID }}
-            # `bun run check` lints YAML with the repository's .yamllint.yaml,
-            # which needs node_modules that lint-format does not install.
+            # `bun run check` lints YAML by the same configurations, so
+            # lint-format need not.
             yaml: false
         secrets:
             metadata-private-key: ${{ secrets.METADATA_APP_PRIVATE_KEY }}
