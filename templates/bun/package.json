@@ -52,7 +52,7 @@
         "@biomejs/biome": "2.5.14",
         "@chewygumxx/actionlint-config": "^1.0.1",
         "@chewygumxx/biome-config": "^1.0.0",
-        "@chewygumxx/commitlint-config": "^1.0.0",
+        "@chewygumxx/commitlint-config": "^1.1.0",
         "@chewygumxx/cspell-config": "^1.0.1",
         "@chewygumxx/cz-commitlint": "^1.0.2",
         "@chewygumxx/editorconfig-checker-config": "^1.0.1",
