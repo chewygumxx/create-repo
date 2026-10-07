@@ -8,7 +8,7 @@
         "@biomejs/biome": "2.5.14",
         "@chewygumxx/actionlint-config": "^1.0.1",
         "@chewygumxx/biome-config": "^1.0.0",
-        "@chewygumxx/commitlint-config": "^1.0.0",
+        "@chewygumxx/commitlint-config": "^1.1.0",
         "@chewygumxx/cspell-config": "^1.0.1",
         "@chewygumxx/cz-commitlint": "^1.0.2",
         "@chewygumxx/editorconfig-checker-config": "^1.0.1",
@@ -65,7 +65,7 @@
 
     "@chewygumxx/biome-config": ["@chewygumxx/biome-config@1.0.1", "", { "peerDependencies": { "@biomejs/biome": "^2.5.14" } }, "sha512-l3NhojIMYGCHAcjBtKRTdTq2mihdnKidhxHGYf14etSLxE74ctcx9BDt6/+iQzvr3f7rjUzJX8mALSTkn5fQ9w=="],
 
-    "@chewygumxx/commitlint-config": ["@chewygumxx/commitlint-config@1.0.2", "", { "dependencies": { "@commitlint/config-conventional": "^21.2.2", "@commitlint/types": "^21.2.2", "conventional-changelog-conventionalcommits": "^10.4.0" }, "peerDependencies": { "@commitlint/cli": "^21.2.2" } }, "sha512-nGjTcnFpaFD7CDHD8af/nCFNPhej0XcCbnJ09zcgMzInMmNmUtJAQ9UKUgKG1vSM3KLBWDqnvSSxgwOfeRpp3A=="],
+    "@chewygumxx/commitlint-config": ["@chewygumxx/commitlint-config@1.1.0", "", { "dependencies": { "@commitlint/config-conventional": "^21.2.2", "@commitlint/types": "^21.2.2", "conventional-changelog-conventionalcommits": "^10.4.0" }, "peerDependencies": { "@commitlint/cli": "^21.2.2" } }, "sha512-4C6E86NXrp+z1wb/CW27FZ+AEs2gcxPNcG9lIaNSkxF6Kym43dRHR3jrqu9FEiUVespS0UO4BIU3iF+/JkTO9A=="],
 
     "@chewygumxx/cspell-config": ["@chewygumxx/cspell-config@1.0.1", "", { "peerDependencies": { "cspell": "^10.3.6" } }, "sha512-qGhjtjgHK44yJF2SaqsdpJGyxi+WsUJy2x/BNIT2Eyp7hsE/suT9+ClGLlo43yZ0ftm/wLAhYB1qpO2Jj4W/dQ=="],
 
