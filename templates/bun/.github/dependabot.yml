@@ -16,6 +16,15 @@ updates:
           interval: weekly
       commit-message:
           prefix: build
+      # A shared-config release bumps several @chewygumxx packages at once;
+      # each group opens one pull request, and a major stays on its own.
+      groups:
+          shared-config:
+              patterns: ["@chewygumxx/*"]
+              update-types: ["minor", "patch"]
+          dependencies:
+              patterns: ["*"]
+              update-types: ["minor", "patch"]
 
     - package-ecosystem: github-actions
       directory: /

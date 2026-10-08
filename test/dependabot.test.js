@@ -71,6 +71,40 @@ test("every template's own Dependabot watches Bun, not npm", () => {
     }
 });
 
+// A shared-config release bumps several @chewygumxx packages at once, which
+// would each open their own pull request in every created repository.
+test("every template's bun entry groups its minor and patch updates", () => {
+    for (const layer of LAYERS) {
+        const file = join(ROOT, "templates", layer, ".github/dependabot.yml");
+        if (!existsSync(file)) continue;
+        const bun = readFileSync(file, "utf8")
+            .split(/^ {4}- package-ecosystem: /m)
+            .find((block) => block.startsWith("bun\n"));
+        if (bun === undefined) continue;
+        const groups = [
+            ...bun.matchAll(
+                /^ {10}(\S+):\n {14}patterns: \[(.+)\]\n {14}update-types: \[(.+)\]$/gm,
+            ),
+        ].map(([, name, patterns, types]) => ({ name, patterns, types }));
+        assert.deepEqual(
+            groups,
+            [
+                {
+                    name: "shared-config",
+                    patterns: '"@chewygumxx/*"',
+                    types: '"minor", "patch"',
+                },
+                {
+                    name: "dependencies",
+                    patterns: '"*"',
+                    types: '"minor", "patch"',
+                },
+            ],
+            layer,
+        );
+    }
+});
+
 test("every layer with workflows is watched where they are", () => {
     for (const layer of LAYERS) {
         const workflows = `templates/${layer}/.github/workflows`;
@@ -131,6 +165,8 @@ test("Dependabot's commit titles pass commitlint", () => {
         );
         assert.equal(result.status, 0, prefix + result.stdout);
     }
+    const grouped = lint("build: Bump the shared-config group with 3 updates");
+    assert.equal(grouped.status, 0, grouped.stdout);
     assert.notEqual(
         lint("ci(template): bump actions/checkout from 6 to 7 in /x").status,
         0,
