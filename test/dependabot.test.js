@@ -71,37 +71,53 @@ test("every template's own Dependabot watches Bun, not npm", () => {
     }
 });
 
+/**
+ * The bun entries of a Dependabot config, one block of text each.
+ * @param {string} file
+ */
+const bunEntries = (file) =>
+    readFileSync(file, "utf8")
+        .split(/^ {4}- package-ecosystem: /m)
+        .filter((block) => block.startsWith("bun\n"));
+
+/**
+ * The groups of a bun entry, in the order Dependabot tries them.
+ * @param {string} block
+ */
+const groupsOf = (block) =>
+    [
+        ...block.matchAll(
+            /^ {10}(\S+):\n {14}patterns: \[(.+)\]\n {14}update-types: \[(.+)\]$/gm,
+        ),
+    ].map(([, name, patterns, types]) => ({ name, patterns, types }));
+
 // A shared-config release bumps several @chewygumxx packages at once, which
-// would each open their own pull request in every created repository.
+// would each open their own pull request in every bun directory. A pattern
+// is tried in order, so the @chewygumxx group comes before the catch-all.
+const GROUPS = [
+    {
+        name: "shared-config",
+        patterns: '"@chewygumxx/*"',
+        types: '"minor", "patch"',
+    },
+    { name: "dependencies", patterns: '"*"', types: '"minor", "patch"' },
+];
+
+test("every bun entry groups its minor and patch updates", () => {
+    const own = bunEntries(join(ROOT, ".github/dependabot.yml"));
+    assert.equal(own.length, directories("bun").length);
+    for (const block of own) {
+        assert.deepEqual(groupsOf(block), GROUPS, block.split("\n")[1]);
+    }
+});
+
 test("every template's bun entry groups its minor and patch updates", () => {
     for (const layer of LAYERS) {
         const file = join(ROOT, "templates", layer, ".github/dependabot.yml");
         if (!existsSync(file)) continue;
-        const bun = readFileSync(file, "utf8")
-            .split(/^ {4}- package-ecosystem: /m)
-            .find((block) => block.startsWith("bun\n"));
-        if (bun === undefined) continue;
-        const groups = [
-            ...bun.matchAll(
-                /^ {10}(\S+):\n {14}patterns: \[(.+)\]\n {14}update-types: \[(.+)\]$/gm,
-            ),
-        ].map(([, name, patterns, types]) => ({ name, patterns, types }));
-        assert.deepEqual(
-            groups,
-            [
-                {
-                    name: "shared-config",
-                    patterns: '"@chewygumxx/*"',
-                    types: '"minor", "patch"',
-                },
-                {
-                    name: "dependencies",
-                    patterns: '"*"',
-                    types: '"minor", "patch"',
-                },
-            ],
-            layer,
-        );
+        for (const block of bunEntries(file)) {
+            assert.deepEqual(groupsOf(block), GROUPS, layer);
+        }
     }
 });
 
