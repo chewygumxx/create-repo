@@ -51,7 +51,7 @@
         ]
     },
     "devDependencies": {
-        "@biomejs/biome": "2.5.14",
+        "@biomejs/biome": "2.5.15",
         "@chewygumxx/actionlint-config": "^1.0.1",
         "@chewygumxx/biome-config": "^1.0.0",
         "@chewygumxx/commitlint-config": "^1.0.0",
@@ -70,9 +70,9 @@
         "commitizen": "^4.3.2",
         "cspell": "^10.3.6",
         "husky": "^9.1.7",
-        "knip": "^6.39.0",
+        "knip": "^6.41.0",
         "markdownlint-cli2": "^0.23.3",
-        "prettier": "^3.9.9",
+        "prettier": "^3.9.10",
         "remark-cli": "^12.0.1",
         "secretlint": "^13.0.7",
         "sort-package-json": "^4.0.0",
