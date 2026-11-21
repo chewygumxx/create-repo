@@ -34,15 +34,19 @@ const BIN = fileURLToPath(new URL("../bin/create-repo.js", import.meta.url));
 
 /**
  * Each stand-in logs `<tool> <first argument> key=<PRESENT or empty>
- * pinned=<MISE_PINNED>`. `mise env --json` reports a pinned environment, and
- * gh fails as if not logged in, unless `GH_LOGIN` names the account.
+ * pinned=<MISE_PINNED>`, and its whole command line and GITHUB_REPOSITORY
+ * to `<log>.argv`. `mise env --json` reports a pinned environment, and gh
+ * fails as if not logged in, unless `GH_LOGIN` names the account; it
+ * creates repositories and sets secrets only with `GH_CREATE` set.
  * @param {string} log
  */
 function standIn(log) {
     return `#!/bin/sh
 printf '%s %s key=%s pinned=%s\\n' "$(basename "$0")" "$1" \\
     "\${METADATA_APP_PRIVATE_KEY:+PRESENT}" "\${MISE_PINNED:-}" >> '${log}'
+printf '%s %s repo=%s\\n' "$(basename "$0")" "$*" "\${GITHUB_REPOSITORY:-}" >> '${log}.argv'
 case "$(basename "$0") $1" in
+"gh repo" | "gh secret") if [ -n "$GH_CREATE" ]; then cat > /dev/null; else exit 1; fi ;;
 "mise env") printf '{"PATH":"%s","MISE_PINNED":"yes"}' "$PATH" ;;
 "gh api") if [ "$2" = user ] && [ -n "$GH_LOGIN" ]; then printf '%s\\n' "$GH_LOGIN"; else echo "HTTP 404" >&2; exit 1; fi ;;
 "gh variable") if [ -n "$GH_LOGIN" ]; then echo client; else exit 1; fi ;;
@@ -65,6 +69,7 @@ function runBin(argv, env = {}) {
         mkdirSync(bin);
         writeFileSync(log, "");
         writeFileSync(`${log}.commit`, "");
+        writeFileSync(`${log}.argv`, "");
         for (const tool of ["gh", "git", "mise", "bun", "npm", "node"]) {
             writeFileSync(join(bin, tool), standIn(log));
             chmodSync(join(bin, tool), 0o755);
@@ -83,6 +88,7 @@ function runBin(argv, env = {}) {
         return {
             result,
             lines: readFileSync(log, "utf8").trim().split("\n"),
+            argv: readFileSync(`${log}.argv`, "utf8").trim().split("\n"),
             commit: readFileSync(`${log}.commit`, "utf8"),
             copied: existsSync(dir),
             ran: existsSync(join(root, "ran")),
@@ -92,6 +98,9 @@ function runBin(argv, env = {}) {
             gitignore: existsSync(join(dir, ".gitignore")),
             wrangler: existsSync(join(dir, "wrangler.jsonc"))
                 ? readFileSync(join(dir, "wrangler.jsonc"), "utf8")
+                : undefined,
+            ci: existsSync(join(dir, ".github/workflows/ci.yaml"))
+                ? readFileSync(join(dir, ".github/workflows/ci.yaml"), "utf8")
                 : undefined,
         };
     } finally {
@@ -154,21 +163,6 @@ test("the copy is the bundled template, initialised", () => {
         url: "git+https://github.com/example/x.git",
     });
     assert.ok(gitignore);
-});
-
-// The template's format:yaml formats only the files git tracks.
-test("the copy is staged before it is formatted", () => {
-    const { lines } = dryRun();
-    const installed = lines.findIndex((line) => line.startsWith("bun install"));
-    const format = lines.findIndex(
-        (line, index) => index > installed && line.startsWith("bun run"),
-    );
-    assert.ok(
-        lines
-            .slice(installed + 1, format)
-            .some((line) => line.startsWith("git add")),
-        lines.join("\n"),
-    );
 });
 
 test("the first commit names the template", () => {
@@ -424,4 +418,118 @@ test("no bun template runs npm or node", () => {
             template,
         );
     }
+});
+
+const PEM =
+    "-----BEGIN RSA PRIVATE KEY-----\nMIIB\n-----END RSA PRIVATE KEY-----\n";
+
+/**
+ * The positions in `argv` of the first line matching each pattern, after
+ * the one before it.
+ * @param {string[]} argv
+ * @param {RegExp[]} patterns
+ */
+function inOrder(argv, patterns) {
+    let at = -1;
+    return patterns.map((pattern) => {
+        at = argv.findIndex((line, index) => index > at && pattern.test(line));
+        return at;
+    });
+}
+
+test("it stages, records words, formats, restages, checks, then commits", () => {
+    const { argv } = dryRun();
+    const order = inOrder(argv, [
+        /^mise install /,
+        /^git add --all /,
+        /^bun run cspell lint --file-list stdin /,
+        /^mise run format --all /,
+        /^git add --all /,
+        /^mise run check --all /,
+        /^git commit /,
+    ]);
+    assert.ok(!order.includes(-1), `${order}\n${argv.join("\n")}`);
+});
+
+// The header check reads GITHUB_REPOSITORY before the origin remote, which
+// does not exist until the repository is created; the caller's own, as in
+// CI, must not leak through.
+test("its checks are told the new repository, not the caller's", () => {
+    const run = runBin(
+        (root) => [
+            "x",
+            "--description",
+            "D",
+            "--owner",
+            "example",
+            "--dir",
+            join(root, "x"),
+            "--no-metadata",
+            "--dry-run",
+            "--yes",
+        ],
+        { GITHUB_REPOSITORY: "caller/elsewhere" },
+    );
+    assert.equal(run.result.status, 0, run.result.stderr);
+    for (const pattern of [/^mise run format /, /^mise run check /]) {
+        const line = run.argv.find((entry) => pattern.test(entry)) ?? "";
+        assert.match(line, / repo=example\/x$/, String(pattern));
+    }
+});
+
+test("--no-metadata switches the new repository's metadata sync off", () => {
+    assert.match(
+        dryRun().ci ?? "",
+        /^ {12}metadata-sync: false # create-repo --no-metadata/m,
+    );
+});
+
+/**
+ * A real run, against a gh that creates.
+ * @param {string[]} extra
+ */
+function create(extra) {
+    return runBin(
+        (root) => [
+            "x",
+            "--description",
+            "D",
+            "--dir",
+            join(root, "x"),
+            "--yes",
+            ...extra,
+        ],
+        {
+            GH_LOGIN: "example",
+            GH_CREATE: "1",
+            METADATA_APP_PRIVATE_KEY: PEM,
+        },
+    );
+}
+
+test("with metadata, the variable and secret are set before the push", () => {
+    const run = create([]);
+    assert.equal(run.result.status, 0, run.result.stderr);
+    assert.match(
+        run.ci ?? "",
+        /^ {12}metadata-sync: \$\{\{ vars\.METADATA_APP_CLIENT_ID != '' \}\}$/m,
+    );
+    const order = inOrder(run.argv, [
+        /^gh repo create example\/x --public /,
+        /^gh variable set METADATA_APP_CLIENT_ID --repo example\/x --body client /,
+        /^gh secret set METADATA_APP_PRIVATE_KEY --repo example\/x /,
+        /^git -C \S+ push --quiet --set-upstream origin main /,
+    ]);
+    assert.ok(!order.includes(-1), `${order}\n${run.argv.join("\n")}`);
+});
+
+test("--no-metadata sets neither the variable nor the secret", () => {
+    const run = create(["--no-metadata"]);
+    assert.equal(run.result.status, 0, run.result.stderr);
+    assert.ok(run.argv.some((line) => /^gh repo create /.test(line)));
+    assert.ok(run.argv.some((line) => / push /.test(line)));
+    assert.deepEqual(
+        run.argv.filter((line) => /^gh (?:variable|secret) set /.test(line)),
+        [],
+    );
 });
