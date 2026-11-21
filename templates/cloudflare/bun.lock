@@ -19,7 +19,7 @@
         "@chewygumxx/remark-preset": "^1.1.0",
         "@chewygumxx/secretlint-rule-preset": "^1.0.1",
         "@chewygumxx/shellcheck-config": "^1.0.1",
-        "@chewygumxx/skill-creating-bun-repositories": "0.0.1",
+        "@chewygumxx/skill-creating-bun-repositories": "0.0.2",
         "@chewygumxx/tsconfig": "^1.0.1",
         "@chewygumxx/yamllint-config": "^1.0.1",
         "@cloudflare/vitest-plugin": "^1.9.0",
@@ -99,7 +99,7 @@
 
     "@chewygumxx/shellcheck-config": ["@chewygumxx/shellcheck-config@1.0.1", "", {}, "sha512-9DBtIedm5UTcv8vmgKv2wz9fcN3Fmk9Aw7w8FZc6SGwulld+/c7bGKX60n2XOAoGjIXEj6yQI5D0hPezzVn54w=="],
 
-    "@chewygumxx/skill-creating-bun-repositories": ["@chewygumxx/skill-creating-bun-repositories@0.0.1", "", {}, "sha512-B1XuNB+FIPNqaedO/hcyIJ/FDJiZxDdPSw2GF7FriRT4nTSlUWnKLR+IobgwWo8KW4VQGI+g4wSyQ16wJJCI8Q=="],
+    "@chewygumxx/skill-creating-bun-repositories": ["@chewygumxx/skill-creating-bun-repositories@0.0.2", "", {}, "sha512-X7dZcH3KDkKcKOGxnoKeBq4iJp8J9/we/kkHZt0ZC4CX/rtI46q44EQJORY32gh5KKfNgSVAoV9QZ7k/FYQE4Q=="],
 
     "@chewygumxx/tsconfig": ["@chewygumxx/tsconfig@1.0.1", "", { "peerDependencies": { "typescript": "^7.0.2" } }, "sha512-4mIj2tB1Q1O9yoNGKfYMBS3sQmX0guZvbAQFFKLVa5d0MrVKF4gx0hD70P2b1LMzVxG8VlpXfEBpDH/mL1FiPQ=="],
 
