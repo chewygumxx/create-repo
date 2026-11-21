@@ -50,7 +50,7 @@
         "@chewygumxx/remark-preset": "^1.1.0",
         "@chewygumxx/secretlint-rule-preset": "^1.0.1",
         "@chewygumxx/shellcheck-config": "^1.0.1",
-        "@chewygumxx/skill-creating-bun-repositories": "0.0.1",
+        "@chewygumxx/skill-creating-bun-repositories": "0.0.2",
         "@chewygumxx/tsconfig": "^1.0.1",
         "@chewygumxx/yamllint-config": "^1.0.1",
         "@commitlint/cli": "^21.2.4",
