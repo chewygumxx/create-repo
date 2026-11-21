@@ -1,0 +1,28 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+#:schema https://mise.jdx.dev/schema/mise-task.json
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.config/mise/tasks/standard.task.toml
+#
+#
+
+#
+# https://mise.jdx.dev/tasks/task-configuration.html
+#
+# Each task extends a cgxx: template from @chewygumxx/mise-tasks-config,
+# linked into .config/mise/conf.d/.
+#
+
+[install]
+extends = "cgxx:install"
+
+# Vitest, in the Workers runtime by @cloudflare/vitest-plugin.
+[test]
+extends = "cgxx:test"
+run     = "bun run vitest run"
+
+[check]
+extends = "cgxx:check"

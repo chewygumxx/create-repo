@@ -15,9 +15,9 @@ import { defineConfig } from "@chewygumxx/commitlint-config";
 export default defineConfig({
     scopes: [
         {
-            name: "claude",
-            fullName: "Claude",
-            description: "Claude Code assets ie. hooks, skills, agents, etc.",
+            name: "agents",
+            fullName: "Agents",
+            description: "Agent instructions and skills",
         },
     ],
 });

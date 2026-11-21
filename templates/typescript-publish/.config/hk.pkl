@@ -1,0 +1,64 @@
+// vim:set expandtab shiftwidth=4 filetype=pkl:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/repo-tmpl.git
+// ::: :/.config/hk.pkl
+//
+//
+
+//
+// https://hk.jdx.dev/configuration
+//
+// The git hooks, and the check and fix hooks that `mise run lint` and
+// `mise run format` run. The steps come from @chewygumxx/hk-config, the
+// package check amended for a package published from dist/. `mise
+// install` installs the hooks; see [hooks] in .config/mise/config.toml.
+//
+
+amends "package://github.com/jdx/hk/releases/download/v2.13.0/hk@2.13.0#/Config.pkl"
+
+import "../node_modules/@chewygumxx/hk-config/steps.pkl" as shared
+
+local cgxx = (shared) {}
+
+hooks {
+    ["check"] {
+        steps = (cgxx.lint) {
+            // The package's exports and types are in dist/, so build it
+            // first; attw checks the types the packed tarball resolves,
+            // packed by Bun, as npm is not installed.
+            ["packages"] {
+                check = """
+                    bun run tsc -p tsconfig.build.json &&
+                        bun run publint --level warning . &&
+                        bun pm pack --quiet --filename package.tgz > /dev/null &&
+                        bun run attw package.tgz --profile esm-only &&
+                        rm package.tgz
+                    """
+            }
+        }
+    }
+    ["fix"] {
+        stage = false
+        steps = cgxx.format
+    }
+    ["pre-commit"] {
+        stash = "git"
+        fix = false
+        stage = false
+        steps {
+            ["check"] {
+                check = "mise run check --staged"
+            }
+        }
+    }
+    ["commit-msg"] {
+        steps {
+            ["commitlint"] {
+                check = "mise run lint:commit \"{{ commit_msg_file }}\""
+            }
+        }
+    }
+}

@@ -9,13 +9,12 @@
 #
 
 .env*
+*.local
 *.local.*
 
+*.local/
+*.cache/
+*.tmp/
+
 node_modules/
-/.herdr/
-/.claude/worktrees/
-
-/.remember/
-/.superpowers/
-
 *.tgz

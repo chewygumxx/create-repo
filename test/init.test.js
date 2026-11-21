@@ -315,7 +315,7 @@ test("the README passes remark whatever the description", () => {
 test("scopes are added after the template's own", () =>
     initialised((dir) => {
         const config = read(dir, ".commitlintrc.mts");
-        assert.match(config, /name: "claude"/);
+        assert.match(config, /name: "agents"/);
         assert.match(config, /fullName: "Command Line"/);
     }));
 

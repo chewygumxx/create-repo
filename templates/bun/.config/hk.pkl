@@ -1,0 +1,52 @@
+// vim:set expandtab shiftwidth=4 filetype=pkl:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/repo-tmpl.git
+// ::: :/.config/hk.pkl
+//
+//
+
+//
+// https://hk.jdx.dev/configuration
+//
+// The git hooks, and the check and fix hooks that `mise run lint` and
+// `mise run format` run. The steps come from @chewygumxx/hk-config.
+// `mise install` installs the hooks; see [hooks] in
+// .config/mise/config.toml.
+//
+
+amends "package://github.com/jdx/hk/releases/download/v2.13.0/hk@2.13.0#/Config.pkl"
+
+import "../node_modules/@chewygumxx/hk-config/steps.pkl" as shared
+
+local cgxx = (shared) {}
+
+hooks {
+    ["check"] {
+        // A private package publishes nothing for publint to check.
+        steps = cgxx.lint.toMap().remove("packages").toMapping()
+    }
+    ["fix"] {
+        stage = false
+        steps = cgxx.format
+    }
+    ["pre-commit"] {
+        stash = "git"
+        fix = false
+        stage = false
+        steps {
+            ["check"] {
+                check = "mise run check --staged"
+            }
+        }
+    }
+    ["commit-msg"] {
+        steps {
+            ["commitlint"] {
+                check = "mise run lint:commit \"{{ commit_msg_file }}\""
+            }
+        }
+    }
+}

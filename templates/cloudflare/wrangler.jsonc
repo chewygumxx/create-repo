@@ -16,9 +16,9 @@
     "name": "repo-tmpl",
     "main": "src/index.ts",
     // Pinned, and bumped by hand. It cannot be later than the newest date the
-    // workerd inside @cloudflare/vitest-pool-workers supports, or the tests
+    // workerd inside @cloudflare/vitest-plugin supports, or the tests
     // will not start: bump it with that package.
-    "compatibility_date": "2026-08-15",
+    "compatibility_date": "2026-11-15",
     "observability": {
         "enabled": true
     }
