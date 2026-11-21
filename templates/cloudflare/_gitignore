@@ -9,16 +9,16 @@
 #
 
 .env*
+*.local
 *.local.*
 
+*.local/
+*.cache/
+*.tmp/
+
 node_modules/
-/.herdr/
-/.claude/worktrees/
+*.tgz
 
-/.remember/
-/.superpowers/
-
+# Wrangler's local state and secrets
 .wrangler/
 .dev.vars*
-
-*.tgz

@@ -109,7 +109,7 @@ updates:
               patterns: ["*"]
               update-types: ["minor", "patch"]
       ignore:
-          # @cloudflare/vitest-pool-workers peers on Vitest 4.
+          # @cloudflare/vitest-plugin peers on given Vitest majors alone.
           - dependency-name: "vitest"
             update-types: ["version-update:semver-major"]
 

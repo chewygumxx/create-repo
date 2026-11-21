@@ -1,0 +1,41 @@
+// vim:set expandtab shiftwidth=4 filetype=jsonc:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/repo-tmpl.git
+// ::: :/.knip.jsonc
+//
+//
+
+// https://knip.dev/reference/configuration
+//
+// knip finds the entry files by itself; this file lists only what it cannot
+// see. Files are globs; dependencies and binaries, regular expressions.
+{
+    "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+    // `bun test` finds these by name, which knip does not follow.
+    "entry": ["src/**/*.test.ts"],
+    "ignoreDependencies": [
+        // The shared configurations, named by path in the hk steps or the
+        // mise conf.d link, by `extends` or `import`, or from
+        // `.secretlintrc.json`.
+        "@chewygumxx/.+",
+        // Extended by @chewygumxx/commitlint-config, which depends on them.
+        "@commitlint/config-conventional",
+        // Run by the hk steps, which knip does not read.
+        "secretlint",
+        "sort-package-json",
+        "sync-header-metadata"
+    ],
+    // The tool manager, which `package.json` runs for its `check`.
+    "ignoreBinaries": ["mise"],
+    // Configured under `.config/`, where neither tool looks unless the hk
+    // steps pass the path.
+    "prettier": {
+        "config": [".config/prettierrc.json"]
+    },
+    "remark": {
+        "config": [".config/remarkrc.json"]
+    }
+}

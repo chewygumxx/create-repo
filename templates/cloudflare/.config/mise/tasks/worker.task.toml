@@ -1,0 +1,27 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+#:schema https://mise.jdx.dev/schema/mise-task.json
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.config/mise/tasks/worker.task.toml
+#
+#
+
+#
+# https://developers.cloudflare.com/workers/wrangler/commands/
+#
+
+[dev]
+description = "Serve the Worker locally"
+run         = "bun run wrangler dev"
+
+[deploy]
+description = "Deploy the Worker"
+run         = "bun run wrangler deploy"
+
+# hk's types step fails while the file is stale.
+[types]
+description = "Regenerate worker-configuration.d.ts from wrangler.jsonc"
+run         = "bun run wrangler types --include-runtime=false"

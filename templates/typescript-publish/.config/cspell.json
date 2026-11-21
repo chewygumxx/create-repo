@@ -1,0 +1,4 @@
+{
+    "import": ["@chewygumxx/cspell-config"],
+    "words": ["attw", "remarkrc"]
+}

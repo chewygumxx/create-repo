@@ -17,6 +17,7 @@ import {
     mkdirSync,
     mkdtempSync,
     readFileSync,
+    readlinkSync,
     rmSync,
     symlinkSync,
     writeFileSync,
@@ -26,6 +27,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import {
     copyTemplate,
+    TASKS_LINK,
     TargetExistsError,
     TEMPLATES_DIR,
     TemplateError,
@@ -67,6 +69,19 @@ test("copies every file, restoring .gitignore", () =>
             readFileSync(join(root, "x", ".gitignore"), "utf8"),
             readFileSync(join(TEMPLATES_DIR, "bun", "_gitignore"), "utf8"),
         );
+    }));
+
+// npm drops a symlink from a package, so no layer can hold the link to the
+// cgxx: task templates; the copy makes it, outside the files init reads.
+test("the copy links the mise task templates, and lists only files", () =>
+    inTemp((root) => {
+        const files = copyTemplate(join(root, "x"), LAYERS);
+        assert.equal(
+            readlinkSync(join(root, "x", TASKS_LINK.path)),
+            "../../../node_modules/@chewygumxx/mise-tasks-config/tasks.toml",
+        );
+        assert.ok(!files.includes(TASKS_LINK.path));
+        assert.ok(files.includes(".config/mise/config.toml"));
     }));
 
 test("a later layer's file replaces an earlier one's", () =>
@@ -133,7 +148,7 @@ const STRAY = [
     "node_modules/pkg/index.js",
     ".env.local",
     "docs/notes.local.md",
-    ".claude/worktrees/x/file",
+    "scratch.tmp/x/file",
 ];
 
 /**

@@ -219,7 +219,13 @@ async function main(argv) {
             ...local,
             capture: true,
         });
-        local.env = childEnv({ ...children, ...JSON.parse(pinned.stdout) });
+        // The header check reads the repository from GITHUB_REPOSITORY
+        // before the origin remote, which does not exist yet.
+        local.env = childEnv({
+            ...children,
+            ...JSON.parse(pinned.stdout),
+            GITHUB_REPOSITORY: slug,
+        });
         for (const command of STEPS.setup) {
             await run(command.file, command.args, local);
         }

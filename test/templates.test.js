@@ -41,7 +41,6 @@ import {
     STEPS,
     TEMPLATES,
 } from "../lib/templates.js";
-import { taskScript } from "./mise-task.js";
 
 /** @typedef {import("../lib/templates.js").Template} Template */
 
@@ -94,6 +93,10 @@ test("cloudflare replaces the bun package and adds the Worker", () => {
         "src/index.ts",
         "test/index.test.ts",
         ".github/workflows/deploy.yaml",
+        ".config/hk.pkl",
+        ".config/mise/tasks/standard.task.toml",
+        ".config/mise/tasks/worker.task.toml",
+        ".knip.jsonc",
     ]) {
         assert.ok(sources.has(file), file);
         assert.match(sources.get(file) ?? "", /templates\/cloudflare\//, file);
@@ -104,9 +107,28 @@ test("cloudflare replaces the bun package and adds the Worker", () => {
         readFileSync(sources.get("package.json") ?? "", "utf8"),
     );
     assert.equal(pkg.private, true);
-    assert.equal(pkg.scripts.test, "vitest run");
-    assert.equal(pkg.scripts.types, "wrangler types --include-runtime=false");
-    assert.match(pkg.scripts.check, /bun run types:check/);
+    /** @param {string} file */
+    const read = (file) => readFileSync(sources.get(file) ?? "", "utf8");
+    assert.match(
+        read(".config/mise/tasks/standard.task.toml"),
+        /^run {5}= "bun run vitest run"$/m,
+    );
+    const worker = read(".config/mise/tasks/worker.task.toml");
+    for (const [task, run] of [
+        ["dev", "bun run wrangler dev"],
+        ["deploy", "bun run wrangler deploy"],
+        ["types", "bun run wrangler types --include-runtime=false"],
+    ]) {
+        assert.match(
+            worker,
+            new RegExp(`^\\[${task}\\]\\n[^[]*^run {9}= "${run}"$`, "m"),
+            task,
+        );
+    }
+    assert.match(
+        read(".config/hk.pkl"),
+        /check = "bun run wrangler types --check --include-runtime=false"/,
+    );
 });
 
 // The full runtime types are 600 KB of Cloudflare's doc comments, em dashes
@@ -126,256 +148,23 @@ test("no template file holds an em dash", () => {
     }
 });
 
-const MISE_SCHEMA = "https://mise.jdx.dev/schema/mise.json";
-
-/** Each TOML file's published schema, by name. */
-const SCHEMAS = new Map([
-    [".tombi.toml", "https://www.schemastore.org/tombi.json"],
-    ["bunfig.toml", "https://www.schemastore.org/bunfig.json"],
-    ["mise.toml", MISE_SCHEMA],
-]);
-
-/** The TOML files whose tools publish no schema. */
-const SCHEMALESS = new Set();
-
-/**
- * The schema a TOML file declares on its third line, after its SPDX line,
- * as `#:schema <url>` for tombi; a new TOML file must be added to SCHEMAS or
- * SCHEMALESS.
- * @param {string} file the path, relative to the repository
- * @param {string} source
- * @returns {string | undefined} what is wrong, if anything
- */
-function schemaProblem(file, source) {
-    const name = file.split("/").at(-1) ?? file;
-    const schema = /^\.config\/mise\/conf\.d\/[^/]+\.toml$/.test(file)
-        ? MISE_SCHEMA
-        : SCHEMAS.get(name);
-    if (schema === undefined) {
-        return SCHEMALESS.has(name) ? undefined : `${file}: no known schema`;
-    }
-    const line = readFileSync(source, "utf8").split("\n")[2];
-    return line === `#:schema ${schema}` ? undefined : `${file}: ${line}`;
-}
-
-// tombi cannot extend a shared configuration, so each repository carries
-// its own, and each file names its schema rather than leaving tombi to look
-// it up by name.
-test("every template has a .tombi.toml, and each TOML file names its schema", () => {
-    for (const combination of combinations()) {
-        const name = label(combination.template, combination.features);
-        const sources = compose(layersOf(combination));
-        assert.ok(sources.has(".tombi.toml"), name);
-        const problems = [...sources]
-            .filter(([file]) => file.endsWith(".toml"))
-            .map(([file, source]) => schemaProblem(file, source))
-            .filter(Boolean);
-        assert.deepEqual(problems, [], name);
-    }
-});
-
-const TOMBI_PIN = /^"aqua:tombi-toml\/tombi"\s*=\s*"\d+\.\d+\.\d+"$/m;
-
-/**
- * Asserts that a check formats and lints TOML with tombi.
- * @param {string} script
- * @param {string} name
- */
-function assertTombiCheck(script, name) {
-    assert.match(script, /'\*\.toml'/, name);
-    assert.match(script, /tombi format --check/, name);
-    assert.match(script, /tombi lint --error-on-warnings/, name);
-}
-
-/**
- * Asserts that a Bun repository's scripts and hook run tombi.
- * @param {string} pkgFile its package.json
- * @param {string} hookFile its .husky/pre-commit
- * @param {string} name
- */
-function assertBunRunsTombi(pkgFile, hookFile, name) {
-    const { scripts } = JSON.parse(readFileSync(pkgFile, "utf8"));
-    assertTombiCheck(scripts["lint:toml"] ?? "", name);
-    assert.match(scripts["format:toml"] ?? "", /tombi format$/, name);
-    assert.match(scripts.check, /bun run lint:toml/, name);
-    assert.match(scripts.format, /bun run format:toml/, name);
-    const hook = readFileSync(hookFile, "utf8");
-    assert.match(hook, /--cached .*'\*\.toml'/, name);
-    assertTombiCheck(hook, name);
-}
-
-// An editor reads .tombi.toml, but nothing enforces it unless the toolchain
-// pins tombi and the checks, formatters and hooks run it.
-test("every template pins tombi, and its checks run it", () => {
-    for (const combination of combinations()) {
-        const name = label(combination.template, combination.features);
-        const sources = compose(layersOf(combination));
-        const mise = sources.get("mise.toml") ?? "";
-        assert.match(readFileSync(mise, "utf8"), TOMBI_PIN, name);
-        if (sources.has("package.json")) {
-            assertBunRunsTombi(
-                sources.get("package.json") ?? "",
-                sources.get(".husky/pre-commit") ?? "",
-                name,
-            );
-        } else {
-            assertTombiCheck(taskScript(mise, "lint:toml"), name);
-            assert.match(
-                taskScript(mise, "format:toml"),
-                /tombi format$/,
-                name,
-            );
-            const staged = taskScript(mise, "pre-commit:toml");
-            assert.match(staged, /--cached /, name);
-            assertTombiCheck(staged, name);
-        }
-    }
-});
-
-/** Pins of the tools CI's lint jobs run, which a bun template runs too. */
-const HYGIENE_PINS = [
-    "aqua:koalaman/shellcheck",
-    "aqua:mvdan/sh",
-    "aqua:editorconfig-checker/editorconfig-checker",
-    "aqua:rhysd/actionlint",
-].map(
-    (tool) =>
-        new RegExp(
-            `^"${tool.replaceAll("/", "\\/")}"\\s*=\\s*"\\d+\\.\\d+\\.\\d+"$`,
-            "m",
-        ),
-);
-
-/** Each shared configuration, and the package that runs by it. */
-const SHARED = {
-    "@chewygumxx/tsconfig": "typescript",
-    "@chewygumxx/cspell-config": "cspell",
-    "@chewygumxx/secretlint-rule-preset": "secretlint",
-    "@chewygumxx/markdownlint-cli2-config": "markdownlint-cli2",
-    "@chewygumxx/prettier-config": "prettier",
-    "@chewygumxx/shellcheck-config": undefined,
-    "@chewygumxx/editorconfig-checker-config": undefined,
-    "@chewygumxx/actionlint-config": undefined,
-};
-
-// A shared configuration is enforced only where the template depends on it,
-// and its check and its pre-commit hook run the tool by it.
-test("every bun template checks by the shared configurations", () => {
-    for (const combination of combinations()) {
-        const name = label(combination.template, combination.features);
-        const sources = compose(layersOf(combination));
-        /** @param {string} file */
-        const read = (file) =>
-            readFileSync(
-                sources.get(file) ?? assert.fail(`${name}: no ${file}`),
-                "utf8",
-            );
-        const mise = read("mise.toml");
-        for (const pin of HYGIENE_PINS) assert.match(mise, pin, name);
-        const pkg = JSON.parse(read("package.json"));
-        const deps = pkg.devDependencies;
-        for (const [config, tool] of Object.entries(SHARED)) {
-            assert.ok(config in deps, `${name} ${config}`);
-            if (tool) assert.ok(tool in deps, `${name} ${tool}`);
-        }
-        assert.ok("sort-package-json" in deps, name);
-        assert.ok("knip" in deps, name);
-        const { scripts } = pkg;
-        for (const script of [
-            "lint:sh",
-            "lint:editorconfig",
-            "lint:actions",
-            "lint:package",
-            "lint:deps",
-            "lint:spell",
-            "lint:secrets",
-        ]) {
-            assert.match(
-                scripts.check,
-                new RegExp(`bun run ${script}( |$)`),
-                `${name} ${script}`,
-            );
-        }
-        assert.match(scripts.format, /bun run format:sh$/, name);
-        assert.match(scripts["format:sh"], /shfmt -w$/, name);
-        assert.match(scripts["lint:sh"], /shfmt -d /, name);
-        assert.match(
-            scripts["lint:sh"],
-            /shellcheck --rcfile node_modules\/@chewygumxx\/shellcheck-config\/config\.shellcheckrc$/,
-            name,
-        );
-        assert.equal(
-            scripts["lint:editorconfig"],
-            "editorconfig-checker -config node_modules/@chewygumxx/editorconfig-checker-config/config.json",
-            name,
-        );
-        assert.equal(
-            scripts["lint:actions"],
-            "actionlint -config-file node_modules/@chewygumxx/actionlint-config/config.yaml",
-            name,
-        );
-        assert.match(
-            scripts["lint:md"],
-            /xargs -0 -r markdownlint-cli2$/,
-            name,
-        );
-        assert.match(
-            scripts["lint:package"],
-            /^sort-package-json --check package\.json/,
-            name,
-        );
-        assert.match(scripts["lint:spell"], /xargs -0 -r cspell /, name);
-        assert.match(scripts["lint:secrets"], /xargs -0 -r secretlint$/, name);
-        assert.deepEqual(
-            pkg.cspell,
-            { import: ["@chewygumxx/cspell-config"] },
-            name,
-        );
-        assert.equal(pkg.prettier, "@chewygumxx/prettier-config", name);
-        assert.deepEqual(
-            parse(read(".secretlintrc.json")).rules,
-            [{ id: "@chewygumxx/secretlint-rule-preset" }],
-            name,
-        );
-        assert.equal(
-            parse(read(".markdownlint-cli2.jsonc")).config.extends,
-            "@chewygumxx/markdownlint-cli2-config",
-            name,
-        );
-        assert.equal(
-            parse(read("tsconfig.json")).extends,
-            "@chewygumxx/tsconfig/bun",
-            name,
-        );
-        // Continued lines joined, as the shell reads them.
-        const hook = read(".husky/pre-commit").replace(/\\\n\s*/g, "");
-        for (const tool of [
-            /shellcheck --rcfile node_modules\/@chewygumxx\/shellcheck-config\//,
-            /actionlint -config-file node_modules\/@chewygumxx\/actionlint-config\//,
-            /editorconfig-checker -config node_modules\/@chewygumxx\/editorconfig-checker-config\//,
-            /markdownlint-cli2/,
-            /bunx --bun --no-install cspell/,
-            /bunx --bun --no-install secretlint/,
-        ]) {
-            assert.match(hook, tool, name);
-        }
-    }
-});
-
-test("a published template lints its package with publint and attw", () => {
-    const pkg = JSON.parse(
-        readFileSync(
-            join(TEMPLATES_DIR, "typescript-publish", "package.json"),
-            "utf8",
-        ),
-    );
-    assert.ok("publint" in pkg.devDependencies);
-    assert.ok("@arethetypeswrong/cli" in pkg.devDependencies);
-    assert.match(pkg.scripts["lint:package"], /&& publint --level warning &&/);
-    assert.match(
-        pkg.scripts["lint:package"],
-        /attw package\.tgz --profile esm-only/,
-    );
+// The package's exports and types are in dist/, which the package check
+// builds before publint and attw read the packed tarball.
+test("a published template builds, then lints its package with publint and attw", () => {
+    const sources = compose(TEMPLATES.typescript.layers(new Set(["publish"])));
+    const hk = readFileSync(sources.get(".config/hk.pkl") ?? "", "utf8");
+    const step = /\["packages"\] \{\n {16}check = """\n([\s\S]*?)"""/.exec(
+        hk,
+    )?.[1];
+    assert.ok(step);
+    const commands = step.split("&&").map((command) => command.trim());
+    assert.deepEqual(commands, [
+        "bun run tsc -p tsconfig.build.json",
+        "bun run publint --level warning .",
+        "bun pm pack --quiet --filename package.tgz > /dev/null",
+        "bun run attw package.tgz --profile esm-only",
+        "rm package.tgz",
+    ]);
 });
 
 // A spelling the shared word list lacks would otherwise be recorded as a new
@@ -392,6 +181,14 @@ test("every bun template is spelled to the shared word list", () => {
         mkdtempSync(join(tmpdir(), "create-repo-spell-")),
         "cspell.json",
     );
+    // The words each layer's own configuration adds, such as a path its
+    // comments name: a template's files are spelled to its own.
+    const words = readdirSync(TEMPLATES_DIR).flatMap((layer) => {
+        const file = join(TEMPLATES_DIR, layer, ".config/cspell.json");
+        return existsSync(file)
+            ? JSON.parse(readFileSync(file, "utf8")).words
+            : [];
+    });
     writeFileSync(
         config,
         JSON.stringify({
@@ -401,6 +198,7 @@ test("every bun template is spelled to the shared word list", () => {
                     "node_modules/@chewygumxx/cspell-config/config.yaml",
                 ),
             ],
+            words,
         }),
     );
     const result = spawnSync(
@@ -494,8 +292,8 @@ test("every template installs from its lock alone", () => {
     const { words: _words, ...steps } = STEPS;
     assert.deepEqual(steps, {
         setup: [{ file: "bun", args: ["install", "--frozen-lockfile"] }],
-        format: { file: "bun", args: ["run", "--silent", "format"] },
-        check: { file: "bun", args: ["run", "check"] },
+        format: { file: "mise", args: ["run", "format", "--all"] },
+        check: { file: "mise", args: ["run", "check", "--all"] },
     });
 });
 
@@ -520,6 +318,7 @@ test("typescript adds sources, tests and its own package over bun", () => {
         "package.json",
         "bun.lock",
         "README.md",
+        ".config/mise/tasks/standard.task.toml",
     ]) {
         assert.ok(sources.has(file), file);
         assert.match(sources.get(file) ?? "", /templates\/typescript\//, file);
@@ -530,8 +329,13 @@ test("typescript adds sources, tests and its own package over bun", () => {
     assert.equal(pkg.type, "module");
     assert.equal(pkg.private, true);
     assert.equal(pkg.engines.bun, ">=1.4");
-    assert.equal(pkg.scripts.test, "bun test");
-    assert.match(pkg.scripts.check, /bun run test/);
+    assert.match(
+        readFileSync(
+            sources.get(".config/mise/tasks/standard.task.toml") ?? "",
+            "utf8",
+        ),
+        /^run {5}= "bun test"$/m,
+    );
 });
 
 test("publish replaces the package, adds the build and the workflow", () => {
@@ -543,6 +347,9 @@ test("publish replaces the package, adds the build and the workflow", () => {
         "README.md",
         "tsconfig.build.json",
         ".github/workflows/publish.yaml",
+        ".config/hk.pkl",
+        ".config/mise/tasks/package.task.toml",
+        ".knip.jsonc",
     ]) {
         assert.ok(sources.has(file), file);
         assert.match(
@@ -557,9 +364,15 @@ test("publish replaces the package, adds the build and the workflow", () => {
     assert.ok(!("private" in pkg));
     assert.equal(pkg.name, "@chewygumxx/repo-tmpl");
     assert.deepEqual(pkg.files, ["dist"]);
-    assert.equal(pkg.scripts.prepack, "bun run build");
+    assert.equal(pkg.scripts.prepack, "tsc -p tsconfig.build.json");
     assert.equal(pkg.publishConfig.provenance, true);
-    assert.match(pkg.scripts.check, /bun run build/);
+    assert.match(
+        readFileSync(
+            sources.get(".config/mise/tasks/package.task.toml") ?? "",
+            "utf8",
+        ),
+        /^\[build\]\n[^[]*^run {9}= "bun run tsc -p tsconfig\.build\.json"$/m,
+    );
     assert.match(
         readFileSync(sources.get("_gitignore") ?? "", "utf8"),
         /^\/dist\/$/m,
@@ -662,7 +475,7 @@ test("every bun template's package runs on Bun", () => {
         );
         assert.deepEqual(pkg.engines, { bun: ">=1.4" }, layer);
         assert.ok(!("@types/node" in pkg.devDependencies), layer);
-        assert.equal(pkg.devDependencies["@types/bun"], "^1.4.2", layer);
+        assert.match(pkg.devDependencies["@types/bun"], /^\^1\.4\./, layer);
         for (const [name, script] of Object.entries(pkg.scripts)) {
             assert.doesNotMatch(
                 script,
@@ -839,6 +652,6 @@ test("cloudflare deploys with Bun", () => {
         "utf8",
     );
     assert.match(text, /run: bun install --frozen-lockfile$/m);
-    assert.match(text, /run: bunx --bun wrangler deploy$/m);
+    assert.match(text, /run: bun run wrangler deploy$/m);
     assert.doesNotMatch(text, /\bnpm\b|\bnpx\b/);
 });

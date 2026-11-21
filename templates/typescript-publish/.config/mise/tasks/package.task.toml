@@ -1,0 +1,19 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+#:schema https://mise.jdx.dev/schema/mise-task.json
+
+#
+#
+# ~chewygumxx/repo-tmpl.git
+# ::: :/.config/mise/tasks/package.task.toml
+#
+#
+
+#
+# https://mise.jdx.dev/tasks/task-configuration.html
+#
+
+# prepack runs the same, so a tarball always holds a fresh build.
+[build]
+description = "Compile src/ to dist/, with its declarations"
+run         = "bun run tsc -p tsconfig.build.json"
