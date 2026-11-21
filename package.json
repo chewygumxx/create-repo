@@ -1,6 +1,6 @@
 {
     "name": "@chewygumxx/create-repo",
-    "version": "3.2.1",
+    "version": "4.0.0",
     "description": "Creates a GitHub repository from a bundled template: bun create @chewygumxx/repo",
     "keywords": [
         "create",
