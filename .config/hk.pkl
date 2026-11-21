@@ -1,0 +1,85 @@
+// vim:set expandtab shiftwidth=4 filetype=pkl:
+// SPDX-License-Identifier: GPL-3.0-only
+
+//
+//
+// ~chewygumxx/create-repo.git
+// ::: :/.config/hk.pkl
+//
+//
+
+//
+// https://hk.jdx.dev/configuration
+//
+// The git hooks, and the check and fix hooks that `mise run lint` and
+// `mise run format` run. The steps come from @chewygumxx/hk-config, with a
+// step of this repository's own for the bundled templates. `mise install`
+// installs the hooks; see [hooks] in .config/mise/config.toml.
+//
+
+amends "package://github.com/jdx/hk/releases/download/v2.13.0/hk@2.13.0#/Config.pkl"
+
+import "../node_modules/@chewygumxx/hk-config/steps.pkl" as shared
+
+local cgxx = (shared) {}
+
+// The plans and specs of earlier versions, kept as written: they predate
+// the Markdown and spelling checks.
+local history = List("docs/plans/**", "docs/specs/**")
+
+// Every template materialised as bundled, each checked by its own Biome
+// and .editorconfig. The CLI formats before it checks, so a check after
+// generation could not catch a bundled file left unformatted.
+local materialized = new Step {
+    check = """
+        bun scripts/materialize.js --all .templates
+        for dir in .templates/*/; do
+            (
+                cd "$dir" &&
+                    ../../node_modules/.bin/biome ci --vcs-use-ignore-file=false . &&
+                    editorconfig-checker -config ../../node_modules/@chewygumxx/editorconfig-checker-config/config.json .
+            ) || exit 1
+        done
+        """
+    cache = true
+    cache_inputs = List(
+        "bun.lock",
+        ".config/mise/config.toml",
+        "lib/**",
+        "scripts/materialize.js",
+        "templates/**",
+    )
+}
+
+hooks {
+    ["check"] {
+        steps = (cgxx.lint) {
+            ["cspell"] { exclude = history }
+            ["markdownlint"] { exclude = history }
+            ["templates"] = materialized
+        }
+    }
+    ["fix"] {
+        stage = false
+        steps = (cgxx.format) {
+            ["markdownlint"] { exclude = history }
+        }
+    }
+    ["pre-commit"] {
+        stash = "git"
+        fix = false
+        stage = false
+        steps {
+            ["check"] {
+                check = "mise run check --staged"
+            }
+        }
+    }
+    ["commit-msg"] {
+        steps {
+            ["commitlint"] {
+                check = "mise run lint:commit \"{{ commit_msg_file }}\""
+            }
+        }
+    }
+}

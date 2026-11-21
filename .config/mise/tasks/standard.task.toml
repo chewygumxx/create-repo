@@ -1,0 +1,27 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+#:schema https://mise.jdx.dev/schema/mise-task.json
+
+#
+#
+# ~chewygumxx/create-repo.git
+# ::: :/.config/mise/tasks/standard.task.toml
+#
+#
+
+#
+# https://mise.jdx.dev/tasks/task-configuration.html
+#
+# Each task extends a cgxx: template from @chewygumxx/mise-tasks-config,
+# linked into .config/mise/conf.d/.
+#
+
+[install]
+extends = "cgxx:install"
+
+[test]
+extends = "cgxx:test"
+run     = "bun test ./test/"
+
+[check]
+extends = "cgxx:check"

@@ -5,7 +5,7 @@
 #
 #
 # ~chewygumxx/create-repo.git
-# ::: :/.tombi.toml
+# ::: :/.config/tombi.toml
 #
 #
 
@@ -20,5 +20,6 @@ date-time-delimiter             = "space"
 group-blank-lines-limit         = 2
 indent-width                    = 4
 key-value-equals-sign-alignment = true
+line-width                      = 80
 trailing-comment-alignment      = true
 trailing-comment-space-width    = 2

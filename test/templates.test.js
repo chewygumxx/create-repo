@@ -174,16 +174,6 @@ test("every template has a .tombi.toml, and each TOML file names its schema", ()
     }
 });
 
-test("this repository's TOML files name their schemas", () => {
-    const root = fileURLToPath(new URL("..", import.meta.url));
-    const problems = readdirSync(root)
-        .filter((file) => file.endsWith(".toml"))
-        .map((file) => schemaProblem(file, join(root, file)))
-        .filter(Boolean);
-    assert.ok(existsSync(join(root, ".tombi.toml")));
-    assert.deepEqual(problems, []);
-});
-
 const TOMBI_PIN = /^"aqua:tombi-toml\/tombi"\s*=\s*"\d+\.\d+\.\d+"$/m;
 
 /**
@@ -240,16 +230,6 @@ test("every template pins tombi, and its checks run it", () => {
             assertTombiCheck(staged, name);
         }
     }
-});
-
-test("this repository pins tombi, and its checks run it", () => {
-    const root = fileURLToPath(new URL("..", import.meta.url));
-    assert.match(readFileSync(join(root, "mise.toml"), "utf8"), TOMBI_PIN);
-    assertBunRunsTombi(
-        join(root, "package.json"),
-        join(root, ".husky/pre-commit"),
-        "create-repo",
-    );
 });
 
 /** Pins of the tools CI's lint jobs run, which a bun template runs too. */

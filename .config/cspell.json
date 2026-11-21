@@ -1,0 +1,14 @@
+{
+    "import": ["@chewygumxx/cspell-config"],
+    "words": [
+        "autolinks",
+        "casefold",
+        "Markor",
+        "MIIB",
+        "MIIC",
+        "remarkrc",
+        "wikilink",
+        "wikilinks",
+        "Zettelkasten"
+    ]
+}
