@@ -1,36 +1,27 @@
 ---
 ctime: 2026-09-30
-mtime: 2026-10-05
+mtime: 2026-11-03
 spdx: GPL-3.0-only
-title: CLAUDE.md
+title: Repository Agentic Instructions
 description: >-
-  Claude Code's guide to create-repo: how to commit, and why the templates'
-  repo-tmpl identity is left for lib/init.js to rewrite.
+  Agentic instruction guide to create-repo, including how to commit, and why the
+  repo-tmpl identity of templates is left for lib/init.js to rewrite.
 tags:
-  - claude
-  - llm
+  - agents
 ---
 
 <!--
    -
    - ~chewygumxx/create-repo.git
-   - ::: :/.claude/CLAUDE.md
+   - ::: :/AGENTS.md
    -
    -->
 
-# CLAUDE.md
+# Repository Agentic Instructions
 
 Continuously granularly commit as you work. Compose single-line commit messages
 whenever appropriate. If the granular commit does indeed warrant further
 context, include such within the commit message body.
-
-When appropriate and worthwhile to compact, append the following
-newline-delimited items to your response:
-
-- A `/compact <summary>`
-- Appraisal rating scaled 1-100
-- Risk assessment rating scaled 1-100
-- Terse single-sentence justification.
 
 ## Repository Information
 
