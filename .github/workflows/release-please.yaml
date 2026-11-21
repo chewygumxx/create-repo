@@ -1,0 +1,56 @@
+# vim:set expandtab shiftwidth=4 filetype=yaml foldlevel=3:
+# SPDX-License-Identifier: GPL-3.0-only
+
+#
+#
+# ~chewygumxx/create-repo.git
+# ::: :/.github/workflows/release-please.yaml
+#
+#
+
+# On every push to main, release-please reads the conventional commits
+# since the last release and keeps one pull request open that bumps
+# package.json's version; see .config/release-please.json. Squash-merge
+# it with its title as the subject and an empty body. The next run then
+# publishes a GitHub release tagged v<version>, which starts publish.yaml.
+#
+# It acts as the release GitHub App: what GITHUB_TOKEN creates starts no
+# other workflow, so neither publish.yaml nor CI on the release pull
+# request would run.
+
+name: Release Please
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch: {}
+
+permissions:
+    contents: read
+
+# One run at a time, so two never rewrite the release branch at once.
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: false
+
+jobs:
+    release:
+        if: github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Mint App Token
+              id: app
+              uses: actions/create-github-app-token@v3
+              with:
+                  client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+                  private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+            - name: Release Please
+              uses: googleapis/release-please-action@v5
+              with:
+                  token: ${{ steps.app.outputs.token }}
+                  target-branch: main
+                  config-file: .config/release-please.json
+                  manifest-file: .config/release-please-manifest.json

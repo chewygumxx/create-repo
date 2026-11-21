@@ -1,0 +1,12 @@
+{
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/v17.6.0/schemas/config.json",
+    "release-type": "node",
+    "include-component-in-tag": false,
+    "include-v-in-tag": true,
+    "skip-changelog": true,
+    "pull-request-title-pattern": "chore: release ${version}",
+    "last-release-sha": "6a010f1213ae79588878ecd6a9e5b764294cf661",
+    "packages": {
+        ".": {}
+    }
+}
