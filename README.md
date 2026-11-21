@@ -38,8 +38,7 @@ metadata App's `METADATA_APP_CLIENT_ID` variable and
 nothing on GitHub.
 
 It needs Bun 1.4 or later, `git`, `mise`, and `gh` logged in with
-`gh auth login`. The `zsh` template also needs zsh, which mise does not
-install.
+`gh auth login`.
 
 Run with `npm create` instead, it still needs Bun: the CLI runs on it.
 
@@ -54,12 +53,6 @@ Run with `npm create` instead, it still needs Bun: the CLI runs on it.
 |              | `@owner/name` by trusted publishing                       |
 | `cloudflare` | A Cloudflare Worker in TypeScript, tested in the Workers  |
 |              | runtime, with a workflow that deploys it                  |
-| `rust`       | A Rust crate without Bun, checked with mise: a binary, or |
-|              | with `--with lib` a library                               |
-| `nvim`       | A Neovim plugin in Lua without Bun, tested in headless    |
-|              | Neovim with mini.test, checked with mise                  |
-| `zsh`        | A zsh plugin without Bun, following the Zsh Plugin        |
-|              | Standard, tested with zsh and linted with shuck           |
 
 `--template` chooses one, `standard` by default, and `--with` turns on its
 optional features; `--help` lists both. A package version always creates
@@ -74,27 +67,17 @@ Each template is an ordered list of layers under `templates/`, declared in
 `lib/templates.js`: a later layer's file replaces the same file from an
 earlier one. `common` holds what every repository carries, `bun` the
 Bun-based checks, `typescript` its sources, `typescript-publish` what
-`--with publish` replaces and adds, and `cloudflare` the Worker. `native` is
-the hygiene layer without Bun: mise pins the tools and aggregates the tasks,
-`committed` lints commit messages, and Biome, rumdl, yamlfmt and yamllint
-carry copies of the shared configurations. `rust` adds Cargo and its mise
-tasks, and `rust-bin` or `rust-lib` the source. `nvim` adds the plugin, its
-tests and the Lua tools' mise tasks, and `zsh` the plugin, its tests, shuck's
-configuration and its mise tasks. A layer that holds a `package.json` holds
-its `bun.lock`; regenerate it with `bun install --lockfile-only` in the
-layer's directory, and delete the `node_modules` that leaves, if any.
-`rust` holds its `Cargo.lock`: materialise the template, run
-`cargo generate-lockfile` there, and copy the file back.
+`--with publish` replaces and adds, and `cloudflare` the Worker. A layer
+that holds a `package.json` holds its `bun.lock`; regenerate it with
+`bun install --lockfile-only` in the layer's directory, and delete the
+`node_modules` that leaves, if any.
 
 The templates' identity stays `chewygumxx/repo-tmpl`:
 `~chewygumxx/repo-tmpl.git` in every file header and the slug in
 `.repo-metadata.jsonc` are what `lib/init.js` finds and rewrites for each
 new repository. They look stale but are not, so `.gitattributes` keeps the
 header sync out of `templates/`. After its edits, init fails if
-`repo-tmpl`, or the identifier form `repo_tmpl`, remains anywhere. `rust`
-with `lib` names its crate in a doc test as `repo_tmpl`, and `nvim` and `zsh`
-name their module so in code and in paths (`lua/repo_tmpl/`,
-`repo_tmpl.plugin.zsh`); the `moduleName` edit rewrites them.
+`repo-tmpl`, or the identifier form `repo_tmpl`, remains anywhere.
 
 A layer stores `.gitignore` as `_gitignore`, since npm drops nested
 `.gitignore` files from the package, and it is renamed back on copy. The

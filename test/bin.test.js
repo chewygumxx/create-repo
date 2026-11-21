@@ -21,7 +21,6 @@ import {
     existsSync,
     mkdirSync,
     mkdtempSync,
-    readdirSync,
     readFileSync,
     rmSync,
     writeFileSync,
@@ -66,7 +65,7 @@ function runBin(argv, env = {}) {
         mkdirSync(bin);
         writeFileSync(log, "");
         writeFileSync(`${log}.commit`, "");
-        for (const tool of ["gh", "git", "mise", "bun", "npm", "node", "zsh"]) {
+        for (const tool of ["gh", "git", "mise", "bun", "npm", "node"]) {
             writeFileSync(join(bin, tool), standIn(log));
             chmodSync(join(bin, tool), 0o755);
         }
@@ -93,20 +92,6 @@ function runBin(argv, env = {}) {
             gitignore: existsSync(join(dir, ".gitignore")),
             wrangler: existsSync(join(dir, "wrangler.jsonc"))
                 ? readFileSync(join(dir, "wrangler.jsonc"), "utf8")
-                : undefined,
-            cargo: existsSync(join(dir, "Cargo.toml"))
-                ? readFileSync(join(dir, "Cargo.toml"), "utf8")
-                : undefined,
-            lib: existsSync(join(dir, "src/lib.rs"))
-                ? readFileSync(join(dir, "src/lib.rs"), "utf8")
-                : undefined,
-            lua: existsSync(join(dir, "lua"))
-                ? readdirSync(join(dir, "lua"))
-                : undefined,
-            plugin: existsSync(dir)
-                ? readdirSync(dir).filter((file) =>
-                      file.endsWith(".plugin.zsh"),
-                  )
                 : undefined,
         };
     } finally {
@@ -227,184 +212,6 @@ test("a name a Worker cannot use stops before anything is copied", () => {
     assert.ok(!copied);
 });
 
-test("rust is copied, initialised and run through mise, not Bun", () => {
-    const { commit, cargo, lines } = dryRun(["--template", "rust"]);
-    assert.match(commit, /\(rust\)\./);
-    assert.match(cargo ?? "", /^name\s*= "x"$/m);
-    assert.match(
-        cargo ?? "",
-        /^repository\s*= "https:\/\/github\.com\/example\/x"$/m,
-    );
-    const env = lines.findIndex((line) => line.startsWith("mise env"));
-    assert.deepEqual(
-        lines
-            .slice(env + 1)
-            .map((line) => line.split(" ").slice(0, 2).join(" ")),
-        ["git add", "mise run", "git add", "mise run", "git commit"],
-        lines.join("\n"),
-    );
-});
-
-test("rust with lib is named in the commit and names its library", () => {
-    const run = runBin((root) => [
-        "my-tool",
-        "--description",
-        "D",
-        "--owner",
-        "example",
-        "--dir",
-        join(root, "x"),
-        "--no-metadata",
-        "--dry-run",
-        "--yes",
-        "--template",
-        "rust",
-        "--with",
-        "lib",
-    ]);
-    assert.equal(run.result.status, 0, run.result.stderr);
-    assert.match(run.commit, /\(rust, with lib\)\./);
-    assert.match(run.lib ?? "", /my_tool::greeting/);
-});
-
-test("a name a crate cannot use stops before anything is copied", () => {
-    /** @type {[string, string[], RegExp][]} */
-    const cases = [
-        ["my.tool", [], /crate name/],
-        ["My-Tool", ["--with", "lib"], /snake case/],
-    ];
-    for (const [name, extra, message] of cases) {
-        const { result, copied } = runBin((root) => [
-            name,
-            "--description",
-            "D",
-            "--owner",
-            "example",
-            "--dir",
-            join(root, "x"),
-            "--no-metadata",
-            "--dry-run",
-            "--yes",
-            "--template",
-            "rust",
-            ...extra,
-        ]);
-        assert.equal(result.status, 2, name);
-        assert.match(result.stderr, message, name);
-        assert.ok(!copied, name);
-    }
-});
-
-test("nvim is copied, initialised and run through mise, not Bun", () => {
-    const { commit, lua, lines } = dryRun(["--template", "nvim"]);
-    assert.match(commit, /\(nvim\)\./);
-    assert.deepEqual(lua, ["x"]);
-    const env = lines.findIndex((line) => line.startsWith("mise env"));
-    assert.deepEqual(
-        lines
-            .slice(env + 1)
-            .map((line) => line.split(" ").slice(0, 2).join(" ")),
-        ["git add", "mise run", "git add", "mise run", "git commit"],
-        lines.join("\n"),
-    );
-});
-
-test("nvim names its module without the affixes", () => {
-    const run = runBin((root) => [
-        "nvim-my-tool.nvim",
-        "--description",
-        "D",
-        "--owner",
-        "example",
-        "--dir",
-        join(root, "x"),
-        "--no-metadata",
-        "--dry-run",
-        "--yes",
-        "--template",
-        "nvim",
-    ]);
-    assert.equal(run.result.status, 0, run.result.stderr);
-    assert.deepEqual(run.lua, ["my-tool"]);
-});
-
-test("a name a Lua module cannot use stops before anything is copied", () => {
-    for (const name of ["my.plugin.nvim", "nvim-", "1plugin"]) {
-        const { result, copied } = runBin((root) => [
-            name,
-            "--description",
-            "D",
-            "--owner",
-            "example",
-            "--dir",
-            join(root, "x"),
-            "--no-metadata",
-            "--dry-run",
-            "--yes",
-            "--template",
-            "nvim",
-        ]);
-        assert.equal(result.status, 2, name);
-        assert.match(result.stderr, /module/, name);
-        assert.ok(!copied, name);
-    }
-});
-
-test("zsh is copied, initialised and run through mise, not Bun", () => {
-    const { commit, plugin, lines } = dryRun(["--template", "zsh"]);
-    assert.match(commit, /\(zsh\)\./);
-    assert.deepEqual(plugin, ["x.plugin.zsh"]);
-    const env = lines.findIndex((line) => line.startsWith("mise env"));
-    assert.deepEqual(
-        lines
-            .slice(env + 1)
-            .map((line) => line.split(" ").slice(0, 2).join(" ")),
-        ["git add", "mise run", "git add", "mise run", "git commit"],
-        lines.join("\n"),
-    );
-});
-
-test("zsh names its plugin for the repository", () => {
-    const run = runBin((root) => [
-        "zsh-my-tool",
-        "--description",
-        "D",
-        "--owner",
-        "example",
-        "--dir",
-        join(root, "x"),
-        "--no-metadata",
-        "--dry-run",
-        "--yes",
-        "--template",
-        "zsh",
-    ]);
-    assert.equal(run.result.status, 0, run.result.stderr);
-    assert.deepEqual(run.plugin, ["zsh-my-tool.plugin.zsh"]);
-});
-
-test("a name a zsh function cannot have stops before anything is copied", () => {
-    for (const name of ["my.plugin", "if", "while"]) {
-        const { result, copied } = runBin((root) => [
-            name,
-            "--description",
-            "D",
-            "--owner",
-            "example",
-            "--dir",
-            join(root, "x"),
-            "--no-metadata",
-            "--dry-run",
-            "--yes",
-            "--template",
-            "zsh",
-        ]);
-        assert.equal(result.status, 2, name);
-        assert.match(result.stderr, /plugin name/, name);
-        assert.ok(!copied, name);
-    }
-});
-
 test("publish names the package @owner/name and the commit", () => {
     const { commit, pkg } = dryRun([
         "--template",
@@ -513,18 +320,6 @@ test("--help lists the templates", () => {
     assert.match(result.stdout, /\nTemplates:\n {2}standard {4}Any repository/);
     assert.match(result.stdout, /\n {2}typescript {2}A Bun library or CLI/);
     assert.match(result.stdout, /\n {2}cloudflare {2}A Cloudflare Worker/);
-    assert.match(result.stdout, /\n {2}rust {8}A Rust crate/);
-    assert.match(result.stdout, /\n {2}nvim {8}A Neovim plugin/);
-    assert.match(result.stdout, /\n {2}zsh {9}A zsh plugin/);
-});
-
-test("zsh is checked for the zsh template only", () => {
-    const checked = (/** @type {string} */ template) =>
-        dryRun(["--template", template]).lines.some((line) =>
-            line.startsWith("zsh --version"),
-        );
-    assert.equal(checked("zsh"), true);
-    assert.equal(checked("rust"), false);
 });
 
 // With no --owner the account gh is logged in as is the owner, which the

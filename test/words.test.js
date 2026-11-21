@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { recordWords } from "../lib/init.js";
-import { FAMILIES } from "../lib/templates.js";
+import { STEPS } from "../lib/templates.js";
 
 /** @param {object} data */
 function repository(data) {
@@ -73,7 +73,7 @@ test("keeps the package's indentation", () => {
 // The words are read from the tracked files on stdin, and the check that
 // follows fails on any left unknown, so listing them must not fail.
 test("the bun family lists unknown words without failing on them", () => {
-    const { words } = FAMILIES.bun;
+    const { words } = STEPS;
     assert.ok(words);
     assert.equal(words.file, "bun");
     assert.deepEqual(words.args.slice(0, 4), [
@@ -92,5 +92,4 @@ test("the bun family lists unknown words without failing on them", () => {
         assert.ok(words.args.includes(flag), flag);
     }
     assert.equal(words.args[words.args.indexOf("--file-list") + 1], "stdin");
-    assert.equal(FAMILIES.native.words, undefined);
 });
