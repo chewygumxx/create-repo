@@ -130,12 +130,14 @@ jobs:
                   fi
 
             # What GitHub's CI sees: the commit alone, nothing the run left
-            # untracked, installed from the lock.
+            # untracked, installed from the lock. The header check reads
+            # the repository from GITHUB_REPOSITORY, which a step's env
+            # cannot override.
             - name: Check a Fresh Clone
               env:
-                  GITHUB_REPOSITORY: example/dry-run
                   MISE_GITHUB_TOKEN: ${{ github.token }}
               run: |
+                  export GITHUB_REPOSITORY=example/dry-run
                   git clone --quiet "$RUNNER_TEMP/dry-run" "$RUNNER_TEMP/fresh"
                   cd "$RUNNER_TEMP/fresh"
                   mise trust --quiet
