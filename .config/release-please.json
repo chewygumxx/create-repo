@@ -5,7 +5,6 @@
     "include-v-in-tag": true,
     "skip-changelog": true,
     "pull-request-title-pattern": "chore: release ${version}",
-    "last-release-sha": "6a010f1213ae79588878ecd6a9e5b764294cf661",
     "packages": {
         ".": {}
     }
