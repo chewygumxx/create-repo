@@ -34,6 +34,7 @@ import { parse } from "jsonc-parser";
 import {
     bunLock,
     commitlintScopes,
+    disableMetadataSync,
     headers,
     init,
     packageJson,
@@ -535,3 +536,19 @@ test("short input does not hide a leftover it is part of", () => {
         );
     }
 });
+
+test("disableMetadataSync turns the switch off, and fails without one", () =>
+    inTemp((root) => {
+        const dir = join(root, "derived");
+        copyTemplate(dir, ["common", "bun"]);
+        disableMetadataSync(dir);
+        const ci = read(dir, ".github/workflows/ci.yaml");
+        assert.match(ci, /^ {12}metadata-sync: false # /m);
+        assert.doesNotMatch(ci, /metadata-sync: \$\{\{/);
+        assert.throws(
+            () => disableMetadataSync(dir),
+            (error) =>
+                error instanceof TemplateError &&
+                /metadata-sync switch/.test(error.message),
+        );
+    }));
