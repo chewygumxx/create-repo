@@ -345,3 +345,27 @@ test("the guidance for agents is AGENTS.md, not .claude/", () =>
         assert.ok(files.includes("AGENTS.md"));
         assert.ok(!files.some((file) => file.startsWith(".claude/")));
     }));
+
+// A new repository's agents learn its setup from the skill, linked from
+// node_modules on every install, so the links are never committed.
+test("every template links the creating-bun-repositories skill", () =>
+    eachView(({ root, files, read }) => {
+        if (root) return;
+        const pkg = JSON.parse(read("package.json"));
+        assert.match(
+            pkg.devDependencies["@chewygumxx/skill-creating-bun-repositories"],
+            /^\d+\.\d+\.\d+$/,
+        );
+        assert.ok("skills" in pkg.devDependencies);
+        assert.match(pkg.scripts.prepare, /skills experimental_sync /);
+        assert.ok(files.includes("skills-lock.json"));
+        const lock = JSON.parse(read("skills-lock.json"));
+        assert.equal(
+            lock.skills["creating-bun-repositories"].version,
+            pkg.devDependencies["@chewygumxx/skill-creating-bun-repositories"],
+        );
+        const ignore = read(".gitignore").split("\n");
+        for (const dir of [".agents/skills/", ".claude/skills/"]) {
+            assert.ok(ignore.includes(dir), dir);
+        }
+    }));

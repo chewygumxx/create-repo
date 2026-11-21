@@ -16,6 +16,12 @@
 [commit]
 extends = "cgxx:commit"
 
+# prepare runs the same on every install. Pass --no-frozen-lockfile in CI,
+# where skills-lock.json is otherwise frozen.
+[skills]
+description = "Link the skills the devDependencies provide into the agents' directories"
+run         = "DO_NOT_TRACK=1 bun run skills experimental_sync --yes --agent claude-code codex"
+
 # https://github.com/chewygumxx/.github#readme
 [act]
 extends = "cgxx:act"

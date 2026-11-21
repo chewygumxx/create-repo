@@ -2,6 +2,10 @@
     "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
     "extends": ["@chewygumxx/biome-config"],
     "files": {
-        "includes": ["!**/*.md", "!worker-configuration.d.ts"]
+        "includes": [
+            "!**/*.md",
+            "!skills-lock.json",
+            "!worker-configuration.d.ts"
+        ]
     }
 }

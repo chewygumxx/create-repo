@@ -18,3 +18,7 @@
 
 node_modules/
 *.tgz
+
+# Linked by the skills CLI from the skill packages node_modules holds
+.agents/skills/
+.claude/skills/

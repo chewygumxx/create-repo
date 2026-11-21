@@ -26,7 +26,8 @@
     ],
     "scripts": {
         "check": "mise run check --all",
-        "prepack": "tsc -p tsconfig.build.json"
+        "prepack": "tsc -p tsconfig.build.json",
+        "prepare": "test ! -d node_modules/skills || DO_NOT_TRACK=1 skills experimental_sync --yes --agent claude-code codex"
     },
     "config": {
         "commitizen": {
@@ -49,6 +50,7 @@
         "@chewygumxx/remark-preset": "^1.1.0",
         "@chewygumxx/secretlint-rule-preset": "^1.0.1",
         "@chewygumxx/shellcheck-config": "^1.0.1",
+        "@chewygumxx/skill-creating-bun-repositories": "0.0.1",
         "@chewygumxx/tsconfig": "^1.0.1",
         "@chewygumxx/yamllint-config": "^1.0.1",
         "@commitlint/cli": "^21.2.4",
@@ -61,6 +63,7 @@
         "publint": "^0.3.25",
         "remark-cli": "^12.0.1",
         "secretlint": "^13.0.7",
+        "skills": "^1.9.0",
         "sort-package-json": "^4.1.0",
         "sync-header-metadata": "^2.4.3",
         "typescript": "^7.0.2"
