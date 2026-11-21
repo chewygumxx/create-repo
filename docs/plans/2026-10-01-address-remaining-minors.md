@@ -20,6 +20,11 @@ tags:
 
 # Address the deferred minors (v2.1.1 follow-up)
 
+> [!NOTE]
+> Historical. 4.0.0 removed the native family (`native`, `rust`, `nvim` and
+> `zsh`) and moved every template to mise and hk; see the README for what
+> the templates are now.
+
 ## Context
 
 v2.1.1 shipped (`main` at fe6488d, npm `latest` 2.1.1). The final review and

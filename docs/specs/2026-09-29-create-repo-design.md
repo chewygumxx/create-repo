@@ -21,6 +21,11 @@ tags:
 
 # Preliminary Specification: create-repo
 
+> [!NOTE]
+> Historical. 4.0.0 removed the native family (`native`, `rust`, `nvim` and
+> `zsh`) and moved every template to mise and hk; see the README for what
+> the templates are now.
+
 `npm create @chewygumxx/repo` creates a new GitHub repository from
 [`chewygumxx/repo-tmpl`](https://github.com/chewygumxx/repo-tmpl) in one
 command, so that its first CI run passes, including the repository metadata

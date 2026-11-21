@@ -21,6 +21,11 @@ tags:
 
 # Implementation Plan: multiple templates, phase 2
 
+> [!NOTE]
+> Historical. 4.0.0 removed the native family (`native`, `rust`, `nvim` and
+> `zsh`) and moved every template to mise and hk; see the README for what
+> the templates are now.
+
 > [!IMPORTANT]
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or

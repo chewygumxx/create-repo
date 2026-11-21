@@ -22,6 +22,11 @@ tags:
 
 # Specification: Bun
 
+> [!NOTE]
+> Historical. 4.0.0 removed the native family (`native`, `rust`, `nvim` and
+> `zsh`) and moved every template to mise and hk; see the README for what
+> the templates are now.
+
 Bun replaces npm as the package manager and Node as the runtime, in
 `create-repo` itself, in the templates of the npm family (renamed the bun
 family), and in the shared workflows of `chewygumxx/.github` that run a
