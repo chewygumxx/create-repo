@@ -12,8 +12,10 @@
 # format, metadata sync), then this repository's own `bun run check` against
 # the commit the header sync pushed. See chewygumxx/.github for each part.
 #
-# workflow_dispatch re-runs the metadata sync once the METADATA_APP_* secret
-# and variable are corrected.
+# The metadata sync runs once the METADATA_APP_CLIENT_ID variable is set,
+# as create-repo sets it unless told not to; until then it is skipped.
+# workflow_dispatch re-runs it once the METADATA_APP_* secret and variable
+# are corrected.
 
 name: CI
 
@@ -38,6 +40,7 @@ jobs:
     standard:
         uses: chewygumxx/.github/.github/workflows/standard.yaml@v1
         with:
+            metadata-sync: ${{ vars.METADATA_APP_CLIENT_ID != '' }}
             metadata-client-id: ${{ vars.METADATA_APP_CLIENT_ID }}
             # `bun run check` lints YAML by the same configurations, so
             # lint-format need not.
