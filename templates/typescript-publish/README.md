@@ -49,6 +49,11 @@ shell scripts, TOML and `.editorconfig`, and the metadata sync once the
 `bun run check`, which is `mise run check --all`, follows against the commit
 the header sync pushed.
 
+A repository created with `--no-metadata` has the sync switched off in
+`ci.yaml`. To turn it on, set the `METADATA_APP_CLIENT_ID` variable and the
+`METADATA_APP_PRIVATE_KEY` secret, then set `metadata-sync` back to
+`${{ vars.METADATA_APP_CLIENT_ID != '' }}`.
+
 ## Development
 
 `mise install` installs the tools, the packages, and hk's git hooks: the

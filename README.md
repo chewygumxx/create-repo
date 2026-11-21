@@ -164,7 +164,8 @@ Run with `--help` for every flag. Without a terminal, the name and
 `--description` are required, topics and scopes default to none, and `--yes`
 is required. `--dry-run` does everything locally and prints the GitHub
 commands instead of running them. `--no-metadata` skips the App variable and
-secret.
+secret, and switches the metadata sync off in the new repository's
+`ci.yaml`.
 
 ## The metadata App private key
 

@@ -19,7 +19,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { text } from "node:stream/consumers";
 import { notTemplate, parseOptions, UsageError } from "../lib/args.js";
-import { init, recordWords } from "../lib/init.js";
+import { disableMetadataSync, init, recordWords } from "../lib/init.js";
 import { childEnv, loadEnvFile, resolveKey } from "../lib/key.js";
 import { checkTarget, checkTools, METADATA_REPO } from "../lib/preflight.js";
 import {
@@ -235,7 +235,8 @@ async function main(argv) {
             edits: template.edits,
             features: answers.features,
         });
-        // Staged first: the template's format:yaml reads `git ls-files`.
+        if (!options.metadata) disableMetadataSync(dir);
+        // Staged first: the spell check reads `git ls-files`, and hk the index.
         await run("git", ["add", "--all"], local);
         // The identity's words, which the spell check would refuse.
         const tracked = await run("git", ["ls-files"], {
