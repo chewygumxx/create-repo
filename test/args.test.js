@@ -194,15 +194,15 @@ test("descriptions the first commit would refuse are refused first", () => {
 
 // npm create consumed the `--` its documented forms needed. bun create
 // drops one before the name, but passes one after it through, so
-// `bun create @chewygumxx/repo x -- --template zsh` would otherwise read every
+// `bun create @chewygumxx/repo x -- --template cloudflare` would otherwise read every
 // flag as a positional.
 test("one -- is dropped, before the name or after it", () => {
     for (const argv of [
-        ["--", "x", "--template", "zsh"],
-        ["x", "--", "--template", "zsh"],
+        ["--", "x", "--template", "cloudflare"],
+        ["x", "--", "--template", "cloudflare"],
     ]) {
         const options = parseOptions(argv);
         assert.equal(options.name, "x", argv.join(" "));
-        assert.equal(options.template, "zsh", argv.join(" "));
+        assert.equal(options.template, "cloudflare", argv.join(" "));
     }
 });

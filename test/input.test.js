@@ -12,7 +12,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync, symlinkSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -71,14 +71,13 @@ test("a feature the default template lacks stops before the key command", () => 
 });
 
 test("a feature no template offers is refused when a terminal may choose", () => {
-    assert.doesNotThrow(() => checkKnownFeatures(["lib"]));
-    assert.doesNotThrow(() => checkKnownFeatures(["lib", "publish"]));
+    assert.doesNotThrow(() => checkKnownFeatures(["publish"]));
     assert.throws(
-        () => checkKnownFeatures(["lib", "nonsense"]),
+        () => checkKnownFeatures(["publish", "nonsense"]),
         (error) =>
             error instanceof UsageError &&
             /"nonsense"/.test(error.message) &&
-            /lib/.test(error.message),
+            /publish/.test(error.message),
     );
 });
 
@@ -88,7 +87,7 @@ test("None at the features prompt means no feature, in any case", async () => {
         parseOptions([
             "x",
             "--template",
-            "rust",
+            "typescript",
             "--description",
             "D",
             "--owner",
@@ -179,28 +178,12 @@ test("a zero width or direction mark in a description is accepted", () => {
 
 test("a name the template refuses stops before the key command", () => {
     for (const [name, args] of /** @type {[string, string[]][]} */ ([
-        ["fn", ["--template", "rust"]],
-        ["Fn", ["--template", "rust", "--with", "lib"]],
-        ["if", ["--template", "zsh"]],
         ["Not.Valid", ["--template", "cloudflare"]],
+        ["Pkg", ["--template", "typescript", "--with", "publish"]],
     ])) {
         const { result, ran } = runWithKeyCommand(args, { name });
         assert.equal(result.status, 2, name + result.stderr);
-        assert.match(result.stderr, /not valid/, name);
-        assert.equal(ran, false, name);
-    }
-});
-
-test("the template's own module stops before the key command", () => {
-    for (const [name, template] of [
-        ["repo-tmpl.nvim", "nvim"],
-        ["Repo_Tmpl", "zsh"],
-    ]) {
-        const { result, ran } = runWithKeyCommand(["--template", template], {
-            name,
-        });
-        assert.equal(result.status, 2, name + result.stderr);
-        assert.match(result.stderr, /the template's own/, name);
+        assert.match(result.stderr, /not (?:a )?valid/, name);
         assert.equal(ran, false, name);
     }
 });
@@ -213,22 +196,4 @@ test("an owner the template refuses stops before the key command", () => {
     assert.equal(result.status, 2, result.stderr);
     assert.match(result.stderr, /lowercase/);
     assert.equal(ran, false);
-});
-
-// The key command is `touch`, so a PATH holding only `touch` lets it run
-// while hiding zsh.
-test("a missing tool stops before the key command", () => {
-    const root = mkdtempSync(join(tmpdir(), "create-repo-path-"));
-    try {
-        symlinkSync("/usr/bin/touch", join(root, "touch"));
-        const { result, ran } = runWithKeyCommand(["--template", "zsh"], {
-            name: "plugin",
-            env: { PATH: root },
-        });
-        assert.equal(result.status, 2, result.stderr);
-        assert.match(result.stderr, /zsh is required/);
-        assert.equal(ran, false);
-    } finally {
-        rmSync(root, { recursive: true, force: true });
-    }
 });

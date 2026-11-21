@@ -119,10 +119,3 @@ updates:
           interval: weekly
       commit-message:
           prefix: ci
-
-    - package-ecosystem: github-actions
-      directory: /templates/native/.github/workflows
-      schedule:
-          interval: weekly
-      commit-message:
-          prefix: ci

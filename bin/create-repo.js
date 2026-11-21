@@ -21,12 +21,7 @@ import { text } from "node:stream/consumers";
 import { notTemplate, parseOptions, UsageError } from "../lib/args.js";
 import { init, recordWords } from "../lib/init.js";
 import { childEnv, loadEnvFile, resolveKey } from "../lib/key.js";
-import {
-    checkTarget,
-    checkTemplateTools,
-    checkTools,
-    METADATA_REPO,
-} from "../lib/preflight.js";
+import { checkTarget, checkTools, METADATA_REPO } from "../lib/preflight.js";
 import {
     completeAnswers,
     confirm,
@@ -44,9 +39,9 @@ import {
     checkFeatures,
     checkKnownFeatures,
     DEFAULT_TEMPLATE,
-    FAMILIES,
     getTemplate,
     label,
+    STEPS,
     TEMPLATES,
 } from "../lib/templates.js";
 
@@ -156,9 +151,6 @@ async function main(argv) {
         exists: existsSync,
     };
 
-    if (options.template !== undefined) {
-        await checkTemplateTools({ template: options.template }, tools);
-    }
     const { login, clientId } = await checkTools(options, tools);
     const owner = options.owner ?? login;
     if (!owner) {
@@ -183,7 +175,6 @@ async function main(argv) {
 
     const answers = await completeAnswers(options, { owner, ask });
     await checkTarget(answers, tools, { remote: login !== undefined });
-    await checkTemplateTools(answers, tools);
 
     console.error(
         `\n${summary(answers, { dryRun: options.dryRun, keySource: key?.source })}\n`,
@@ -202,7 +193,6 @@ async function main(argv) {
 
     const { dir } = answers;
     const template = TEMPLATES[answers.template];
-    const family = FAMILIES[template.family];
     const chosen = label(answers.template, answers.features);
     const slug = `${answers.owner}/${answers.name}`;
     const local = { cwd: dir, env: children };
@@ -230,7 +220,7 @@ async function main(argv) {
             capture: true,
         });
         local.env = childEnv({ ...children, ...JSON.parse(pinned.stdout) });
-        for (const command of family.setup) {
+        for (const command of STEPS.setup) {
             await run(command.file, command.args, local);
         }
 
@@ -241,24 +231,22 @@ async function main(argv) {
         });
         // Staged first: the template's format:yaml reads `git ls-files`.
         await run("git", ["add", "--all"], local);
-        if (family.words) {
-            // The identity's words, which the spell check would refuse.
-            const tracked = await run("git", ["ls-files"], {
-                ...local,
-                capture: true,
-            });
-            const unknown = await run(family.words.file, family.words.args, {
-                ...local,
-                capture: true,
-                input: tracked.stdout,
-            });
-            recordWords(dir, unknown.stdout);
-        }
-        await run(family.format.file, family.format.args, local);
+        // The identity's words, which the spell check would refuse.
+        const tracked = await run("git", ["ls-files"], {
+            ...local,
+            capture: true,
+        });
+        const unknown = await run(STEPS.words.file, STEPS.words.args, {
+            ...local,
+            capture: true,
+            input: tracked.stdout,
+        });
+        recordWords(dir, unknown.stdout);
+        await run(STEPS.format.file, STEPS.format.args, local);
 
         step("Checking and committing");
         await run("git", ["add", "--all"], local);
-        await run(family.check.file, family.check.args, local);
+        await run(STEPS.check.file, STEPS.check.args, local);
         await run(
             "git",
             [

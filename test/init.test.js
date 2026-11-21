@@ -20,7 +20,6 @@ import {
     existsSync,
     mkdirSync,
     mkdtempSync,
-    readdirSync,
     readFileSync,
     renameSync,
     rmSync,
@@ -34,13 +33,9 @@ import { fileURLToPath } from "node:url";
 import { parse } from "jsonc-parser";
 import {
     bunLock,
-    cargoLock,
-    cargoToml,
     commitlintScopes,
-    committedScopes,
     headers,
     init,
-    moduleName,
     packageJson,
     readme,
     repoMetadata,
@@ -425,13 +420,13 @@ test("each edit sees the identity, features and both slugs", () =>
                     seen.push(context);
                 },
             ],
-            features: ["lib"],
+            features: ["publish"],
             today: "2026-10-01",
         });
         assert.equal(seen.length, 1);
         assert.equal(seen[0].slug, "example/derived-repo");
         assert.equal(seen[0].template, "someone/tmpl");
-        assert.deepEqual([...seen[0].features], ["lib"]);
+        assert.deepEqual([...seen[0].features], ["publish"]);
         assert.equal(seen[0].today, "2026-10-01");
     }));
 
@@ -454,13 +449,13 @@ test("the template's identity left in a path fails, naming it", () =>
     inTemp((root) => {
         const { dir, files } = bare(root, {
             ...METADATA,
-            "lua/repo_tmpl/init.lua": "return {}\n",
+            "src/repo_tmpl/index.ts": "export {};\n",
         });
         assert.throws(
             () => init(dir, IDENTITY, files, { edits: [] }),
             (error) =>
                 error instanceof TemplateError &&
-                /lua\/repo_tmpl\/init\.lua/.test(error.message),
+                /src\/repo_tmpl\/index\.ts/.test(error.message),
         );
     }));
 
@@ -539,259 +534,4 @@ test("short input does not hide a leftover it is part of", () => {
             JSON.stringify(changes),
         );
     }
-});
-
-/**
- * Runs `edits` over a copy holding only `files`, then hands `body` a reader
- * of the result, and the copy's directory.
- * @param {Record<string, string>} files
- * @param {import("../lib/init.js").Edit[]} edits
- * @param {(read: (file: string) => string, dir: string) => void} body
- * @param {Partial<typeof IDENTITY>} [changes]
- */
-function edited(files, edits, body, changes = {}) {
-    inTemp((root) => {
-        const copy = bare(root, { ...METADATA, ...files });
-        init(copy.dir, { ...IDENTITY, ...changes }, copy.files, {
-            edits,
-            today: "2026-10-01",
-        });
-        body((file) => read(copy.dir, file), copy.dir);
-    });
-}
-
-const COMMITTED = `allowed_scopes = [
-    # Claude Code assets
-    "claude",
-]
-`;
-
-test("committedScopes adds each scope, its full name as a comment", () =>
-    edited({ "committed.toml": COMMITTED }, [committedScopes], (read) => {
-        assert.equal(
-            read("committed.toml"),
-            `allowed_scopes = [
-    # Claude Code assets
-    "claude",
-    # Api
-    "api",
-    # Command Line
-    "cli",
-]
-`,
-        );
-    }));
-
-test("committedScopes leaves the file alone when no scope is asked for", () =>
-    edited(
-        { "committed.toml": COMMITTED },
-        [committedScopes],
-        (read) => {
-            assert.equal(read("committed.toml"), COMMITTED);
-        },
-        { scopes: [] },
-    ));
-
-test("committedScopes keeps a scope's quotes and lines out of the TOML", () =>
-    edited(
-        { "committed.toml": COMMITTED },
-        [committedScopes],
-        (read) => {
-            assert.match(
-                read("committed.toml"),
-                /^ {4}# Two lines # not code$/m,
-            );
-            assert.match(read("committed.toml"), /^ {4}"a\\"b",$/m);
-        },
-        { scopes: [{ name: 'a"b', fullName: "Two\nlines # not code" }] },
-    ));
-
-test("committedScopes fails when committed.toml has no allowed_scopes", () => {
-    assert.throws(
-        () =>
-            edited(
-                { "committed.toml": 'style = "conventional"\n' },
-                [committedScopes],
-                () => {},
-            ),
-        (error) =>
-            error instanceof TemplateError &&
-            /allowed_scopes in committed\.toml/.test(error.message),
-    );
-});
-
-test("moduleName names the module in every file that holds the token", () =>
-    edited(
-        {
-            "src/lib.rs": "use repo_tmpl::greeting;\n",
-            "docs/a.md": "repo_tmpl, twice: repo_tmpl\n",
-            "notes.txt": "nothing to rename\n",
-        },
-        [moduleName((name) => name.replaceAll("-", "_"))],
-        (read) => {
-            assert.equal(read("src/lib.rs"), "use derived_repo::greeting;\n");
-            assert.equal(
-                read("docs/a.md"),
-                "derived_repo, twice: derived_repo\n",
-            );
-            assert.equal(read("notes.txt"), "nothing to rename\n");
-        },
-    ));
-
-test("moduleName takes its value literally, not as a replacement pattern", () =>
-    edited({ "a.txt": "repo_tmpl\n" }, [moduleName(() => "$&$1")], (read) => {
-        assert.equal(read("a.txt"), "$&$1\n");
-    }));
-
-test("moduleName renames the paths that hold the token, and removes the emptied directories", () =>
-    edited(
-        {
-            "lua/repo_tmpl/init.lua": "return {}\n",
-            "lua/repo_tmpl/health.lua": "return {}\n",
-            "plugin/repo_tmpl.lua": "-- plugin\n",
-            "doc/keep.txt": "keep\n",
-        },
-        [moduleName((name) => name)],
-        (read, dir) => {
-            assert.equal(read("lua/derived-repo/init.lua"), "return {}\n");
-            assert.equal(read("lua/derived-repo/health.lua"), "return {}\n");
-            assert.equal(read("plugin/derived-repo.lua"), "-- plugin\n");
-            assert.equal(read("doc/keep.txt"), "keep\n");
-            assert.deepEqual(readdirSync(join(dir, "lua")), ["derived-repo"]);
-        },
-    ));
-
-test("moduleName leaves a path alone when the name is the token", () =>
-    edited(
-        { "repo_tmpl.txt": "repo_tmpl\n" },
-        [moduleName(() => "repo_tmpl")],
-        (read) => {
-            assert.equal(read("repo_tmpl.txt"), "repo_tmpl\n");
-        },
-    ));
-
-test("moduleName does not overwrite a file its name lands on", () => {
-    assert.throws(
-        () =>
-            edited(
-                { "repo_tmpl.txt": "a\n", "derived-repo.txt": "b\n" },
-                [moduleName((name) => name)],
-                () => {},
-            ),
-        (error) =>
-            error instanceof TemplateError &&
-            /derived-repo\.txt already exists/.test(error.message),
-    );
-});
-
-// The module is the name, changed; the guard knows the name's own words, so
-// it has to know the module's too.
-test("a module name that holds the template's identity is not a leftover", () =>
-    edited(
-        { "a.txt": "repo_tmpl\n", "lua/repo_tmpl/init.lua": "x\n" },
-        [moduleName((name) => name.replaceAll("-", "_"))],
-        (read) => {
-            assert.equal(read("a.txt"), "my_repo_tmpl\n");
-            assert.equal(read("lua/my_repo_tmpl/init.lua"), "x\n");
-        },
-        { name: "my-repo-tmpl" },
-    ));
-
-test("moduleName asks nothing of a repository without the token", () =>
-    edited({ "a.txt": "a\n" }, [moduleName((name) => name)], (read) => {
-        assert.equal(read("a.txt"), "a\n");
-    }));
-
-/** As tombi leaves it: the keys aligned. */
-const CARGO_TOML = `[package]
-name        = "repo-tmpl"
-version     = "0.1.0"
-edition     = "2024"
-description = "Repository Template"
-repository  = "https://github.com/chewygumxx/repo-tmpl"
-license     = "GPL-3.0-only"
-publish     = false
-`;
-
-test("cargoToml names the crate, its description and its repository", () =>
-    edited({ "Cargo.toml": CARGO_TOML }, [cargoToml], (read) => {
-        assert.equal(
-            read("Cargo.toml"),
-            `[package]
-name        = "derived-repo"
-version     = "0.1.0"
-edition     = "2024"
-description = ${JSON.stringify(IDENTITY.description)}
-repository  = "https://github.com/example/derived-repo"
-license     = "GPL-3.0-only"
-publish     = false
-`,
-        );
-    }));
-
-test("cargoToml writes a description holding TOML's special characters", () =>
-    edited(
-        { "Cargo.toml": CARGO_TOML },
-        [cargoToml],
-        (read) => {
-            assert.match(
-                read("Cargo.toml"),
-                /^description = "back\\\\slash \\"quoted\\" # not a comment\\n2nd line"$/m,
-            );
-        },
-        { description: 'back\\slash "quoted" # not a comment\n2nd line' },
-    ));
-
-test("cargoToml fails when a key is missing", () => {
-    assert.throws(
-        () =>
-            edited(
-                {
-                    "Cargo.toml": CARGO_TOML.replace(/^repository.*\n/m, ""),
-                },
-                [cargoToml],
-                () => {},
-            ),
-        (error) =>
-            error instanceof TemplateError &&
-            /repository in Cargo\.toml/.test(error.message),
-    );
-});
-
-const CARGO_LOCK = `# This file is automatically @generated by Cargo.
-# It is not intended for manual editing.
-version = 4
-
-[[package]]
-name = "repo-tmpl"
-version = "0.1.0"
-dependencies = [
- "itoa",
-]
-
-[[package]]
-name = "itoa"
-version = "1.0.15"
-`;
-
-test("cargoLock renames the crate's own package only", () =>
-    edited({ "Cargo.lock": CARGO_LOCK }, [cargoLock], (read) => {
-        assert.equal(
-            read("Cargo.lock"),
-            CARGO_LOCK.replace('name = "repo-tmpl"', 'name = "derived-repo"'),
-        );
-    }));
-
-test("cargoLock fails when the crate's package is missing", () => {
-    assert.throws(
-        () =>
-            edited(
-                { "Cargo.lock": CARGO_LOCK.replace("repo-tmpl", "other") },
-                [cargoLock],
-                () => {},
-            ),
-        (error) =>
-            error instanceof TemplateError &&
-            /\[\[package\]\] in Cargo\.lock/.test(error.message),
-    );
 });
