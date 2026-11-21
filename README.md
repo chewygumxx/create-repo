@@ -83,7 +83,10 @@ Every template sets a repository up as
 - CI calls the shared workflows of
   [chewygumxx/.github](https://github.com/chewygumxx/.github) at `v1`, then
   `bun run check`. Dependabot groups the `@chewygumxx` bumps.
-- `AGENTS.md` holds the guidance for agents.
+- `AGENTS.md` holds the guidance for agents, and the
+  `creating-bun-repositories` skill, an exact devDependency, explains
+  the setup to them: the `skills` CLI links it into `.agents/skills/` and
+  `.claude/skills/` on every install, and `skills-lock.json` records it.
 
 `@chewygumxx/hk-config` and `@chewygumxx/mise-tasks-config` are pinned
 exactly, as is Biome, which hk-config names: below 1.0.0, every functional

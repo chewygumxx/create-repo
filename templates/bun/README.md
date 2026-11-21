@@ -67,6 +67,10 @@ runs commitlint.
   configuration; a word of this repository's own goes in the `words` of
   `.config/cspell.json`.
 - `mise run format` applies the formatters.
+- `mise run skills` relinks the agent skills the devDependencies provide,
+  which every install also does. A Dependabot bump of a skill package
+  fails CI until `mise run skills` has updated `skills-lock.json` on its
+  branch.
 - With no flag a task selects the changed files; `--staged` the staged
   files; `--all` every file. `mise tasks` lists every task.
 

@@ -34,6 +34,15 @@ every file.
 pre-commit hook runs `mise run check --staged`, and the commit-msg hook runs
 commitlint. Fix what they report; never skip them.
 
+## Skills
+
+`.agents/skills/` and `.claude/skills/` link the agent skills that
+`package.json`'s devDependencies provide, such as
+`@chewygumxx/skill-creating-bun-repositories`, which explains this
+repository's setup. Every install relinks them, and `skills-lock.json`
+records them: add a skill as an exact devDependency, then run `mise run
+skills`, and commit the lock it updates.
+
 ## Repository Metadata
 
 `.repo-metadata.jsonc` holds the GitHub repository's description, topics and
