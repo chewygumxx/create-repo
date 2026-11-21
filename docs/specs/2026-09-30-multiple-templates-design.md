@@ -22,6 +22,11 @@ tags:
 
 # Specification: multiple templates
 
+> [!NOTE]
+> Historical. 4.0.0 removed the native family (`native`, `rust`, `nvim` and
+> `zsh`) and moved every template to mise and hk; see the README for what
+> the templates are now.
+
 `create-repo` bundles one template. It will bundle six, chosen with
 `--template`, each guaranteeing what the single template guarantees today: a
 repository created from it commits only after its own check passes, and its

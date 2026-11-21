@@ -20,6 +20,11 @@ tags:
 
 # Address the aforementioned deferred minors (follow-up to the merge)
 
+> [!NOTE]
+> Historical. 4.0.0 removed the native family (`native`, `rust`, `nvim` and
+> `zsh`) and moved every template to mise and hk; see the README for what
+> the templates are now.
+
 ## Context
 
 `address-remaining-minors` is merged into local `main` (1c0f64c, 14 commits
