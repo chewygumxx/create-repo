@@ -11,7 +11,8 @@
 # Publishes the package for each published GitHub release, which
 # release-please.yaml makes once its pull request is merged: that merge
 # is the maintainer's approval. The release commit must pass lint and a
-# dry run of every template first, and its tag must be v<version>.
+# dry run of every template first, and its tag must be v<version>; the
+# tarball those dry runs used is what is published.
 #
 # Authentication is npm trusted publishing: npm exchanges this job's OIDC
 # token for a short-lived credential, so no NPM_TOKEN secret exists. The
@@ -52,11 +53,13 @@ jobs:
             id-token: write
 
         steps:
-            - name: Checkout Release Commit
-              uses: actions/checkout@v7
+            # The tarball the dry run tested, packed from the release
+            # commit, is the one published.
+            - name: Download Package
+              uses: actions/download-artifact@v8
               with:
-                  ref: ${{ github.sha }}
-                  persist-credentials: false
+                  name: package
+                  path: ${{ runner.temp }}/package
 
             # npm from Node: Bun cannot publish by trusted publishing. No
             # dependency is installed, so this job, holding the OIDC token,
@@ -69,15 +72,24 @@ jobs:
                   package-manager-cache: false
 
             - name: Check Package and Tag
+              id: package
               env:
                   TAG: ${{ github.event.release.tag_name }}
               run: |
-                  if ! jq -e --arg tag "$TAG" \
-                      '.name == "@chewygumxx/create-repo" and "v\(.version)" == $tag' \
-                      package.json >/dev/null; then
-                      echo "::error::package.json does not match the tag $TAG"
+                  set -- "$RUNNER_TEMP"/package/*.tgz
+                  if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+                      echo "::error::Expected one packed tarball"
                       exit 1
                   fi
+                  if ! tar -xOzf "$1" package/package.json | jq -e --arg tag "$TAG" \
+                      '.name == "@chewygumxx/create-repo" and "v\(.version)" == $tag' >/dev/null; then
+                      echo "::error::The packed package.json does not match the tag $TAG"
+                      exit 1
+                  fi
+                  echo "tarball=$1" >> "$GITHUB_OUTPUT"
+                  echo "npm $(npm --version), Node $(node --version)"
 
             - name: Publish with npm Trusted Publishing
-              run: npm publish --provenance --ignore-scripts
+              env:
+                  TARBALL: ${{ steps.package.outputs.tarball }}
+              run: npm publish "$TARBALL" --provenance --ignore-scripts
