@@ -83,6 +83,22 @@ test("the client ID comes from create-repo's variable", async () => {
     );
 });
 
+test("an empty client ID stops it, naming --no-metadata", async () => {
+    await assert.rejects(
+        checkTools(
+            parseOptions([]),
+            tools({
+                ...loggedIn,
+                [Object.keys(clientId)[0]]: "\n",
+            }),
+        ),
+        (error) =>
+            error instanceof UsageError &&
+            /is empty/.test(error.message) &&
+            /--no-metadata/.test(error.message),
+    );
+});
+
 test("--no-metadata does not read the client ID", async () => {
     const fake = tools(loggedIn);
     assert.deepEqual(await checkTools(parseOptions(["--no-metadata"]), fake), {
@@ -109,6 +125,32 @@ test("an existing directory or repository stops it", async () => {
         }),
         /o\/x already exists/,
     );
+});
+
+// GitHub takes either spelling, but the header check compares the one CI
+// is told with the one init wrote.
+test("an owner spelt otherwise than GitHub spells it stops it", async () => {
+    const target = await answers(["x", "--description", "D", "--dir", "/d"]);
+    const lookup = "gh api users/o --jq .login";
+    const free = new CommandError("gh api repos/o/x", 1, "HTTP 404");
+    await assert.rejects(
+        checkTarget(
+            target,
+            tools({ [lookup]: "O\n", "gh api repos/o/x": free }),
+            { remote: true },
+        ),
+        (error) =>
+            error instanceof UsageError && /--owner O\b/.test(error.message),
+    );
+    await checkTarget(
+        target,
+        tools({ [lookup]: "o\n", "gh api repos/o/x": free }),
+        { remote: true },
+    );
+    // An owner GitHub cannot find is gh repo create's to report.
+    await checkTarget(target, tools({ "gh api repos/o/x": free }), {
+        remote: true,
+    });
 });
 
 test("every template refuses a path with a bracket", async () => {
