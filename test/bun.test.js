@@ -10,7 +10,7 @@
 
 // @ts-check
 
-// This repository runs on Bun: its scripts, its tests and its hooks.
+// This repository runs on Bun: its scripts and its tests.
 
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -29,26 +29,7 @@ test("every script runs on Bun, even with Node on PATH", () => {
     assert.match(read("bunfig.toml"), /^\[run\]\nbun = true$/m);
 });
 
-// A bare `bun test` also runs the templates' own tests under templates/,
-// which need their own dependencies.
-test("the scripts call Bun, and test only test/", () => {
-    const pkg = JSON.parse(read("package.json"));
-    assert.equal(pkg.scripts.test, "bun test ./test/");
-    assert.deepEqual(pkg.engines, { bun: ">=1.4" });
-    for (const [name, script] of Object.entries(pkg.scripts)) {
-        assert.doesNotMatch(script, /\b(?:npm|npx|node)\b/, name);
-    }
-});
-
 test("the lock is Bun's", () => {
     assert.ok(existsSync(join(ROOT, "bun.lock")));
     assert.ok(!existsSync(join(ROOT, "package-lock.json")));
-});
-
-test("the hooks run their tools with Bun", () => {
-    for (const hook of [".husky/pre-commit", ".husky/commit-msg"]) {
-        const text = read(hook);
-        assert.doesNotMatch(text, /\bnpx\b/, hook);
-        assert.match(text, /bunx --bun --no-install /, hook);
-    }
 });

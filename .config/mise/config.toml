@@ -1,0 +1,86 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+#:schema https://mise.jdx.dev/schema/mise.json
+
+#
+#
+# ~chewygumxx/create-repo.git
+# ::: :/.config/mise/config.toml
+#
+#
+
+#
+# Sourced during CI by GitHub Action `jdx/mise-action`
+# https://mise.jdx.dev/configuration.html
+#
+
+# ----------
+# Intrinsic
+# ----------
+
+min_version = "2026.9.0"
+
+# ------
+# Tools
+# ------
+
+[tool_alias]
+sh = "aqua:mvdan/sh"
+uv = "aqua:astral-sh/uv"
+hk = "aqua:jdx/hk"
+
+[tools]
+# Runtime. Node is for npm alone, which publishes the package and which
+# test/pack.test.js asks what it would publish.
+bun  = "1.4"
+node = "24"
+sh   = "3.14.1"
+uv   = "0.12.19"
+
+# Utility
+hk = "2.13.0"
+
+# Lint and Format
+#
+# Installed up front, not lazily: hk runs its steps in parallel, and a lazy
+# install from inside a step has failed CI.
+"aqua:editorconfig-checker/editorconfig-checker" = "4.0.2"
+"aqua:koalaman/shellcheck"                       = "0.11.0"
+"aqua:tombi-toml/tombi"                          = "1.11.3"
+"aqua:rhysd/actionlint"                          = "1.7.12"
+"pypi:yamllint"                                  = {
+    version = "1.38.0",
+    depends = [ "uv" ]
+}
+
+# ------------
+# Environment
+# ------------
+
+[env]
+# A change to these, the configuration packages' pins among them, makes
+# lint and format select every file.
+CGXX_WIDEN_ON = "bun.lock .config .biome.json .editorconfig .markdownlint-cli2.jsonc .secretlintrc.json"
+
+# ------
+# Hooks
+# ------
+
+[hooks]
+# The hooks import the shared hk steps, which bun ci installs first. CI
+# installs the packages itself. A mise hook, not an npm one: this package
+# is installed from the registry, where it must run no install script.
+postinstall = 'test -n "${CI-}" || { bun ci && hk install --mise; }'
+
+# ------
+# Tasks
+# ------
+
+# The cgxx: templates come from @chewygumxx/mise-tasks-config, linked into
+# .config/mise/conf.d/.
+[task_config]
+includes = [ ".config/mise/tasks/*.task.toml" ]
+
+[settings]
+# Remote file tasks, such as act-cached, are experimental.
+experimental = true

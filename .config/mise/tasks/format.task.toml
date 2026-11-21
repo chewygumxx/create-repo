@@ -1,0 +1,19 @@
+# vim:set expandtab shiftwidth=4 filetype=toml:
+# SPDX-License-Identifier: GPL-3.0-only
+#:schema https://mise.jdx.dev/schema/mise-task.json
+
+#
+#
+# ~chewygumxx/create-repo.git
+# ::: :/.config/mise/tasks/format.task.toml
+#
+#
+
+#
+# https://mise.jdx.dev/tasks/task-configuration.html
+#
+# format runs hk's fix hook; the steps are in .config/hk.pkl.
+#
+
+[format]
+extends = "cgxx:format"
