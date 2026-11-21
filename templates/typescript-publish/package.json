@@ -62,7 +62,7 @@
         "prettier": "^3.10.1",
         "publint": "^0.3.25",
         "remark-cli": "^12.0.1",
-        "secretlint": "^13.0.7",
+        "secretlint": "^14.0.1",
         "skills": "^1.9.0",
         "sort-package-json": "^4.1.0",
         "sync-header-metadata": "^2.4.3",
