@@ -8,22 +8,22 @@
 #
 #
 
-# Stages the package for a `v<version>` tag, e.g. `v2.0.0`, if package.json
-# has that version. A staged version is not installable until it is approved
-# on npmjs.com with the maintainer's 2FA, so this workflow alone can never
-# release it.
+# Publishes the package for each published GitHub release, which
+# release-please.yaml makes once its pull request is merged: that merge
+# is the maintainer's approval. The release commit must pass lint and a
+# dry run of every template first, and its tag must be v<version>.
 #
 # Authentication is npm trusted publishing: npm exchanges this job's OIDC
 # token for a short-lived credential, so no NPM_TOKEN secret exists. The
-# package's npm Settings > Trusted Publisher must name this repository and
-# workflow with the stage publish permission.
+# package's npm Settings > Trusted Publisher names this repository and
+# this workflow's filename, which must not change.
 
 name: Publish
 
 on:
-    push:
-        tags:
-            - "v*"
+    release:
+        types:
+            - published
 
 permissions:
     contents: read
@@ -35,6 +35,8 @@ concurrency:
 jobs:
     check:
         uses: chewygumxx/.github/.github/workflows/lint.yaml@v1
+        with:
+            ref: ${{ github.sha }}
 
     dry-run:
         permissions:
@@ -50,25 +52,32 @@ jobs:
             id-token: write
 
         steps:
-            - name: Checkout
+            - name: Checkout Release Commit
               uses: actions/checkout@v7
               with:
+                  ref: ${{ github.sha }}
                   persist-credentials: false
 
-            - name: Setup Bun and Node
-              uses: jdx/mise-action@v5
+            # npm from Node: Bun cannot publish by trusted publishing. No
+            # dependency is installed, so this job, holding the OIDC token,
+            # runs no dependency's code.
+            - name: Set Up Node
+              uses: actions/setup-node@v7
+              with:
+                  node-version: "24"
+                  registry-url: https://registry.npmjs.org
+                  package-manager-cache: false
 
-            - name: Bun Install
-              run: bun install --frozen-lockfile
-
-            - name: Check Version
+            - name: Check Package and Tag
               env:
-                  TAG: ${{ github.ref_name }}
+                  TAG: ${{ github.event.release.tag_name }}
               run: |
-                  actual=$(bun -p "require('./package.json').version")
-                  test "v$actual" = "$TAG" || { echo "::error::package.json is $actual, tag says $TAG"; exit 1; }
+                  if ! jq -e --arg tag "$TAG" \
+                      '.name == "@chewygumxx/create-repo" and "v\(.version)" == $tag' \
+                      package.json >/dev/null; then
+                      echo "::error::package.json does not match the tag $TAG"
+                      exit 1
+                  fi
 
-            # npm, from mise's Node: Bun cannot stage a publish or publish by
-            # trusted publishing.
-            - name: Publish
-              run: npm stage publish
+            - name: Publish with npm Trusted Publishing
+              run: npm publish --provenance --ignore-scripts
