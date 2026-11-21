@@ -10,11 +10,13 @@
 
 # Runs `create-repo --dry-run` on every bundled template and combination of
 # its features: copy, install, init, check and commit for real, with
-# nothing created on GitHub. Catches a template drifting from lib/init.js
-# and from its own checks, though not from its Biome formatting, which the
-# run applies before checking; the root `bun run lint:templates` catches
-# that. gh is not logged in here, so the dry run reads nothing from GitHub.
-# Publish calls it too, so no version is staged whose templates fail their
+# nothing created on GitHub. It runs the package as npm packs it, so what
+# the registry would serve is what is tested, and then checks a fresh
+# clone of the commit as GitHub's CI would: install from the lock, then
+# `bun run check`. A bundled file left unformatted is caught by the root's
+# hk templates step instead, as the run formats before it checks. gh is
+# not logged in here, so the dry run reads nothing from GitHub. Publish
+# calls this too, so no version is published whose templates fail their
 # own checks.
 
 name: Create Repo
@@ -31,7 +33,7 @@ permissions:
     contents: read
 
 jobs:
-    matrix:
+    pack:
         runs-on: ubuntu-latest
 
         outputs:
@@ -53,16 +55,27 @@ jobs:
               id: list
               run: echo "matrix=$(bun scripts/materialize.js --list)" >> "$GITHUB_OUTPUT"
 
+            - name: Pack
+              run: npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP"
+
+            - name: Upload Package
+              uses: actions/upload-artifact@v7
+              with:
+                  name: package
+                  path: ${{ runner.temp }}/*.tgz
+                  if-no-files-found: error
+
     dry-run:
-        needs: matrix
+        needs: pack
         name: Dry Run (${{ matrix.name }})
         runs-on: ubuntu-latest
 
         strategy:
             fail-fast: false
-            matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+            matrix: ${{ fromJSON(needs.pack.outputs.matrix) }}
 
         steps:
+            # For mise's Bun and Node; the package itself comes packed.
             - name: Checkout
               uses: actions/checkout@v7
               with:
@@ -71,8 +84,19 @@ jobs:
             - name: Setup mise
               uses: jdx/mise-action@v5
 
-            - name: Bun Install
-              run: bun install --frozen-lockfile
+            - name: Download Package
+              uses: actions/download-artifact@v8
+              with:
+                  name: package
+                  path: ${{ runner.temp }}/package
+
+            # As a registry install would: its dependencies, no scripts.
+            - name: Install Package
+              working-directory: ${{ runner.temp }}/package
+              run: |
+                  tar -xzf ./*.tgz
+                  cd package
+                  bun install --production --ignore-scripts
 
             - name: Dry Run
               env:
@@ -86,7 +110,7 @@ jobs:
               run: |
                   git config --global user.name "create-repo dry run"
                   git config --global user.email "create-repo@users.noreply.github.com"
-                  bun bin/create-repo.js dry-run \
+                  bun "$RUNNER_TEMP/package/package/bin/create-repo.js" dry-run \
                       --template "$TEMPLATE" \
                       --with "$WITH" \
                       --description 'Dry run of "create-repo": a bundled template, initialised and committed.' \
@@ -104,3 +128,17 @@ jobs:
                       echo "::error::template identity remains"
                       exit 1
                   fi
+
+            # What GitHub's CI sees: the commit alone, nothing the run left
+            # untracked, installed from the lock.
+            - name: Check a Fresh Clone
+              env:
+                  GITHUB_REPOSITORY: example/dry-run
+                  MISE_GITHUB_TOKEN: ${{ github.token }}
+              run: |
+                  git clone --quiet "$RUNNER_TEMP/dry-run" "$RUNNER_TEMP/fresh"
+                  cd "$RUNNER_TEMP/fresh"
+                  mise trust --quiet
+                  mise install
+                  bun install --frozen-lockfile
+                  bun run check
