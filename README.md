@@ -22,6 +22,11 @@ tags:
 
 # @chewygumxx/create-repo
 
+> Development and releases have moved to [shared-config][new-home].
+> Use `bun create @chewygumxx/repo` to create a repository.
+
+[new-home]: https://github.com/chewygumxx/shared-config/tree/main/packages/create-repo
+
 Creates a GitHub repository from one of the templates bundled in this
 package, whose first CI run passes, including the repository metadata sync.
 
